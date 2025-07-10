@@ -13,7 +13,7 @@ The primary goal is to have a working command-line tool (`whoistel.py`) that can
     *   The primary data sources are CSV files from `data.gouv.fr` for ARCEP data.
 3.  **Testing:**
     *   The phone number `+33740756315` must be used as a test case.
-    *   The script must be runnable with this number by explicitly passing it as the main phone number argument (e.g., `python whoistel.py +33740756315`).
+    *   The script must be runnable with this number by explicitly passing it as the main phone number argument (e.g., `python3 whoistel.py +33740756315`).
     *   *(Future consideration: Modify the script to use this number as a default if no other is provided, or to accept it via a dedicated test execution flag.)*
     *   Use `pytest` for validation. Write tests to cover core functionality, especially number lookups.
     *   Run the script with the test number before submitting changes.
