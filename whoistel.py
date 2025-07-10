@@ -28,40 +28,49 @@ is_special = False
 # urlAnnu = 'http://v3.annu.com/cgi-bin/srch.cgi?j=1&n=10&s=' # Removed
 # urlOVH = 'https://www.ovhtelecom.fr/cgi-bin/ajax/ajaxEligibilityCheck.cgi?lightRequest=yes&number=' # Removed
 
+import argparse
+
 # Interpréter les arguments
-# Keep --no-annu and --no-ovh for now to avoid breaking existing calls, but they will do nothing.
-# Or, better, remove them to simplify. Let's remove.
-args_to_parse = argv[1:]
-parsed_args = {}
+parser = argparse.ArgumentParser(description="Recherche d'informations sur un numéro de téléphone français.")
+parser.add_argument("numero_tel", nargs='?', help="Le numéro de téléphone à rechercher (ex: 0123456789, +33612345678).")
+# Deprecated arguments - kept for informational purposes but do nothing
+parser.add_argument("--no-annu", help="Argument obsolète, ignoré.", action="store_true")
+parser.add_argument("--no-ovh", help="Argument obsolète, ignoré.", action="store_true")
 
-for i, arg_val in enumerate(args_to_parse):
-    clean_arg = arg_val.replace('-', '').replace(' ', '').replace('.', '')
-    clean_arg = clean_arg.replace('+33(0)', '0').replace('+330', '0').replace('+33', '0')
-    clean_arg = clean_arg.strip().lower()
-
-    if clean_arg.isdigit() and tel is None:
-        tel = clean_arg
-    # elif clean_arg == 'noannu': # Removed
-    #     useAnnu = False
-    # elif clean_arg == 'noovh': # Removed
-    #     useOVH = False
-    elif clean_arg in ['noannu', 'noovh']:
-        print(f"Warning: Argument {arg_val} is deprecated and will be ignored.")
-    elif tel is None and i == 0 : # Assume first non-option arg is the number
-        tel = clean_arg
-    elif tel is not None : # If number is set, other args might be problematic
-        print(f"Argument non reconnu ou numéro déjà défini: {arg_val}")
-        tel = None # Invalidate to show usage
-        break
-    else: # If tel is still None and it's not a digit or known old option
-        tel = None # Invalidate to show usage
-        break
+# Add a specific argument for the test number, though manual input is also fine
+parser.add_argument("--test-numero", default="+33740756315", help="Numéro de test prédéfini.", dest="test_numero_arg")
 
 
-# Message d'utilisation
-if tel is None:
-    print(f'Utilisation : {argv[0]} <numéro de téléphone français>')
+args = parser.parse_args()
+
+if args.no_annu:
+    print("Warning: Argument --no-annu is deprecated and will be ignored.")
+if args.no_ovh:
+    print("Warning: Argument --no-ovh is deprecated and will be ignored.")
+
+raw_tel = args.numero_tel
+
+# If numero_tel is not provided directly, consider using test_numero_arg if a specific flag for it was intended.
+# For now, numero_tel being positional and optional (nargs='?') means if it's None, we might want to use a default or error out.
+# The original script structure implies the number is mandatory.
+
+if raw_tel is None:
+    # This part could be enhanced, e.g. to use a default test number if a specific flag like --run-test was added.
+    # For now, mirror original behavior: number is mandatory.
+    parser.print_help()
+    print("\nErreur: Le numéro de téléphone est requis.")
     exit(1)
+
+# Nettoyage du numéro de téléphone
+tel = raw_tel.replace('-', '').replace(' ', '').replace('.', '')
+tel = tel.replace('+33(0)', '0').replace('+330', '0').replace('+33', '0')
+tel = tel.strip().lower()
+
+if not tel.isdigit():
+    parser.print_help()
+    print(f"\nErreur: Le numéro '{raw_tel}' contient des caractères non numériques après nettoyage.")
+    exit(1)
+
 
 # Fonctions d'information
 
@@ -353,7 +362,7 @@ else:
     # Could be other international, malformed, or new types not covered
     print("Type de numéro non formellement identifié par les règles de base (longueur/préfixe).")
     # Attempt ARCEP lookup anyway
-    if tel.startswith('0') and len(tel) > 6 : # Likely a standard French number
+    if tel.startswith('0') and len(tel) == 10 : # Enforce 10-digit length for standard numbers
          if tel[1] in '12345':
              getGeographicNumberARCEP()
          else:
