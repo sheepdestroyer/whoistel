@@ -1,7 +1,7 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
 #-*- encoding: Utf-8 -*-
 import sqlite3
-import xlrd
+# import xlrd # No longer needed
 import csv
 import os
 
@@ -11,25 +11,25 @@ os.chdir(dname)
 
 # -----------------------------------------------------------
 
-print 'Création de la base de données...'
+print('Création de la base de données...')
 
 if os.path.exists('whoistel.sqlite3'):
 	os.remove('whoistel.sqlite3')
 
-sqlite = sqlite3.connect('whoistel.sqlite3')
-c = sqlite.cursor()
+sqlite_conn = sqlite3.connect('whoistel.sqlite3') # Renamed to avoid conflict with module
+c = sqlite_conn.cursor()
 
 c.execute('''
 CREATE TABLE PlagesNumerosGeographiques(
-	PlageTel INTEGER,
+	PlageTel INTEGER, /* Corresponds to EZABPQM for geo numbers, e.g., 12345 for 012345xxxx */
 	CodeOperateur TEXT,
-	CodeInsee INTEGER
+	CodeInsee INTEGER /* This will be an issue as MAJNUM.csv doesn't have it directly - Placeholder 0 */
 );
 ''')
 
 c.execute('''
 CREATE TABLE PlagesNumeros(
-	PlageTel TEXT,
+	PlageTel TEXT, /* Can be various lengths, e.g., 06, 081, 0800 */
 	CodeOperateur TEXT
 );
 ''')
@@ -38,9 +38,9 @@ c.execute('''
 CREATE TABLE Operateurs(
 	CodeOperateur TEXT,
 	NomOperateur TEXT,
-	TypeOperateur TEXT,
-	MailOperateur TEXT,
-	SiteOperateur TEXT
+	TypeOperateur TEXT, /* Not in identifiants_ce.csv */
+	MailOperateur TEXT, /* Not in identifiants_ce.csv */
+	SiteOperateur TEXT /* Not in identifiants_ce.csv */
 );
 ''')
 
@@ -53,157 +53,145 @@ CREATE TABLE Communes(
 );
 ''')
 
-c.execute('''
-CREATE TABLE CommunesZNE(
-	CodeZNE INTEGER,
-	CodeInsee INTEGER
-);
-''')
+# CommunesZNE might not be possible to populate from new data sources without more info
+# c.execute('''
+# CREATE TABLE CommunesZNE(
+# 	CodeZNE INTEGER,
+# 	CodeInsee INTEGER
+# );
+# ''')
 
 # -----------------------------------------------------------
-
-print 'Lecture du fichier Excel des numéros géographiques...'
-
-xls_geo = xlrd.open_workbook('arcep/ZABPQ-ZNE.xls')
-sheet = xls_geo.sheet_by_index(0)
-geo = []
-nums1ereListe = []
-nongeo = []
-
-for rownum in xrange(1, sheet.nrows):
-	row = sheet.row_values(rownum)
-	
-	# Ne garder que les numéros géographiques /^0[1-5]/,
-	# la BDD suivante s'occupera du reste.
-	
-	if row[0] >= 60000:
-		break
-	
-	nums1ereListe.append('0'+str(int(row[0])))
-	
-	if row[2] == '':
-		nongeo.append(('0'+str(int(row[0])), str(row[1])))
-	else:
-		geo.append((int(row[0]), str(row[1]), int(row[2])))
-
-c.executemany("INSERT INTO PlagesNumerosGeographiques (PlageTel, CodeOperateur, CodeInsee) VALUES (?, ?, ?);", geo)
-
-del xls_geo
-del sheet
-del geo
-
-# -----------------------------------------------------------
-
-print 'Lecture du fichier Excel des numéros non-géographiques...'
-
-xls_nongeo = xlrd.open_workbook('arcep/wopnum.xls')
-sheet = xls_nongeo.sheet_by_index(0)
-
-for rownum in xrange(1, sheet.nrows):
-	row = sheet.row_values(rownum)
-	
-	# Vérifier les doublons avec la liste des numéros géographiques
-	
-	if row[0][0] == '0' and row[0][1] in '12345':
-		doublon = False
-		for num2 in nums1ereListe[:100]: # Ne va pas au-delà de 99 avec la liste du 27 juin 2013
-			if num2.startswith(row[0]):
-				doublon = True
-				nums1ereListe = nums1ereListe[nums1ereListe.index(num2)+1:]
-				break
-		if doublon is True:
-			continue
-	
-	nongeo.append((str(row[0]), str(row[2])))
-
-c.executemany("INSERT INTO PlagesNumeros (PlageTel, CodeOperateur) VALUES (?, ?);", nongeo)
-
-del xls_nongeo
-del sheet
-del nongeo
-
-# -----------------------------------------------------------
-
-print 'Lecture du fichier Excel des codes opérateur...'
-
-xls_ops = xlrd.open_workbook('arcep/liste-operateurs-declares.xls')
-sheet = xls_ops.sheet_by_index(0)
+# Processing Operateurs from identifiants_ce.csv
+print('Lecture du fichier CSV des identifiants opérateurs...')
 ops = []
+try:
+    with open('arcep/identifiants_ce.csv', 'r', encoding='cp1252', newline='') as csvfile: # ANSI often means cp1252 in FR context
+        reader = csv.DictReader(csvfile, delimiter=';')
+        for row in reader:
+            ops.append((
+                row['CODE_OPERATEUR'].strip(),
+                row['IDENTITE_OPERATEUR'].strip(),
+                '', # TypeOperateur - not available
+                '', # MailOperateur - not available
+                ''  # SiteOperateur - not available
+            ))
+except FileNotFoundError:
+    print("ERREUR: Fichier arcep/identifiants_ce.csv non trouvé. Exécutez updatearcep.sh.")
+except Exception as e:
+    print(f"Erreur lors du traitement de identifiants_ce.csv: {e}")
 
-for rownum in xrange(1, sheet.nrows):
-	row = sheet.row_values(rownum)
-	
-	if type(row[0]) == float:
-		row[0] = str(int(row[0]))
-	
-	if type(row[1]) == float:
-		row[1] = str(int(row[1]))
-	
-	ops.append((
-		row[1].strip(),
-		row[0].strip(),
-		row[3].strip(),
-		row[4].strip(),
-		row[5].strip()
-		))
-
-c.executemany("INSERT INTO Operateurs(CodeOperateur, NomOperateur, TypeOperateur, MailOperateur, SiteOperateur) VALUES (?, ?, ?, ?, ?);", ops)
-
-del xls_ops
-del sheet
+if ops:
+    c.executemany("INSERT INTO Operateurs(CodeOperateur, NomOperateur, TypeOperateur, MailOperateur, SiteOperateur) VALUES (?, ?, ?, ?, ?);", ops)
 del ops
 
 # -----------------------------------------------------------
+# Processing MAJNUM.csv for PlagesNumerosGeographiques and PlagesNumeros
+print('Lecture du fichier CSV des ressources en numérotation (MAJNUM)...')
+plages_geo = []
+plages_non_geo = []
 
-print 'Lecture du fichier CSV des codes communes...'
+try:
+    with open('arcep/majournums.csv', 'r', encoding='cp1252', newline='') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter=';')
+        print(f"DEBUG: MAJNUM Fieldnames: {reader.fieldnames}") # ADD THIS LINE FOR DEBUGGING
+        for row in reader:
+            ezabpqm = row['EZABPQM'].strip() # e.g. "01056", "0603", "0800"
+            operateur = row['Mn\\xe9mo'].strip() # Use the escaped key
 
-file_insee = open('arcep/insee.csv', 'rb')
-csv_insee = csv.DictReader(file_insee, delimiter=';')
-insee = []
+            # Determine if it's geographic (starts with 01-05)
+            is_geo = False
+            if ezabpqm.startswith('0') and len(ezabpqm) > 1:
+                if ezabpqm[1] in '12345':
+                    is_geo = True
 
-for row in csv_insee:
-	if row['Codepos'] == '':
-		continue
-	
-	insee.append((
-		int(row['INSEE'].decode('cp1252').strip()),
-		row['Commune'].decode('cp1252').strip(),
-		int(row['Codepos'].decode('cp1252').strip()),
-		row['Departement'].decode('cp1252').strip()
-		))
+            if is_geo:
+                # Geographic numbers
+                # PlageTel for PlagesNumerosGeographiques was an INTEGER, derived from the first 5 digits of the number
+                # e.g. for "01056xxxxx", PlageTel was 10560 (if EZABPQM was 010560) or 1056 (if EZABPQM was 01056)
+                # The new MAJNUM.csv provides EZABPQM, Tranche_Debut, Tranche_Fin.
+                # We'll use Tranche_Debut (first 5 digits, excluding leading 0) as PlageTel.
+                # Example: Tranche_Debut "0105600000", PlageTel should be 10560.
+                plage_tel_int = 0
+                tranche_debut_str = row['Tranche_Debut'].strip() # e.g. "0105600000"
+                if tranche_debut_str.startswith('0') and len(tranche_debut_str) >= 6 :
+                    try:
+                        plage_tel_int = int(tranche_debut_str[1:6]) # e.g. 10560
+                    except ValueError:
+                        print(f"Erreur de conversion pour PlageTel geo (Tranche_Debut): {tranche_debut_str} pour EZABPQM {ezabpqm}")
+                        continue
+                else:
+                    print(f"Format Tranche_Debut inattendu pour geo: {tranche_debut_str} pour EZABPQM {ezabpqm}")
+                    # Fallback: try to use EZABPQM itself if it's numeric and 5 digits after stripping 0
+                    if ezabpqm.startswith('0') and len(ezabpqm) == 5 and ezabpqm[1:].isdigit(): # e.g. 01234
+                        plage_tel_int = int(ezabpqm[1:]) * 10 # Heuristic: 12340
+                    elif ezabpqm.startswith('0') and len(ezabpqm) == 6 and ezabpqm[1:].isdigit(): # e.g. 012345
+                         plage_tel_int = int(ezabpqm[1:])
+                    else:
+                        print(f"  -> Tentative de fallback avec EZABPQM {ezabpqm} échouée pour geo.")
+                        plages_non_geo.append((ezabpqm, operateur)) # Add to non-geo if unsure
+                        continue
 
-c.executemany("INSERT INTO Communes(CodeInsee, NomCommune, CodePostal, NomDepartement) VALUES (?, ?, ?, ?);", insee)
+                # CODE_INSEE IS MISSING. Placeholder 0.
+                # This functionality is degraded. A separate file or different column in MAJNUM might be needed.
+                plages_geo.append((plage_tel_int, operateur, 0))
+            else:
+                # Non-geographic numbers (06, 07, 08, 09, special numbers)
+                # PlageTel is TEXT here. EZABPQM is directly the prefix.
+                plages_non_geo.append((ezabpqm, operateur))
 
-file_insee.close()
+except FileNotFoundError:
+    print("ERREUR: Fichier arcep/majournums.csv non trouvé. Exécutez updatearcep.sh.")
+except Exception as e:
+    print(f"Erreur lors du traitement de majournums.csv: {e}")
 
-del csv_insee
-del insee
+
+if plages_geo:
+    c.executemany("INSERT INTO PlagesNumerosGeographiques (PlageTel, CodeOperateur, CodeInsee) VALUES (?, ?, ?);", plages_geo)
+del plages_geo
+
+if plages_non_geo:
+    c.executemany("INSERT INTO PlagesNumeros (PlageTel, CodeOperateur) VALUES (?, ?);", plages_non_geo)
+del plages_non_geo
+
+# -----------------------------------------------------------
+# CommunesZNE data processing - commented out as liste-zne.xls replacement is unknown
+# print('Lecture du fichier CSV des zones géographiques...')
+# ... (original code for liste-zne.xls was here) ...
+# -----------------------------------------------------------
+
+print('Lecture du fichier CSV des codes communes (INSEE)...')
+insee_data = [] # Renamed to avoid conflict
+try:
+    with open('arcep/insee.csv', 'r', encoding='cp1252', newline='') as file_insee:
+        csv_insee = csv.DictReader(file_insee, delimiter=';')
+        for row in csv_insee:
+            if not row['Codepos'] or not row['INSEE'] or not row['Commune'] or not row['Departement']: # Skip if essential fields are empty
+                print(f"Ligne incomplète dans insee.csv: {row}, sautée.")
+                continue
+            try:
+                insee_data.append((
+                    int(row['INSEE'].strip()),
+                    row['Commune'].strip(),
+                    int(row['Codepos'].strip()),
+                    row['Departement'].strip()
+                ))
+            except ValueError:
+                print(f"Skipping row due to ValueError in INSEE data: {row}")
+                continue
+except FileNotFoundError:
+    print("ERREUR: Fichier arcep/insee.csv non trouvé. Assurez-vous que updatearcep.sh a bien fonctionné et décompressé insee.zip.")
+except Exception as e:
+    print(f"Erreur lors du traitement de insee.csv: {e}")
+
+if insee_data:
+    c.executemany("INSERT INTO Communes(CodeInsee, NomCommune, CodePostal, NomDepartement) VALUES (?, ?, ?, ?);", insee_data)
+del insee_data
 
 # -----------------------------------------------------------
 
-print 'Lecture du fichier CSV des zones géographiques...'
+print('Sauvegarde de la base de données...')
+sqlite_conn.commit()
+sqlite_conn.close()
 
-xls_zne = xlrd.open_workbook('arcep/liste-zne.xls')
-sheet = xls_ops.sheet_by_index(1)
-zne = []
-
-for rownum in xrange(1, sheet.nrows):
-	row = sheet.row_values(rownum)
-	
-	zne.append((
-		int(row[0]),
-		int(row[1])
-		))
-
-c.executemany("INSERT INTO CommunesZNE(CodeZNE, CodeINSEE) VALUES (?, ?);", zne)
-
-del xls_zne
-del sheet
-del zne
-
-# -----------------------------------------------------------
-
-print 'Sauvegarde de la base de données...'
-
-sqlite.commit()
-sqlite.close()
+print('Terminé.')
