@@ -38,6 +38,7 @@ This file tracks tasks for the `whoistel` project.
     *   [x] Ran `updatearcep.sh` (downloads data and runs `generatedb.py`).
     *   [x] Ran `python whoistel.py +33740756315` and verified its output (Numéro inconnu).
     *   [x] Ran `pytest tests/test_whoistel.py` - all tests passed.
+*   [x] **Documentation Files**: Ensured `AGENTS.md` and `TODO.md` are created/overwritten with latest content.
 
 ### Pending Tasks (Deferred / Future Considerations)
 *   [ ] **`generatedb.py`:** Address placeholder CodeInsee (currently 0).
