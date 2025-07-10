@@ -35,10 +35,11 @@ Clone the repository or download the source files.
 
 ### 2. Prepare Data and Database
 
-Before the first use, and periodically to update the data, run the `updatearcep.sh` script from the project's root directory:
+Before the first use, and periodically to update the data, make the `updatearcep.sh` script executable and then run it from the project's root directory:
 
 ```bash
-bash updatearcep.sh
+chmod +x updatearcep.sh
+./updatearcep.sh
 ```
 
 This script will:
