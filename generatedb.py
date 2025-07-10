@@ -94,10 +94,9 @@ plages_non_geo = []
 try:
     with open('arcep/majournums.csv', 'r', encoding='cp1252', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=';')
-        print(f"DEBUG: MAJNUM Fieldnames: {reader.fieldnames}") # ADD THIS LINE FOR DEBUGGING
         for row in reader:
             ezabpqm = row['EZABPQM'].strip() # e.g. "01056", "0603", "0800"
-            operateur = row['Mn\\xe9mo'].strip() # Use the escaped key
+            operateur = row['Mnémo'].strip() # Use the correctly decoded key
 
             # Determine if it's geographic (starts with 01-05)
             is_geo = False
