@@ -54,3 +54,13 @@ This file tracks tasks for the `whoistel` project.
 ### Future Considerations (Post-MVP)
 *   Explore options for CodeInsee and ZNE/commune mapping if deemed important.
 *   Investigate if any new, reliable, free APIs exist for supplementary information.
+*   **Web Service Conversion**:
+    *   [ ] Adapt `whoistel.py` or create a new wrapper script to function as a web service (e.g., using Flask/FastAPI).
+    *   [ ] The service should accept phone numbers via API requests and return JSON responses.
+    *   [ ] Ensure `Containerfile` `EXPOSE` directive matches the port used by the web service.
+*   **In-Container Database Updates**:
+    *   [ ] Implement a mechanism (possibly an API endpoint in the web service) to trigger `updatearcep.sh` (and thus `generatedb.py`) from within the running container.
+    *   [ ] This requires `pandas` and `xlrd` (from `requirements.txt`) to be available in the runtime container image.
+    *   [ ] Consider how the updated `whoistel.sqlite3` database will be persisted or how the running application will reload it.
+*   **CLI Output Refinement**:
+    *   [x] Refactor `whoistel.py` to direct successful lookup results to `stdout` and keep logs (debug, info, warnings, errors) on `stderr`. This aligns with standard CLI tool conventions.

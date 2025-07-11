@@ -1,20 +1,25 @@
 #!/bin/sh
-set -x
+set -ex
 
-# Ensure Python dependencies are installed
-echo "Checking and installing Python dependencies from requirements.txt..."
-if command -v pip3 &> /dev/null
-then
-    pip3 install -r requirements.txt
-elif command -v pip &> /dev/null
-then
-    echo "pip3 not found, trying pip..."
-    pip install -r requirements.txt
+# Ensure Python dependencies are installed, unless skipped by environment variable
+if [ "$SKIP_PIP_INSTALL_IN_CONTAINER" != "true" ]; then
+    echo "Checking and installing Python dependencies from requirements.txt..."
+    if command -v pip3 &> /dev/null
+    then
+        pip3 install -r requirements.txt
+    elif command -v pip &> /dev/null
+    then
+        echo "pip3 not found, trying pip..."
+        pip install -r requirements.txt
+    else
+        echo "Error: Neither pip3 nor pip found. Please install pip."
+        echo "If running locally, please install dependencies manually (e.g., pip install -r requirements.txt) or ensure pip is available."
+        exit 1
+    fi
+    echo "Dependency check complete."
 else
-    echo "Error: Neither pip3 nor pip found. Please install pip."
-    exit 1
+    echo "Skipping pip install in updatearcep.sh as SKIP_PIP_INSTALL_IN_CONTAINER is true."
 fi
-echo "Dependency check complete."
 echo
 
 cd "$(dirname "$0")"

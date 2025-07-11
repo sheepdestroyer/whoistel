@@ -1,0 +1,42 @@
+# Git specific files
+.git/
+.gitignore
+
+# GitHub specific files
+.github/
+
+# Test files and directories
+tests/
+.pytest_cache/
+
+# Documentation (except potentially README.md if it were needed)
+AGENTS.md
+CI.md
+TODO.md
+# README.md # Usually not needed in the image, uncomment to exclude
+
+# Containerfile itself
+Containerfile
+
+# Python specific cache/compiled files
+__pycache__/
+*.pyc
+*.pyo
+
+# Development requirements
+requirements-dev.txt
+
+# Local ARCEP data (should be generated inside container if needed, or DB copied)
+# arcep/ # If updatearcep.sh is run IN the container, this might be needed.
+          # For now, assuming DB is pre-built or scripts handle its creation.
+
+# SQLite database - typically mounted as a volume or copied in a build step
+# If you build the DB then build the image, you might copy it.
+# If the container is supposed to create it, don't ignore it if it's part of source.
+# whoistel.sqlite3 # This is a build artifact, should not be in version control or copied if large/dynamic
+
+# Virtual environment folder if created locally
+.venv/
+venv/
+ENV/
+env/

@@ -1,5 +1,2 @@
 pandas
 xlrd==2.0.1
-
-# For running tests
-pytest
