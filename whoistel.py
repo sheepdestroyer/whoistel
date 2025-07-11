@@ -49,31 +49,30 @@ logging.debug(f"Arguments parsed: {args}")
 raw_tel = args.numero_tel
 logging.debug(f"Raw telephone number input from positional arg: {raw_tel}")
 
-if raw_tel is None:
-    # If positional numero_tel is not given, use test_numero_arg.
-    # The default for test_numero_arg is set in argparse.
+if raw_tel:
+    # A positional number was provided, it takes precedence.
+    # Warn if --test-numero was also explicitly provided by the user and its value is different from its default.
+    if args.test_numero_arg != parser.get_default("test_numero_arg"):
+        logging.warning(
+            f"Le numéro de téléphone positionnel ({args.numero_tel}) et --test-numero ({args.test_numero_arg}) ont été fournis. "
+            f"Le numéro positionnel ({args.numero_tel}) sera utilisé."
+        )
+else:
+    # No positional number, so use the value from --test-numero.
     raw_tel = args.test_numero_arg
-    if args.test_numero_arg == parser.get_default("test_numero_arg") and args.numero_tel is None:
-        # test_numero_arg is its default value because neither positional arg nor --test-numero was explicitly given
-        # but since --test-numero has a default, it will be used.
-        logging.info(f"Aucun numéro de téléphone fourni. Utilisation du numéro de test par défaut : {raw_tel}")
+    # Check if the value used for raw_tel is the default for --test-numero.
+    # This helps determine the appropriate informational message.
+    if raw_tel == parser.get_default("test_numero_arg"):
+        # This implies --test-numero was not explicitly passed by the user,
+        # or it was passed but with the same value as its default.
+        # In either case, the default number is effectively being used.
+        logging.info(f"Aucun numéro de téléphone positionnel fourni. Utilisation du numéro de test par défaut : {raw_tel}")
     else:
-        # --test-numero was explicitly provided, or it's the default but positional was also missing.
-        logging.info(f"Utilisation du numéro de test : {raw_tel} (fourni via --test-numero)")
-elif args.numero_tel and args.test_numero_arg != parser.get_default("test_numero_arg"):
-    # Both positional and --test-numero were explicitly provided.
-    # Positional (numero_tel) takes precedence. Log this situation.
-    logging.warning(f"Le numéro de téléphone positionnel ({args.numero_tel}) et --test-numero ({args.test_numero_arg}) ont été fournis. "
-                    f"Le numéro positionnel ({args.numero_tel}) sera utilisé.")
-    # raw_tel is already args.numero_tel, so no change needed.
+        # This implies --test-numero was explicitly passed by the user with a non-default value.
+        logging.info(f"Aucun numéro de téléphone positionnel fourni. Utilisation du numéro de test : {raw_tel} (fourni via --test-numero)")
 
-# Final check if a number is available
-if raw_tel is None:
-    # This case should not be reached if --test-numero has a default and is used as a fallback.
-    # However, if --test-numero was defined without a default and not provided, this could happen.
-    parser.print_help()
-    logging.error("Le numéro de téléphone est requis et aucun numéro (positionnel ou via --test-numero) n'a été fourni.")
-    exit(1)
+# Since --test-numero has a default value, raw_tel will always be populated by this point.
+# The previous explicit check 'if raw_tel is None:' and exit(1) is no longer necessary.
 
 # Nettoyage du numéro de téléphone
 logging.debug(f"Original tel: '{raw_tel}'")
