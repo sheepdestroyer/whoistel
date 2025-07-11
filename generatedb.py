@@ -123,7 +123,7 @@ try:
         reader = csv.DictReader(csvfile, delimiter=';')
         logging.debug(f"Fieldnames in majournums.csv: {reader.fieldnames}") # Keep as DEBUG
         for i, row in enumerate(reader):
-            logging.getLogger(__name__).trace(f"Processing row {i} from majournums.csv: {row}") # Change to TRACE
+            logger.trace(f"Processing row {i} from majournums.csv: {row}") # Change to TRACE
             ezabpqm = row['EZABPQM'].strip() # e.g. "01056", "0603", "0800"
             # The second fieldname can vary ('Mnémo', 'Mnémo ', etc.)
             # Let's find it more robustly or assume it's the one after 'EZABPQM'
