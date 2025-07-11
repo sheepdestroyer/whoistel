@@ -19,6 +19,7 @@ The primary goal is to have a working command-line tool (`whoistel.py`) that can
     *   Run the script with the test number before submitting changes.
 4.  **Data Handling:**
     *   **Never attempt to read `arcep/insee.csv` directly within the main application logic.** This file is large and contains commune, postal code, department, and INSEE code mappings. It's used during the database generation phase (`generatedb.py`) if necessary, but not directly by `whoistel.py`.
+    *   **When inspecting large data files (e.g., CSV, XLS), do not attempt to read the entire file into memory at once.** Use tools or methods to inspect only the beginning (head) or end (tail) of the file to understand its structure. If conversion is needed (e.g., XLS to CSV for inspection), perform the conversion and then inspect the head/tail of the resulting file.
 5.  **Python Version:** The project targets Python 3. Ensure all code is Python 3 compatible.
 6.  **Dependency Management:** If new dependencies are added, ensure they are documented (e.g., in a `requirements.txt` if appropriate).
 7.  **Committing Code:**
