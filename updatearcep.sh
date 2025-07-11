@@ -27,10 +27,11 @@ wget -N -O liste-zne.xls http://www.arcep.fr/fileadmin/reprise/dossiers/numero/l
 echo "Downloading ARCEP ZAB-Departements correspondence..."
 wget -N -O correspondance-zab-departements.xls http://www.arcep.fr/fileadmin/reprise/dossiers/numero/correspondance-zab-departements.xls
 
-# Convert downloaded XLS files to CSV
+# Convert & Remove downloaded XLS files to CSV
 echo "Converting XLS files to CSV..."
 python3 ../xls_to_csv_converter.py liste-zne.xls liste-zne
 python3 ../xls_to_csv_converter.py correspondance-zab-departements.xls correspondance-zab-departements
+rm -f liste-zne.xls correspondance-zab-departements.xls
 
 # New ARCEP data from data.gouv.fr (CSV files)
 echo "Downloading ARCEP numbering resources (majournums.csv)..."
