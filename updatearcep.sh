@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x
+set -ex
 
 # Ensure Python dependencies are installed, unless skipped by environment variable
 if [ "$SKIP_PIP_INSTALL_IN_CONTAINER" != "true" ]; then
