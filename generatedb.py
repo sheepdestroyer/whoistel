@@ -125,30 +125,13 @@ try:
         for i, row in enumerate(reader):
             logger.trace(f"Processing row {i} from majournums.csv: {row}") # Change to TRACE
             ezabpqm = row['EZABPQM'].strip() # e.g. "01056", "0603", "0800"
-            # The second fieldname can vary ('Mnémo', 'Mnémo ', etc.)
-            # Let's find it more robustly or assume it's the one after 'EZABPQM'
-            # Based on current file, it's fieldnames[1] which is 'Mnémo'
-            operateur_key = reader.fieldnames[1]
-            operateur = row[operateur_key].strip()
-            logger.debug(f"EZABPQM: {ezabpqm}, Operateur Key: {operateur_key}, Operateur: {operateur}")
-
-            # Determine if it's geographic (starts with 01-05)
-            is_geo = False
-            if ezabpqm.startswith('0') and len(ezabpqm) > 1:
-                if ezabpqm[1] in '12345':
-                    is_geo = True
-
-            if is_geo:
-                # Geographic numbers
-                # PlageTel for PlagesNumerosGeographiques was an INTEGER, derived from the first 5 digits of the number
-                # e.g. for "01056xxxxx", PlageTel was 10560 (if EZABPQM was 010560) or 1056 (if EZABPQM was 01056)
-                # The new MAJNUM.csv provides EZABPQM, Tranche_Debut, Tranche_Fin.
-                # We'll use Tranche_Debut (first 5 digits, excluding leading 0) as PlageTel.
-                # Example: Tranche_Debut "0105600000", PlageTel should be 10560.
-                plage_tel_int = 0
-            operateur_key = reader.fieldnames[1]
-            operateur = row[operateur_key].strip()
-            logger.debug(f"EZABPQM: {ezabpqm}, Operateur Key: {operateur_key}, Operateur: {operateur}")
+            # Correctly get the operator mnemonic from the 'Mnémo' column.
+            # Previous fallback logic removed for simplicity, relying on 'Mnémo' being the correct
+            # and stable key name as suggested by AGENTS.md/TODO.md history.
+            # If 'Mnémo' is not found, DictReader will raise a KeyError, which should be investigated
+            # as a CSV format/header issue.
+            operateur = row['Mnémo'].strip()
+            logger.debug(f"EZABPQM: {ezabpqm}, Mnémo (Operateur): {operateur}")
 
             # Determine if it's geographic (starts with 01-05)
             is_geo = False

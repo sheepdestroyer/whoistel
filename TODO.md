@@ -47,9 +47,10 @@ This file tracks tasks for the `whoistel` project.
     *   *Assessment: Similar to CodeInsee, deferred.*
 *   [ ] **Further `+33740756315` Investigation (Data Permitting):**
     *   If the user can provide the *expected operator* for `+33740756315`, further investigation into `majournums.csv` could be done to see if a different data extraction strategy in `generatedb.py` is needed for this specific number's range (e.g., using `Tranche_Debut` / `Tranche_Fin` instead of/alongside `EZABPQM` if `EZABPQM` is not the definitive prefix for its operator). Currently, the script correctly reports "unknown" based on available data and current processing.
-*   [ ] Review all code for clarity, comments, and any remaining Python 2 artifacts (mostly done, but a final pass is good).
-*   [ ] Update `README.md` if necessary to reflect changes in usage or setup (e.g. `argparse` usage).
-*   [ ] Consider adding `requirements.txt` (currently only standard library + `pytest` for testing).
+    *   *Note (July 2024): The fix for operator code extraction in `generatedb.py` (using `Mnémo`) did not change the "unknown" status for this number, as it's related to prefix matching, not operator identification post-match. This remains a data/prefix-strategy dependent issue.*
+*   [x] Review all code for clarity, comments, and any remaining Python 2 artifacts (mostly done, but a final pass is good). *(Checked for `generatedb.py` during recent bug fix).*
+*   [ ] Update `README.md` if necessary to reflect changes in usage or setup (e.g. `argparse` usage). *(No changes needed from recent bug fix).*
+*   [ ] Consider adding `requirements.txt` (currently only standard library + `pytest` for testing). *(Requirements files `requirements.txt` and `requirements-dev.txt` exist and seem appropriate. `pandas` is correctly in `requirements.txt` for data processing pipeline. This item seems resolved).*
 
 ### Future Considerations (Post-MVP)
 *   Explore options for CodeInsee and ZNE/commune mapping if deemed important.
