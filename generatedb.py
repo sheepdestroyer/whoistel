@@ -6,19 +6,27 @@ import csv
 import os
 import logging
 
+# Define a custom TRACE logging level (lower than DEBUG)
+TRACE_LEVEL_NUM = 5
+logging.addLevelName(TRACE_LEVEL_NUM, "TRACE")
+
+class TraceLogger(logging.Logger):
+    """Custom logger to add a TRACE level."""
+    def trace(self, message, *args, **kws):
+        if self.isEnabledFor(TRACE_LEVEL_NUM):
+            # stacklevel=2 ensures the caller of trace() is logged as the source
+            self._log(TRACE_LEVEL_NUM, message, args, stacklevel=2, **kws)
+
+# Set the custom logger class BEFORE any loggers are instantiated or basicConfig is called.
+logging.setLoggerClass(TraceLogger)
+
 # Configure logging
 # Set default level to INFO. DEBUG messages will be suppressed unless explicitly enabled.
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Define a custom TRACE logging level (lower than DEBUG)
-TRACE_LEVEL_NUM = 5
-logging.addLevelName(TRACE_LEVEL_NUM, "TRACE")
-def trace(self, message, *args, **kws):
-    if self.isEnabledFor(TRACE_LEVEL_NUM):
-        # Yes, logger takes its '*args' as 'args'.
-        self._log(TRACE_LEVEL_NUM, message, args, stacklevel=2, **kws) # Added stacklevel=2
-logging.Logger.trace = trace
-
+# Instantiate the module-level logger
+# All subsequent logging calls in this file should use this 'logger' instance.
+logger = logging.getLogger(__name__)
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -26,10 +34,10 @@ os.chdir(dname)
 
 # -----------------------------------------------------------
 
-logging.info('Création de la base de données...')
+logger.info('Création de la base de données...')
 
 if os.path.exists('whoistel.sqlite3'):
-	logging.debug('Ancienne base de données whoistel.sqlite3 trouvée, suppression...')
+	logger.debug('Ancienne base de données whoistel.sqlite3 trouvée, suppression...')
 	os.remove('whoistel.sqlite3')
 
 sqlite_conn = sqlite3.connect('whoistel.sqlite3') # Renamed to avoid conflict with module
@@ -79,14 +87,14 @@ CREATE TABLE Communes(
 
 # -----------------------------------------------------------
 # Processing Operateurs from identifiants_ce.csv
-logging.info('Lecture du fichier CSV des identifiants opérateurs...')
+logger.info('Lecture du fichier CSV des identifiants opérateurs...')
 ops = []
 try:
     with open('arcep/identifiants_ce.csv', 'r', encoding='cp1252', newline='') as csvfile: # ANSI often means cp1252 in FR context
         reader = csv.DictReader(csvfile, delimiter=';')
-        logging.debug(f"Fieldnames in identifiants_ce.csv: {reader.fieldnames}") # Keep as DEBUG
+        logger.debug(f"Fieldnames in identifiants_ce.csv: {reader.fieldnames}") # Keep as DEBUG
         for i, row in enumerate(reader):
-            logging.getLogger(__name__).trace(f"Processing row {i} from identifiants_ce.csv: {row}") # Change to TRACE
+            logger.trace(f"Processing row {i} from identifiants_ce.csv: {row}") # Change to TRACE
             ops.append((
                 row['CODE_OPERATEUR'].strip(),
                 row['IDENTITE_OPERATEUR'].strip(),
@@ -95,18 +103,18 @@ try:
                 ''  # SiteOperateur - not available
             ))
 except FileNotFoundError:
-    logging.error("ERREUR: Fichier arcep/identifiants_ce.csv non trouvé. Exécutez updatearcep.sh.")
+    logger.error("ERREUR: Fichier arcep/identifiants_ce.csv non trouvé. Exécutez updatearcep.sh.")
 except Exception as e:
-    logging.error(f"Erreur lors du traitement de identifiants_ce.csv: {e}", exc_info=True)
+    logger.error(f"Erreur lors du traitement de identifiants_ce.csv: {e}", exc_info=True)
 
 if ops:
-    logging.debug(f"Inserting {len(ops)} operators into Operateurs table.")
+    logger.debug(f"Inserting {len(ops)} operators into Operateurs table.")
     c.executemany("INSERT INTO Operateurs(CodeOperateur, NomOperateur, TypeOperateur, MailOperateur, SiteOperateur) VALUES (?, ?, ?, ?, ?);", ops)
 del ops
 
 # -----------------------------------------------------------
 # Processing MAJNUM.csv for PlagesNumerosGeographiques and PlagesNumeros
-logging.info('Lecture du fichier CSV des ressources en numérotation (MAJNUM)...')
+logger.info('Lecture du fichier CSV des ressources en numérotation (MAJNUM)...')
 plages_geo = []
 plages_non_geo = []
 
@@ -122,7 +130,25 @@ try:
             # Based on current file, it's fieldnames[1] which is 'Mnémo'
             operateur_key = reader.fieldnames[1]
             operateur = row[operateur_key].strip()
-            logging.debug(f"EZABPQM: {ezabpqm}, Operateur Key: {operateur_key}, Operateur: {operateur}")
+            logger.debug(f"EZABPQM: {ezabpqm}, Operateur Key: {operateur_key}, Operateur: {operateur}")
+
+            # Determine if it's geographic (starts with 01-05)
+            is_geo = False
+            if ezabpqm.startswith('0') and len(ezabpqm) > 1:
+                if ezabpqm[1] in '12345':
+                    is_geo = True
+
+            if is_geo:
+                # Geographic numbers
+                # PlageTel for PlagesNumerosGeographiques was an INTEGER, derived from the first 5 digits of the number
+                # e.g. for "01056xxxxx", PlageTel was 10560 (if EZABPQM was 010560) or 1056 (if EZABPQM was 01056)
+                # The new MAJNUM.csv provides EZABPQM, Tranche_Debut, Tranche_Fin.
+                # We'll use Tranche_Debut (first 5 digits, excluding leading 0) as PlageTel.
+                # Example: Tranche_Debut "0105600000", PlageTel should be 10560.
+                plage_tel_int = 0
+            operateur_key = reader.fieldnames[1]
+            operateur = row[operateur_key].strip()
+            logger.debug(f"EZABPQM: {ezabpqm}, Operateur Key: {operateur_key}, Operateur: {operateur}")
 
             # Determine if it's geographic (starts with 01-05)
             is_geo = False
@@ -142,33 +168,33 @@ try:
                 if tranche_debut_str.startswith('0') and len(tranche_debut_str) >= 6 :
                     try:
                         plage_tel_int = int(tranche_debut_str[1:6]) # e.g. 10560
-                        logging.debug(f"Geo number, Tranche_Debut: {tranche_debut_str}, extracted PlageTel: {plage_tel_int}")
+                        logger.debug(f"Geo number, Tranche_Debut: {tranche_debut_str}, extracted PlageTel: {plage_tel_int}")
                     except ValueError:
-                        logging.warning(f"Erreur de conversion pour PlageTel geo (Tranche_Debut): {tranche_debut_str} pour EZABPQM {ezabpqm}")
+                        logger.warning(f"Erreur de conversion pour PlageTel geo (Tranche_Debut): {tranche_debut_str} pour EZABPQM {ezabpqm}")
                         continue
                 else:
-                    logging.warning(f"Format Tranche_Debut inattendu pour geo: {tranche_debut_str} pour EZABPQM {ezabpqm}. Tentative de fallback.")
+                    logger.warning(f"Format Tranche_Debut inattendu pour geo: {tranche_debut_str} pour EZABPQM {ezabpqm}. Tentative de fallback.")
                     # Fallback: try to use EZABPQM itself if it's numeric and 5 digits after stripping 0
                     if ezabpqm.startswith('0') and len(ezabpqm) == 5 and ezabpqm[1:].isdigit(): # e.g. 01234
                         plage_tel_int = int(ezabpqm[1:]) * 10 # Heuristic: 12340
-                        logging.debug(f"  Fallback using EZABPQM (5-digit type 0ZXXX): {ezabpqm} -> {plage_tel_int}")
+                        logger.debug(f"  Fallback using EZABPQM (5-digit type 0ZXXX): {ezabpqm} -> {plage_tel_int}")
                     elif ezabpqm.startswith('0') and len(ezabpqm) == 6 and ezabpqm[1:].isdigit(): # e.g. 012345
                          plage_tel_int = int(ezabpqm[1:])
-                         logging.debug(f"  Fallback using EZABPQM (6-digit type 0ZXXXX): {ezabpqm} -> {plage_tel_int}")
+                         logger.debug(f"  Fallback using EZABPQM (6-digit type 0ZXXXX): {ezabpqm} -> {plage_tel_int}")
                     else:
-                        logging.warning(f"  -> Tentative de fallback avec EZABPQM {ezabpqm} échouée pour geo. Assignation à non-geo.")
+                        logger.warning(f"  -> Tentative de fallback avec EZABPQM {ezabpqm} échouée pour geo. Assignation à non-geo.")
                         plages_non_geo.append((ezabpqm, operateur)) # Add to non-geo if unsure
                         continue
 
                 # CODE_INSEE IS MISSING. Placeholder 0.
                 # This functionality is degraded. A separate file or different column in MAJNUM might be needed.
                 plages_geo.append((plage_tel_int, operateur, 0))
-                logging.debug(f"Added to plages_geo: PlageTel={plage_tel_int}, Operateur={operateur}, CodeInsee=0")
+                logger.debug(f"Added to plages_geo: PlageTel={plage_tel_int}, Operateur={operateur}, CodeInsee=0")
             else:
                 # Non-geographic numbers (06, 07, 08, 09, special numbers)
                 # PlageTel is TEXT here. EZABPQM is directly the prefix.
                 plages_non_geo.append((ezabpqm, operateur))
-                logging.debug(f"Added to plages_non_geo: EZABPQM={ezabpqm}, Operateur={operateur}")
+                logger.debug(f"Added to plages_non_geo: EZABPQM={ezabpqm}, Operateur={operateur}")
 
 except FileNotFoundError:
     logging.error("ERREUR: Fichier arcep/majournums.csv non trouvé. Exécutez updatearcep.sh.")
