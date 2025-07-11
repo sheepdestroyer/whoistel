@@ -16,7 +16,7 @@ logging.addLevelName(TRACE_LEVEL_NUM, "TRACE")
 def trace(self, message, *args, **kws):
     if self.isEnabledFor(TRACE_LEVEL_NUM):
         # Yes, logger takes its '*args' as 'args'.
-        self._log(TRACE_LEVEL_NUM, message, args, **kws)
+        self._log(TRACE_LEVEL_NUM, message, args, stacklevel=2, **kws) # Added stacklevel=2
 logging.Logger.trace = trace
 
 
