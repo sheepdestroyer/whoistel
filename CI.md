@@ -49,7 +49,7 @@ Our CI/CD setup automates testing, building, releasing container images, and dep
     4.  **Build Container Image:**
         -   Uses `podman build` with the `Containerfile` in the repository root.
         -   Tags the image with the Git tag (e.g., `ghcr.io/owner/repo:v1.0.0`) and `latest`.
-        -   The image ID is constructed using `ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}` (converted to lowercase).
+        -   The image name is constructed using `ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}` (converted to lowercase).
     5.  **Push Container Image:**
         -   Pushes both the version-specific tag and the `latest` tag to `ghcr.io`.
 
@@ -59,7 +59,7 @@ Our CI/CD setup automates testing, building, releasing container images, and dep
 -   **Purpose:** Configures Dependabot to automatically create Pull Requests for updating dependencies.
 -   **Key Configurations:**
     1.  **`pip` (Python dependencies):**
-        -   Checks for updates daily in the root directory (for `requirements.txt`).
+        -   Checks for updates daily in the root directory (for `requirements.txt` and `requirements-dev.txt`).
         -   Targets the `main` branch.
         -   Default strategy is to allow all updates (patch, minor, major). Comments in the file suggest how to restrict this if needed.
     2.  **`github-actions` (GitHub Actions used in workflows):**

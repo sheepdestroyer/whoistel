@@ -15,31 +15,39 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file into the container at /app
+# Copy requirements.txt first for better layer caching.
+# pandas and xlrd are kept for future in-container DB updates via updatearcep.sh.
 COPY requirements.txt .
-
-# Install dependencies into the virtual environment
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code into the container at /app
-COPY --chown=appuser:appuser . /app/
+# Copy necessary application scripts.
+# These are needed for the application to run and for future in-container DB updates.
+# Ensure requirements.txt is also in /app for updatearcep.sh if it invokes pip directly.
+COPY whoistel.py xls_to_csv_converter.py generatedb.py updatearcep.sh requirements.txt /app/
 
-# Ensure the data directory exists and that files have correct permissions *before* switching user
-# (The VOLUME instruction itself doesn't create the directory)
-# Adjust data directory as needed for your application
-RUN mkdir -p /app/data && \
-    chown -R appuser:appuser /app
+# Ensure updatearcep.sh is executable
+RUN chmod +x /app/updatearcep.sh
+
+# Run updatearcep.sh to download data and generate whoistel.sqlite3.
+# This also creates the arcep/ directory with downloaded/converted data.
+# This is done as root to ensure permissions for downloads and file creation.
+RUN /app/updatearcep.sh
+
+# Ensure the /app directory and its contents (including generated DB and arcep data)
+# are owned by appuser. This is crucial before switching user.
+# The /app/data directory is also created for potential future use (e.g., mounted volumes).
+RUN mkdir -p /app/data && chown -R appuser:appuser /app
 
 # Switch to the non-root user
 USER appuser
 
-# Make port 8000 available (adjust if your application uses a different port)
+# EXPOSE 8000 is kept in preparation for future web service functionality.
 EXPOSE 8000
 
 # Define environment variables (can be overridden at runtime)
-# Adjust these to your application's needs
 ENV PYTHONPATH=/app
 
-# Command to run the application (adjust to your application's entrypoint)
-# This is an example, replace with how your application is started
-CMD ["python", "whoistel.py"]
+# ENTRYPOINT makes the container behave like an executable.
+# CMD provides default arguments (e.g., --help) if no arguments are given to `docker run`.
+ENTRYPOINT ["python", "/app/whoistel.py"]
+CMD ["--help"]
