@@ -46,9 +46,9 @@ CREATE TABLE Operateurs(
 
 c.execute('''
 CREATE TABLE Communes(
-	CodeInsee TEXT, /* Changed to TEXT for Corsican INSEE codes like 2A001 */
+	CodeInsee INTEGER,
 	NomCommune TEXT,
-	CodePostal INTEGER, /* Assuming CodePostal is always numeric, can be TEXT if not */
+	CodePostal INTEGER,
 	NomDepartement TEXT
 );
 ''')
@@ -60,20 +60,6 @@ CREATE TABLE Communes(
 # 	CodeInsee INTEGER
 # );
 # ''')
-
-c.execute('''
-CREATE TABLE CommunesZNE(
-	CodeZNE INTEGER,
-	CodeINSEECommune TEXT /* Changed to TEXT for Corsican INSEE codes like 2A001 */
-);
-''')
-
-c.execute('''
-CREATE TABLE ZABDepartement(
-    ZABPrefix TEXT,
-    NumerosDepartement TEXT
-);
-''')
 
 # -----------------------------------------------------------
 # Processing Operateurs from identifiants_ce.csv
@@ -108,9 +94,12 @@ plages_non_geo = []
 try:
     with open('arcep/majournums.csv', 'r', encoding='cp1252', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=';')
+        # print(f"DEBUG: Fieldnames in majournums.csv: {reader.fieldnames}") # DEBUG LINE REMOVED
+        # import sys # DEBUG LINE REMOVED
+        # sys.exit(0) # DEBUG LINE REMOVED
         for row in reader:
             ezabpqm = row['EZABPQM'].strip() # e.g. "01056", "0603", "0800"
-            operateur = row['Mnémo'].strip() # Use the correctly decoded key
+            operateur = row['Mn\\xe9mo'].strip() # Use the key as seen by DictReader
 
             # Determine if it's geographic (starts with 01-05)
             is_geo = False
@@ -168,68 +157,9 @@ if plages_non_geo:
 del plages_non_geo
 
 # -----------------------------------------------------------
-# Processing CommunesZNE from liste-zne_Correspondance_Communes_ZNE.csv
-print('Lecture du fichier CSV de correspondance Communes-ZNE...')
-communes_zne_data = []
-try:
-    # Path: arcep/liste-zne_Correspondance_Communes_ZNE.csv
-    # Headers: ZNE_NUM,ZNE_CHEF_LIEU,COMMUNE_INSEE,COMMUNE_NOM,ZNE_NBABO,ZNE_COM
-    with open('arcep/liste-zne_Correspondance_Communes_ZNE.csv', 'r', encoding='utf-8', newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            try:
-                code_zne = int(row['ZNE_NUM'].strip())
-                commune_insee = row['COMMUNE_INSEE'].strip() # Keep as TEXT
-                communes_zne_data.append((code_zne, commune_insee))
-            except ValueError: # Will now only catch issues with ZNE_NUM
-                print(f"Skipping row due to ValueError (likely ZNE_NUM) in Communes-ZNE data: {row}")
-                continue
-            except KeyError as e:
-                print(f"Skipping row due to KeyError '{e}' in Communes-ZNE data (check headers): {row}")
-                continue
-except FileNotFoundError:
-    print("ERREUR: Fichier arcep/liste-zne_Correspondance_Communes_ZNE.csv non trouvé.")
-except Exception as e:
-    print(f"Erreur lors du traitement de liste-zne_Correspondance_Communes_ZNE.csv: {e}")
-
-if communes_zne_data:
-    c.executemany("INSERT INTO CommunesZNE (CodeZNE, CodeINSEECommune) VALUES (?, ?);", communes_zne_data)
-del communes_zne_data
-
-# -----------------------------------------------------------
-# Processing ZABDepartement from arcep/correspondance-zab-departements_ZAB_D_partement.csv
-print('Lecture du fichier CSV de correspondance ZAB-Départements...')
-zab_departement_data = []
-try:
-    # Path: arcep/correspondance-zab-departements_ZAB_D_partement.csv
-    # Headers: Régions ou groupes de départements,N° des départements,0ZAB
-    with open('arcep/correspondance-zab-departements_ZAB_D_partement.csv', 'r', encoding='utf-8', newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            try:
-                zab_prefix = row['0ZAB'].strip()
-                numeros_dept = row['N° des départements'].strip()
-                if zab_prefix and numeros_dept: # Ensure essential data is present
-                    zab_departement_data.append((zab_prefix, numeros_dept))
-                else:
-                    print(f"Skipping row due to missing ZABPrefix or NumerosDepartement in ZAB-Départements data: {row}")
-            except KeyError as e:
-                print(f"Skipping row due to KeyError '{e}' in ZAB-Départements data (check headers): {row}")
-                continue
-except FileNotFoundError:
-    print("ERREUR: Fichier arcep/correspondance-zab-departements_ZAB_D_partement.csv non trouvé.")
-except Exception as e:
-    print(f"Erreur lors du traitement de correspondance-zab-departements_ZAB_D_partement.csv: {e}")
-
-if zab_departement_data:
-    c.executemany("INSERT INTO ZABDepartement (ZABPrefix, NumerosDepartement) VALUES (?, ?);", zab_departement_data)
-del zab_departement_data
-
-# -----------------------------------------------------------
-# CodeInsee in PlagesNumerosGeographiques will remain 0 as the current majournums.csv
-# does not provide a clear way to link to ZNE Chef-Lieu INSEE codes.
-# The dict_zne_cheflieu_insee and related logic has been removed.
-# The original MAJNUM.csv processing block correctly inserts 0 for CodeInsee.
+# CommunesZNE data processing - commented out as liste-zne.xls replacement is unknown
+# print('Lecture du fichier CSV des zones géographiques...')
+# ... (original code for liste-zne.xls was here) ...
 # -----------------------------------------------------------
 
 print('Lecture du fichier CSV des codes communes (INSEE)...')
@@ -242,19 +172,14 @@ try:
                 print(f"Ligne incomplète dans insee.csv: {row}, sautée.")
                 continue
             try:
-                # INSEE code is now TEXT, Codepos is INTEGER
-                code_postal_val = None
-                if row['Codepos'].strip(): # Check if Codepos is not empty
-                    code_postal_val = int(row['Codepos'].strip())
-
                 insee_data.append((
-                    row['INSEE'].strip(), # Keep as TEXT
+                    int(row['INSEE'].strip()),
                     row['Commune'].strip(),
-                    code_postal_val, # Use potentially None value
+                    int(row['Codepos'].strip()),
                     row['Departement'].strip()
                 ))
-            except ValueError: # Will now primarily catch issues with Codepos
-                print(f"Skipping row due to ValueError (likely Codepos) in INSEE data: {row}")
+            except ValueError:
+                print(f"Skipping row due to ValueError in INSEE data: {row}")
                 continue
 except FileNotFoundError:
     print("ERREUR: Fichier arcep/insee.csv non trouvé. Assurez-vous que updatearcep.sh a bien fonctionné et décompressé insee.zip.")
