@@ -23,6 +23,7 @@ os.chdir(dname)
 
 # Variables globales
 
+DEFAULT_PHONE_NUMBER = "+33740756315" # Default number if no argument is provided
 tel = None
 # useAnnu = True # Removed
 # useOVH = True # Removed
@@ -38,35 +39,17 @@ import argparse
 # Interpréter les arguments
 parser = argparse.ArgumentParser(description="Recherche d'informations sur un numéro de téléphone français.")
 parser.add_argument("numero_tel", nargs='?', help="Le numéro de téléphone à rechercher (ex: 0123456789, +33612345678).")
-# Deprecated arguments - kept for informational purposes but do nothing
-parser.add_argument("--no-annu", help="Argument obsolète, ignoré.", action="store_true")
-parser.add_argument("--no-ovh", help="Argument obsolète, ignoré.", action="store_true")
-
-# Add a specific argument for the test number, though manual input is also fine
-parser.add_argument("--test-numero", default="+33740756315", help="Numéro de test prédéfini.", dest="test_numero_arg")
-
 
 args = parser.parse_args()
 logging.debug(f"Arguments parsed: {args}")
 
-if args.no_annu:
-    logging.warning("Argument --no-annu is deprecated and will be ignored.")
-if args.no_ovh:
-    logging.warning("Argument --no-ovh is deprecated and will be ignored.")
-
 raw_tel = args.numero_tel
-logging.debug(f"Raw telephone number input: {raw_tel}")
+logging.debug(f"Raw telephone number input from positional arg: {raw_tel}")
 
-# If numero_tel is not provided directly, consider using test_numero_arg if a specific flag for it was intended.
-# For now, numero_tel being positional and optional (nargs='?') means if it's None, we might want to use a default or error out.
-# The original script structure implies the number is mandatory.
-
-if raw_tel is None:
-    # This part could be enhanced, e.g. to use a default test number if a specific flag like --run-test was added.
-    # For now, mirror original behavior: number is mandatory.
-    parser.print_help() # This prints to stdout
-    logging.error("Le numéro de téléphone est requis.")
-    exit(1)
+if not raw_tel:
+    # No positional number, so use the internal default.
+    raw_tel = DEFAULT_PHONE_NUMBER
+    logging.info(f"Aucun numéro de téléphone positionnel fourni. Utilisation du numéro par défaut : {raw_tel}")
 
 # Nettoyage du numéro de téléphone
 logging.debug(f"Original tel: '{raw_tel}'")
