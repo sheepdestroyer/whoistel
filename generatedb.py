@@ -99,7 +99,7 @@ try:
         # sys.exit(0) # DEBUG LINE REMOVED
         for row in reader:
             ezabpqm = row['EZABPQM'].strip() # e.g. "01056", "0603", "0800"
-            operateur = row['Mn\\xe9mo'].strip() # Use the key as seen by DictReader
+            operateur = row[reader.fieldnames[1]].strip() # Use the key as seen by DictReader
 
             # Determine if it's geographic (starts with 01-05)
             is_geo = False
