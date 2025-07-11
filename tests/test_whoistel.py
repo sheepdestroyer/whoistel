@@ -78,33 +78,42 @@ def test_geographic_number_lookup():
     result = run_whoistel_script(number)
 
     assert result.returncode == 0, f"Script failed with error: {result.stderr}"
-    assert "Type : EZABPQMCDU (Numéro géographique ou mobile/VoIP)" in result.stderr
-    # Add more specific assertions here once expected output is known
-    # e.g. assert "Opérateur : ORANGE" in result.stderr
-    # e.g. assert "Commune : PARIS" in result.stderr (if INSEE mapping is fixed)
+    # Successful output now goes to stdout
+    assert "Numéro : 0140000000" in result.stdout
+    assert "Type : EZABPQMCDU (Numéro géographique ou mobile/VoIP)" in result.stdout
+    # Specific operator/commune details would also be in stdout
+    # e.g. assert "Opérateur : ORANGE" in result.stdout
+    # e.g. assert "Commune : PARIS" in result.stdout
+    # Check that some operational logging still goes to stderr
+    assert "Attempting geographic number lookup for: 0140000000" in result.stderr
 
 
 def test_non_geographic_test_number_lookup():
     """
     Tests lookup for the specific non-geographic number +33740756315.
+    The script should identify its type (to stdout) then log an error (to stderr)
+    and exit with 1 because it's not found in the ARCEP DB.
     """
     number = "+33740756315"
     result = run_whoistel_script(number)
 
-    # It identifies the type, then prints error and exits with 1 as it's not found
-    assert "Type : EZABPQMCDU (Numéro géographique ou mobile/VoIP)" in result.stderr
-    assert "Numéro inconnu dans la base ARCEP." in result.stderr # Error messages from logging go to stderr
-    assert result.returncode == 1, f"Script should exit with 1 for unknown number. Stderr: {result.stderr}"
+    assert "Numéro : 0740756315" in result.stdout # Cleaned number
+    assert "Type : EZABPQMCDU (Numéro géographique ou mobile/VoIP)" in result.stdout # Type info to stdout
+    assert "Numéro inconnu dans la base ARCEP." in result.stderr # Error message to stderr
+    assert result.returncode == 1, f"Script should exit with 1 for unknown number. stdout: {result.stdout}, stderr: {result.stderr}"
 
 
 def test_invalid_number_format_too_short():
     """
     Tests handling of an invalidly formatted number (too short).
+    The script should print some info to stdout (like the number itself)
+    then log warnings/errors to stderr and exit with 1.
     """
     number = "0123"
     result = run_whoistel_script(number)
 
-    # The script exits with 1 for errors, and prints error message to stderr
+    assert "Numéro : 0123" in result.stdout # Initial number print
+    # Error/warning messages go to stderr
     assert result.returncode == 1, "Script should fail for invalid number."
     assert "Type de numéro non formellement identifié" in result.stderr or \
            "Numéro non reconnu ou format invalide pour recherche ARCEP" in result.stderr
@@ -113,15 +122,16 @@ def test_invalid_number_format_too_short():
 def test_invalid_number_format_non_digit():
     """
     Tests handling of an invalidly formatted number (contains letters).
+    Argparse error message goes to stdout. Script's own error log goes to stderr.
     """
     number = "012345678A"
     result = run_whoistel_script(number)
 
-    # The main error "Le numéro ... contient des caractères non numériques" is a log ERROR, so stderr.
-    # The argparse error message goes to stdout by default if parsing fails before logging is fully set up,
-    # or if main() isn't reached. However, in this case, the script identifies the bad char and logs an error.
+    # Argparse help message due to invalid input before full script logic runs for this case.
+    # The script now also logs an error to stderr before exiting.
+    assert "usage: whoistel.py" in result.stdout # Argparse help
+    assert "contient des caractères non numériques" in result.stderr # Specific error log
     assert result.returncode == 1, "Script should fail for non-digit number."
-    assert "contient des caractères non numériques" in result.stderr
 
 # More tests can be added:
 # - Other types of special numbers (118xxx, 3xxx)

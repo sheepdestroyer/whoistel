@@ -12,7 +12,8 @@ import os
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Basic configuration for stderr
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', stream=None) # Stream=None uses default stderr
 
 # Se mettre dans le même dossier que le script
 
@@ -82,16 +83,20 @@ if not tel.isdigit():
 
 # Fonctions d'information
 
-def section(text):
+def section(text): # This function is for console log formatting, stays with logging.info
     logging.info("")
     logging.info('+-' + '-' * len(text) + '-+')
     logging.info('| ' + text + ' |')
     logging.info('+-' + '-' * len(text) + '-+')
     logging.info("")
 
+def print_stdout(message):
+    """Helper function to print to stdout."""
+    print(message)
+
 def erreur(text, exit_code=1):
     logging.error(text)
-    logging.info("") # Add a blank line for readability in logs, similar to original print behavior
+    # logging.info("") # No longer needed as logging adds its own newlines
     exit(exit_code)
 
 # Se connecter à la base de données de l'ARCEP en local
@@ -108,6 +113,7 @@ c = conn.cursor()
 def getInfosINSEE(codeINSEE):
     logging.debug(f"Fetching INSEE info for CodeINSEE: {codeINSEE}")
     if codeINSEE == 0 or codeINSEE is None:
+        # This is an informational message about data unavailability, keep as log.
         logging.info("Informations de commune non disponibles pour ce bloc (CodeInsee manquant ou 0).")
         return
 
@@ -116,11 +122,11 @@ def getInfosINSEE(codeINSEE):
     logging.debug(f"INSEE query result: {infos}")
 
     if infos:
-        logging.info("")
-        logging.info(f'Commune : {infos[0]}')
-        logging.info(f'Département : {infos[2]}')
-        logging.info(f'Code postal : {str(infos[1]).zfill(5)}')
-        logging.info(f'Code INSEE : {str(codeINSEE).zfill(5)}')
+        print_stdout("") # For spacing, similar to original logging.info("")
+        print_stdout(f'Commune : {infos[0]}')
+        print_stdout(f'Département : {infos[2]}')
+        print_stdout(f'Code postal : {str(infos[1]).zfill(5)}')
+        print_stdout(f'Code INSEE : {str(codeINSEE).zfill(5)}')
     else:
         logging.warning(f"Aucune information trouvée pour le Code INSEE : {str(codeINSEE).zfill(5)}")
 
@@ -135,21 +141,21 @@ def getInfosOperateur(codeOperateur):
         logging.warning(f"Opérateur non trouvé pour le code : {codeOperateur}")
         return
 
-    logging.info("")
-    logging.info(f'Opérateur : {infos[0]}')
-    logging.info(f'Code opérateur : {codeOperateur}')
+    print_stdout("") # For spacing
+    print_stdout(f'Opérateur : {infos[0]}')
+    print_stdout(f'Code opérateur : {codeOperateur}')
 
     if infos[1]: # TypeOperateur
-        logging.info(f'Type : {infos[1][0].upper() + infos[1][1:] if infos[1] else "N/A"}')
+        print_stdout(f'Type : {infos[1][0].upper() + infos[1][1:] if infos[1] else "N/A"}')
     if infos[2]: # MailOperateur
-        logging.info(f'Courriel : {infos[2]}')
+        print_stdout(f'Courriel : {infos[2]}')
     if infos[3]: # SiteOperateur
         url = infos[3].lower()
         if not url.startswith('http'):
             url = 'http://' + url
         if '/' not in infos[3][8:]: # Check after "http://" or "https://"
             url += '/'
-        logging.info(f'Site web : {url}')
+        print_stdout(f'Site web : {url}')
 
 def getGeographicNumberARCEP():
     logging.debug(f"Attempting geographic number lookup for: {tel}")
@@ -171,7 +177,7 @@ def getGeographicNumberARCEP():
         logging.debug(f"Result for {plage_tel_query_4_digit}: {infos_4_digit}")
         if infos_4_digit:
             infos = infos_4_digit
-            logging.info(f"(Information basée sur le bloc de 4 chiffres: {tel[0:5]})")
+            print_stdout(f"(Information basée sur le bloc de 4 chiffres: {tel[0:5]})")
         else: # If both 5 and 4 digit block lookups fail
             logging.debug("4-digit geographic lookup also failed. Falling back to non-geographic lookup.")
             getNonGeographicNumberARCEP() # Fallback to non-geographic
@@ -205,7 +211,7 @@ def getNonGeographicNumberARCEP():
         infos = c.fetchone()
         logging.debug(f"Result for prefix {prefix_to_check}: {infos}")
         if infos is not None:
-            logging.info(f"(Information basée sur le préfixe: {prefix_to_check})")
+            print_stdout(f"(Information basée sur le préfixe: {prefix_to_check})")
             break
 
     if infos is None:
@@ -231,31 +237,31 @@ def getSurtax():
         logging.debug(f"Surtax check for 10-digit number, type08 (tel[2:4]): {type08}")
 
         if type08 >= 90 : # Example: 0890, 0891, 0892, 0893, 0897, 0899
-            logging.info('Dénomination commerciale : Numéro Audiotel (Service à valeur ajoutée)')
+            print_stdout('Dénomination commerciale : Numéro Audiotel (Service à valeur ajoutée)')
 
         # Free numbers (Numéros Verts)
         if (newRates and type08 <= 5) or (type08 in (1, 2, 3, 4, 8)): # 0800-0805, 0808
-             logging.info('Dénomination commerciale : Numéro Vert')
-             logging.info('Prix : Entièrement gratuit (depuis fixe et mobile)')
+             print_stdout('Dénomination commerciale : Numéro Vert')
+             print_stdout('Prix : Entièrement gratuit (depuis fixe et mobile)')
         elif type08 <= 9: # 0806-0809 (excluding 0808 already covered)
-             logging.info('Dénomination commerciale : Numéro Vert (Service gratuit + prix appel)')
-             logging.info('Surtaxe : Non (coût d\'un appel vers un fixe)')
+             print_stdout('Dénomination commerciale : Numéro Vert (Service gratuit + prix appel)')
+             print_stdout('Surtaxe : Non (coût d\'un appel vers un fixe)')
 
         # Grey numbers (Numéros Gris) - cost of a local call or specific tariff
         elif 10 <= type08 <= 19 or type08 == 84: # 081x, 082x (partially, see below), 0884
             # This was complex and changed significantly in 2015.
             # Modern 081x, 082x are typically "Service gratuit + prix appel" or have a per-minute/per-call charge.
             # The old categories "Azur" and "Indigo" are less relevant.
-            logging.info('Dénomination commerciale : Numéro Gris (Banalisé)')
-            logging.info('Surtaxe : variable, généralement coût d\'un appel local ou tarif spécifique par minute/appel.')
+            print_stdout('Dénomination commerciale : Numéro Gris (Banalisé)')
+            print_stdout('Surtaxe : variable, généralement coût d\'un appel local ou tarif spécifique par minute/appel.')
             # Old details:
             # logging.debug('Dénomination commerciale : Numéro Azur')
             # logging.debug('Surtaxe par appel : 0,078 €')
             # logging.debug('Surtaxe par minute : 0,014 € en heures creuses, ou 0,028 € en heures pleines')
 
         elif type08 == 20 or type08 == 21 or type08 == 25 or type08 == 26: # 0820, 0821, 0825, 0826
-            logging.info('Dénomination commerciale : Numéro Gris (Banalisé)')
-            logging.info('Surtaxe : variable, tarif spécifique par minute/appel.')
+            print_stdout('Dénomination commerciale : Numéro Gris (Banalisé)')
+            print_stdout('Surtaxe : variable, tarif spécifique par minute/appel.')
             # Old details:
             # logging.debug('Dénomination commerciale : Numéro Indigo')
             # if type08 == 20 or type08 == 21:
@@ -266,22 +272,22 @@ def getSurtax():
             #     logging.debug('Surtaxe par minute après 45s : 0,15 €')
 
         elif type08 == 36: # Example: 0836 - Often Minitel or specific services
-            logging.info('Prix : Variable (services divers, potentiellement élevé)')
+            print_stdout('Prix : Variable (services divers, potentiellement élevé)')
 
         elif 40 <= type08 <= 43: # 0840-0843
-            logging.info("Utilisation : Numéro technique destiné à l'acheminement des communications, " +
+            print_stdout("Utilisation : Numéro technique destiné à l'acheminement des communications, " +
                   "ne doit pas être appelé directement (cf décision n°2006-0452)")
 
         elif 50 <= type08 <= 58: # 085x
-            logging.info('Prix : Variable (accès VPN RPC)')
+            print_stdout('Prix : Variable (accès VPN RPC)')
 
         elif 60 <= type08 <= 68: # 086x
-            logging.info('Prix : Variable (accès RTC)')
+            print_stdout('Prix : Variable (accès RTC)')
 
         # Surcharged numbers (Numéros Magenta / Audiotel) - 089x
         # Modern 089x have specific per-call or per-minute charges.
         elif type08 >= 90: # Already covered at the top, but more specific old details were here
-            logging.info('Surtaxe : Tarif fortement surtaxé, variable.')
+            print_stdout('Surtaxe : Tarif fortement surtaxé, variable.')
             # Old details for 0890:
             # logging.debug('Surtaxe : Dépend du numéro et du FAI.')
             # logging.debug('          - Orange : Maximum de 0,112 € toutes les 45s')
@@ -294,14 +300,14 @@ def getSurtax():
             # logging.debug('          - Free : 0,11 € puis, après 45s, 0,15€ par minute')
 
         else: # Other 08xx not covered by specific old rules
-            logging.info("Type de numéro 08xx non précisément tarifé par cet outil (données obsolètes).")
+            print_stdout("Type de numéro 08xx non précisément tarifé par cet outil (données obsolètes).")
 
     elif tel == '1044': # Example specific number
-        logging.info('Surtaxe par appel : 0,078 €') # Likely outdated
-        logging.info('Surtaxe par minute : 0,014 € en heures creuses, ou 0,028 € en heures pleines')
+        print_stdout('Surtaxe par appel : 0,078 €') # Likely outdated
+        print_stdout('Surtaxe par minute : 0,014 € en heures creuses, ou 0,028 € en heures pleines')
 
     elif tel.startswith('10') and len(tel) == 4: # Numbers like 10XY (e.g. 1013, 1023)
-        logging.info('Surtaxe : Non (généralement, services opérateurs)')
+        print_stdout('Surtaxe : Non (généralement, services opérateurs)')
 
 
 def getSurtax118():
@@ -331,7 +337,7 @@ def getSurtax118():
         suffix = int(tel[3:])
         logging.debug(f"118xxx suffix: {suffix}")
         if suffix in surtax118:
-            logging.info('Surtaxe : ' + surtax118[suffix])
+            print_stdout('Surtaxe : ' + surtax118[suffix])
         else:
             erreur(f'Numéro 118 inconnu ou tarif non listé pour suffixe {suffix}.')
     except ValueError:
@@ -352,8 +358,8 @@ def getSpecial():
     try:
         num_int = int(tel)
         if num_int in special_numbers_map:
-            logging.info('Type : Spécial (Urgence/Service Public)')
-            logging.info('Fonction : ' + special_numbers_map[num_int])
+            print_stdout('Type : Spécial (Urgence/Service Public)')
+            print_stdout('Fonction : ' + special_numbers_map[num_int])
         else:
             erreur(f'Numéro spécial {num_int} inconnu.')
     except ValueError:
@@ -366,23 +372,23 @@ def getSpecial():
 # def getOVH(): ...
 
 # Déterminer le type de numéro de téléphone
-section('Informations ARCEP')
-logging.info('Numéro : ' + tel)
+section('Informations ARCEP') # This section header is for log, remains logging.info
+print_stdout('Numéro : ' + tel)
 
 if tel.startswith('0') and len(tel) == 10: # EZABPQMCDU
-    logging.info('Type : EZABPQMCDU (Numéro géographique ou mobile/VoIP)')
+    print_stdout('Type : EZABPQMCDU (Numéro géographique ou mobile/VoIP)')
     is_EZABPQMCDU = True
 elif len(tel) == 4 and tel.startswith('3'): # 3BPQ (e.g. 3000, 3949)
-    logging.info('Type : Numéro court 3BPQ')
+    print_stdout('Type : Numéro court 3BPQ')
     is_special = True # Treat as special for surtax check, may or may not be surtaxed
     getSurtax() # Some 3xxx numbers can be surtaxed
 elif (len(tel) == 4 and tel.startswith('10')) or \
      (len(tel) == 6 and tel.startswith('118')): # 10XY, 118XYZ
     if tel.startswith('118'):
-        logging.info('Type : 118XYZ (Service de renseignements)')
+        print_stdout('Type : 118XYZ (Service de renseignements)')
         getSurtax118()
     else: # 10XY
-        logging.info(f'Type : Numéro court {tel[:2]}XY (Service opérateur/spécial)')
+        print_stdout(f'Type : Numéro court {tel[:2]}XY (Service opérateur/spécial)')
         getSurtax() # Check for potential surtax for 10XY
     is_special = True
 elif len(tel) in [2, 3] and tel.isdigit(): # Short codes like 15, 17, 18, 112, 115
