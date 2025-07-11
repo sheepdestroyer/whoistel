@@ -225,7 +225,7 @@ try:
         csv_insee = csv.DictReader(file_insee, delimiter=';')
         logging.debug(f"Fieldnames in insee.csv: {csv_insee.fieldnames}") # Keep as DEBUG
         for i, row in enumerate(csv_insee):
-            logging.getLogger(__name__).trace(f"Processing row {i} from insee.csv: {row}") # Change to TRACE
+            logger.trace(f"Processing row {i} from insee.csv: {row}") # Change to TRACE
             if not row['Codepos'] or not row['INSEE'] or not row['Commune'] or not row['Departement']: # Skip if essential fields are empty
                 logging.warning(f"Ligne incomplète dans insee.csv: {row}, sautée.")
                 continue
