@@ -1,4 +1,5 @@
 pandas
+xlrd
 
 # For running tests
 pytest

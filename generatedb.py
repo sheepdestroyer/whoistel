@@ -7,7 +7,18 @@ import os
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Set default level to INFO. DEBUG messages will be suppressed unless explicitly enabled.
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Define a custom TRACE logging level (lower than DEBUG)
+TRACE_LEVEL_NUM = 5
+logging.addLevelName(TRACE_LEVEL_NUM, "TRACE")
+def trace(self, message, *args, **kws):
+    if self.isEnabledFor(TRACE_LEVEL_NUM):
+        # Yes, logger takes its '*args' as 'args'.
+        self._log(TRACE_LEVEL_NUM, message, args, **kws)
+logging.Logger.trace = trace
+
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -73,9 +84,9 @@ ops = []
 try:
     with open('arcep/identifiants_ce.csv', 'r', encoding='cp1252', newline='') as csvfile: # ANSI often means cp1252 in FR context
         reader = csv.DictReader(csvfile, delimiter=';')
-        logging.debug(f"Fieldnames in identifiants_ce.csv: {reader.fieldnames}")
+        logging.debug(f"Fieldnames in identifiants_ce.csv: {reader.fieldnames}") # Keep as DEBUG
         for i, row in enumerate(reader):
-            logging.debug(f"Processing row {i} from identifiants_ce.csv: {row}")
+            logging.getLogger(__name__).trace(f"Processing row {i} from identifiants_ce.csv: {row}") # Change to TRACE
             ops.append((
                 row['CODE_OPERATEUR'].strip(),
                 row['IDENTITE_OPERATEUR'].strip(),
@@ -102,9 +113,9 @@ plages_non_geo = []
 try:
     with open('arcep/majournums.csv', 'r', encoding='cp1252', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=';')
-        logging.debug(f"Fieldnames in majournums.csv: {reader.fieldnames}")
+        logging.debug(f"Fieldnames in majournums.csv: {reader.fieldnames}") # Keep as DEBUG
         for i, row in enumerate(reader):
-            logging.debug(f"Processing row {i} from majournums.csv: {row}")
+            logging.getLogger(__name__).trace(f"Processing row {i} from majournums.csv: {row}") # Change to TRACE
             ezabpqm = row['EZABPQM'].strip() # e.g. "01056", "0603", "0800"
             # The second fieldname can vary ('Mnémo', 'Mnémo ', etc.)
             # Let's find it more robustly or assume it's the one after 'EZABPQM'
@@ -186,9 +197,9 @@ insee_data = [] # Renamed to avoid conflict
 try:
     with open('arcep/insee.csv', 'r', encoding='cp1252', newline='') as file_insee:
         csv_insee = csv.DictReader(file_insee, delimiter=';')
-        logging.debug(f"Fieldnames in insee.csv: {csv_insee.fieldnames}")
+        logging.debug(f"Fieldnames in insee.csv: {csv_insee.fieldnames}") # Keep as DEBUG
         for i, row in enumerate(csv_insee):
-            logging.debug(f"Processing row {i} from insee.csv: {row}")
+            logging.getLogger(__name__).trace(f"Processing row {i} from insee.csv: {row}") # Change to TRACE
             if not row['Codepos'] or not row['INSEE'] or not row['Commune'] or not row['Departement']: # Skip if essential fields are empty
                 logging.warning(f"Ligne incomplète dans insee.csv: {row}, sautée.")
                 continue
