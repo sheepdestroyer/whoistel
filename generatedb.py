@@ -4,6 +4,10 @@ import sqlite3
 # import xlrd # No longer needed
 import csv
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -11,9 +15,10 @@ os.chdir(dname)
 
 # -----------------------------------------------------------
 
-print('Création de la base de données...')
+logging.info('Création de la base de données...')
 
 if os.path.exists('whoistel.sqlite3'):
+	logging.debug('Ancienne base de données whoistel.sqlite3 trouvée, suppression...')
 	os.remove('whoistel.sqlite3')
 
 sqlite_conn = sqlite3.connect('whoistel.sqlite3') # Renamed to avoid conflict with module
@@ -63,12 +68,14 @@ CREATE TABLE Communes(
 
 # -----------------------------------------------------------
 # Processing Operateurs from identifiants_ce.csv
-print('Lecture du fichier CSV des identifiants opérateurs...')
+logging.info('Lecture du fichier CSV des identifiants opérateurs...')
 ops = []
 try:
     with open('arcep/identifiants_ce.csv', 'r', encoding='cp1252', newline='') as csvfile: # ANSI often means cp1252 in FR context
         reader = csv.DictReader(csvfile, delimiter=';')
-        for row in reader:
+        logging.debug(f"Fieldnames in identifiants_ce.csv: {reader.fieldnames}")
+        for i, row in enumerate(reader):
+            logging.debug(f"Processing row {i} from identifiants_ce.csv: {row}")
             ops.append((
                 row['CODE_OPERATEUR'].strip(),
                 row['IDENTITE_OPERATEUR'].strip(),
@@ -77,29 +84,34 @@ try:
                 ''  # SiteOperateur - not available
             ))
 except FileNotFoundError:
-    print("ERREUR: Fichier arcep/identifiants_ce.csv non trouvé. Exécutez updatearcep.sh.")
+    logging.error("ERREUR: Fichier arcep/identifiants_ce.csv non trouvé. Exécutez updatearcep.sh.")
 except Exception as e:
-    print(f"Erreur lors du traitement de identifiants_ce.csv: {e}")
+    logging.error(f"Erreur lors du traitement de identifiants_ce.csv: {e}", exc_info=True)
 
 if ops:
+    logging.debug(f"Inserting {len(ops)} operators into Operateurs table.")
     c.executemany("INSERT INTO Operateurs(CodeOperateur, NomOperateur, TypeOperateur, MailOperateur, SiteOperateur) VALUES (?, ?, ?, ?, ?);", ops)
 del ops
 
 # -----------------------------------------------------------
 # Processing MAJNUM.csv for PlagesNumerosGeographiques and PlagesNumeros
-print('Lecture du fichier CSV des ressources en numérotation (MAJNUM)...')
+logging.info('Lecture du fichier CSV des ressources en numérotation (MAJNUM)...')
 plages_geo = []
 plages_non_geo = []
 
 try:
     with open('arcep/majournums.csv', 'r', encoding='cp1252', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=';')
-        # print(f"DEBUG: Fieldnames in majournums.csv: {reader.fieldnames}") # DEBUG LINE REMOVED
-        # import sys # DEBUG LINE REMOVED
-        # sys.exit(0) # DEBUG LINE REMOVED
-        for row in reader:
+        logging.debug(f"Fieldnames in majournums.csv: {reader.fieldnames}")
+        for i, row in enumerate(reader):
+            logging.debug(f"Processing row {i} from majournums.csv: {row}")
             ezabpqm = row['EZABPQM'].strip() # e.g. "01056", "0603", "0800"
-            operateur = row[reader.fieldnames[1]].strip() # Use the key as seen by DictReader
+            # The second fieldname can vary ('Mnémo', 'Mnémo ', etc.)
+            # Let's find it more robustly or assume it's the one after 'EZABPQM'
+            # Based on current file, it's fieldnames[1] which is 'Mnémo'
+            operateur_key = reader.fieldnames[1]
+            operateur = row[operateur_key].strip()
+            logging.debug(f"EZABPQM: {ezabpqm}, Operateur Key: {operateur_key}, Operateur: {operateur}")
 
             # Determine if it's geographic (starts with 01-05)
             is_geo = False
@@ -119,57 +131,66 @@ try:
                 if tranche_debut_str.startswith('0') and len(tranche_debut_str) >= 6 :
                     try:
                         plage_tel_int = int(tranche_debut_str[1:6]) # e.g. 10560
+                        logging.debug(f"Geo number, Tranche_Debut: {tranche_debut_str}, extracted PlageTel: {plage_tel_int}")
                     except ValueError:
-                        print(f"Erreur de conversion pour PlageTel geo (Tranche_Debut): {tranche_debut_str} pour EZABPQM {ezabpqm}")
+                        logging.warning(f"Erreur de conversion pour PlageTel geo (Tranche_Debut): {tranche_debut_str} pour EZABPQM {ezabpqm}")
                         continue
                 else:
-                    print(f"Format Tranche_Debut inattendu pour geo: {tranche_debut_str} pour EZABPQM {ezabpqm}")
+                    logging.warning(f"Format Tranche_Debut inattendu pour geo: {tranche_debut_str} pour EZABPQM {ezabpqm}. Tentative de fallback.")
                     # Fallback: try to use EZABPQM itself if it's numeric and 5 digits after stripping 0
                     if ezabpqm.startswith('0') and len(ezabpqm) == 5 and ezabpqm[1:].isdigit(): # e.g. 01234
                         plage_tel_int = int(ezabpqm[1:]) * 10 # Heuristic: 12340
+                        logging.debug(f"  Fallback using EZABPQM (5-digit type 0ZXXX): {ezabpqm} -> {plage_tel_int}")
                     elif ezabpqm.startswith('0') and len(ezabpqm) == 6 and ezabpqm[1:].isdigit(): # e.g. 012345
                          plage_tel_int = int(ezabpqm[1:])
+                         logging.debug(f"  Fallback using EZABPQM (6-digit type 0ZXXXX): {ezabpqm} -> {plage_tel_int}")
                     else:
-                        print(f"  -> Tentative de fallback avec EZABPQM {ezabpqm} échouée pour geo.")
+                        logging.warning(f"  -> Tentative de fallback avec EZABPQM {ezabpqm} échouée pour geo. Assignation à non-geo.")
                         plages_non_geo.append((ezabpqm, operateur)) # Add to non-geo if unsure
                         continue
 
                 # CODE_INSEE IS MISSING. Placeholder 0.
                 # This functionality is degraded. A separate file or different column in MAJNUM might be needed.
                 plages_geo.append((plage_tel_int, operateur, 0))
+                logging.debug(f"Added to plages_geo: PlageTel={plage_tel_int}, Operateur={operateur}, CodeInsee=0")
             else:
                 # Non-geographic numbers (06, 07, 08, 09, special numbers)
                 # PlageTel is TEXT here. EZABPQM is directly the prefix.
                 plages_non_geo.append((ezabpqm, operateur))
+                logging.debug(f"Added to plages_non_geo: EZABPQM={ezabpqm}, Operateur={operateur}")
 
 except FileNotFoundError:
-    print("ERREUR: Fichier arcep/majournums.csv non trouvé. Exécutez updatearcep.sh.")
+    logging.error("ERREUR: Fichier arcep/majournums.csv non trouvé. Exécutez updatearcep.sh.")
 except Exception as e:
-    print(f"Erreur lors du traitement de majournums.csv: {e}")
+    logging.error(f"Erreur lors du traitement de majournums.csv: {e}", exc_info=True)
 
 
 if plages_geo:
+    logging.debug(f"Inserting {len(plages_geo)} records into PlagesNumerosGeographiques.")
     c.executemany("INSERT INTO PlagesNumerosGeographiques (PlageTel, CodeOperateur, CodeInsee) VALUES (?, ?, ?);", plages_geo)
 del plages_geo
 
 if plages_non_geo:
+    logging.debug(f"Inserting {len(plages_non_geo)} records into PlagesNumeros.")
     c.executemany("INSERT INTO PlagesNumeros (PlageTel, CodeOperateur) VALUES (?, ?);", plages_non_geo)
 del plages_non_geo
 
 # -----------------------------------------------------------
 # CommunesZNE data processing - commented out as liste-zne.xls replacement is unknown
-# print('Lecture du fichier CSV des zones géographiques...')
+# logging.info('Lecture du fichier CSV des zones géographiques...')
 # ... (original code for liste-zne.xls was here) ...
 # -----------------------------------------------------------
 
-print('Lecture du fichier CSV des codes communes (INSEE)...')
+logging.info('Lecture du fichier CSV des codes communes (INSEE)...')
 insee_data = [] # Renamed to avoid conflict
 try:
     with open('arcep/insee.csv', 'r', encoding='cp1252', newline='') as file_insee:
         csv_insee = csv.DictReader(file_insee, delimiter=';')
-        for row in csv_insee:
+        logging.debug(f"Fieldnames in insee.csv: {csv_insee.fieldnames}")
+        for i, row in enumerate(csv_insee):
+            logging.debug(f"Processing row {i} from insee.csv: {row}")
             if not row['Codepos'] or not row['INSEE'] or not row['Commune'] or not row['Departement']: # Skip if essential fields are empty
-                print(f"Ligne incomplète dans insee.csv: {row}, sautée.")
+                logging.warning(f"Ligne incomplète dans insee.csv: {row}, sautée.")
                 continue
             try:
                 insee_data.append((
@@ -179,21 +200,22 @@ try:
                     row['Departement'].strip()
                 ))
             except ValueError:
-                print(f"Skipping row due to ValueError in INSEE data: {row}")
+                logging.warning(f"Skipping row due to ValueError in INSEE data: {row}")
                 continue
 except FileNotFoundError:
-    print("ERREUR: Fichier arcep/insee.csv non trouvé. Assurez-vous que updatearcep.sh a bien fonctionné et décompressé insee.zip.")
+    logging.error("ERREUR: Fichier arcep/insee.csv non trouvé. Assurez-vous que updatearcep.sh a bien fonctionné et décompressé insee.zip.")
 except Exception as e:
-    print(f"Erreur lors du traitement de insee.csv: {e}")
+    logging.error(f"Erreur lors du traitement de insee.csv: {e}", exc_info=True)
 
 if insee_data:
+    logging.debug(f"Inserting {len(insee_data)} records into Communes.")
     c.executemany("INSERT INTO Communes(CodeInsee, NomCommune, CodePostal, NomDepartement) VALUES (?, ?, ?, ?);", insee_data)
 del insee_data
 
 # -----------------------------------------------------------
 
-print('Sauvegarde de la base de données...')
+logging.info('Sauvegarde de la base de données...')
 sqlite_conn.commit()
 sqlite_conn.close()
 
-print('Terminé.')
+logging.info('Terminé.')
