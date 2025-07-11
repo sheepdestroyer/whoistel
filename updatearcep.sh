@@ -4,24 +4,38 @@ cd "$(dirname "$0")"
 mkdir -p arcep
 cd arcep
 
-# wget -N http://www.arcep.fr/fileadmin/reprise/dossiers/numero/ZABPQ-ZNE.xls # Old
-# wget -N http://www.arcep.fr/fileadmin/wopnum.xls # Old
-# wget -N http://www.arcep.fr/fileadmin/operateurs/liste-operateurs-declares.xls # Old
-# wget -N http://www.arcep.fr/fileadmin/reprise/dossiers/numero/liste-zne.xls # Old
+# ARCEP ZNE and ZAB data (XLS files to be converted)
+echo "Downloading ARCEP ZNE list..."
+wget -N -O liste-zne.xls http://www.arcep.fr/fileadmin/reprise/dossiers/numero/liste-zne.xls
+echo "Downloading ARCEP ZAB-Departements correspondence..."
+wget -N -O correspondance-zab-departements.xls http://www.arcep.fr/fileadmin/reprise/dossiers/numero/correspondance-zab-departements.xls
 
-# New ARCEP data from data.gouv.fr
-# Ressources en numérotation téléphonique (main file, contains number ranges and operators)
+# Convert downloaded XLS files to CSV
+echo "Converting XLS files to CSV..."
+python3 ../xls_to_csv_converter.py liste-zne.xls liste-zne
+python3 ../xls_to_csv_converter.py correspondance-zab-departements.xls correspondance-zab-departements
+
+# New ARCEP data from data.gouv.fr (CSV files)
+echo "Downloading ARCEP numbering resources (majournums.csv)..."
 wget -N -O majournums.csv https://www.data.gouv.fr/fr/datasets/r/90e8bdd0-0f5c-47ac-bd39-5f46463eb806
-# Identifiants de communications électroniques (operator details)
+echo "Downloading ARCEP operator identifiers (identifiants_ce.csv)..."
 wget -N -O identifiants_ce.csv https://www.data.gouv.fr/fr/datasets/r/b0f62183-cd0c-498d-8153-aa1594e5e8d9
 
 # INSEE data (unchanged)
+echo "Downloading INSEE data..."
 wget -N http://www.galichon.com/codesgeo/data/insee.zip
 
+echo "Unzipping INSEE data..."
 unzip -o insee.zip
 rm -f insee.zip
-# Ensure new CSVs are not accidentally deleted if they were previously part of a zip (they are not)
+
+# Old ARCEP data (commented out as they are superseded or handled differently)
+# wget -N http://www.arcep.fr/fileadmin/reprise/dossiers/numero/ZABPQ-ZNE.xls
+# wget -N http://www.arcep.fr/fileadmin/wopnum.xls
+# wget -N http://www.arcep.fr/fileadmin/operateurs/liste-operateurs-declares.xls
 
 cd ..
 echo
+echo "Running generatedb.py to build database..."
 ./generatedb.py
+echo "Data update and database generation complete."
