@@ -23,6 +23,7 @@ os.chdir(dname)
 
 # Variables globales
 
+DEFAULT_PHONE_NUMBER = "+33740756315" # Default number if no argument is provided
 tel = None
 # useAnnu = True # Removed
 # useOVH = True # Removed
@@ -39,10 +40,6 @@ import argparse
 parser = argparse.ArgumentParser(description="Recherche d'informations sur un numéro de téléphone français.")
 parser.add_argument("numero_tel", nargs='?', help="Le numéro de téléphone à rechercher (ex: 0123456789, +33612345678).")
 
-# Add a specific argument for the test number, though manual input is also fine
-parser.add_argument("--test-numero", default="+33740756315", help="Numéro de test prédéfini.", dest="test_numero_arg")
-
-
 args = parser.parse_args()
 logging.debug(f"Arguments parsed: {args}")
 
@@ -51,28 +48,12 @@ logging.debug(f"Raw telephone number input from positional arg: {raw_tel}")
 
 if raw_tel:
     # A positional number was provided, it takes precedence.
-    # Warn if --test-numero was also explicitly provided by the user and its value is different from its default.
-    if args.test_numero_arg != parser.get_default("test_numero_arg"):
-        logging.warning(
-            f"Le numéro de téléphone positionnel ({args.numero_tel}) et --test-numero ({args.test_numero_arg}) ont été fournis. "
-            f"Le numéro positionnel ({args.numero_tel}) sera utilisé."
-        )
+    # No other logic needed here as --test-numero flag is removed.
+    pass
 else:
-    # No positional number, so use the value from --test-numero.
-    raw_tel = args.test_numero_arg
-    # Check if the value used for raw_tel is the default for --test-numero.
-    # This helps determine the appropriate informational message.
-    if raw_tel == parser.get_default("test_numero_arg"):
-        # This implies --test-numero was not explicitly passed by the user,
-        # or it was passed but with the same value as its default.
-        # In either case, the default number is effectively being used.
-        logging.info(f"Aucun numéro de téléphone positionnel fourni. Utilisation du numéro de test par défaut : {raw_tel}")
-    else:
-        # This implies --test-numero was explicitly passed by the user with a non-default value.
-        logging.info(f"Aucun numéro de téléphone positionnel fourni. Utilisation du numéro de test : {raw_tel} (fourni via --test-numero)")
-
-# Since --test-numero has a default value, raw_tel will always be populated by this point.
-# The previous explicit check 'if raw_tel is None:' and exit(1) is no longer necessary.
+    # No positional number, so use the internal default.
+    raw_tel = DEFAULT_PHONE_NUMBER
+    logging.info(f"Aucun numéro de téléphone positionnel fourni. Utilisation du numéro par défaut : {raw_tel}")
 
 # Nettoyage du numéro de téléphone
 logging.debug(f"Original tel: '{raw_tel}'")
