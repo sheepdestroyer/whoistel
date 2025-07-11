@@ -1,4 +1,0 @@
-pandas
-
-# For running tests
-pytest

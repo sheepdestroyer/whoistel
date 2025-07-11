@@ -27,8 +27,7 @@ The Annu.com and OVH Telecom API integrations from the original version have bee
 
 *   Python 3
 *   Standard Unix utilities (`bash`, `wget`, `unzip`) for fetching data.
-*   Python package installer `pip` or `pip3`.
-*   Dependencies listed in `requirements.txt` (includes `pandas` for data processing and `pytest` for tests). These are installed automatically by `updatearcep.sh` or can be installed manually.
+*   `pytest` for running tests (optional, for development).
 
 ### 1. Get the Code
 
@@ -44,16 +43,8 @@ chmod +x updatearcep.sh
 ```
 
 This script will:
-1.  Install necessary Python dependencies from `requirements.txt` (e.g., `pandas`).
-2.  Download the latest CSV data files from ARCEP (via data.gouv.fr) and the INSEE data into the `arcep/` subdirectory.
-3.  Run `generatedb.py` to process these CSV files and create/update the `whoistel.sqlite3` database in the project root.
-
-Alternatively, to install dependencies manually (if you don't run `updatearcep.sh` or it fails to install them):
-```bash
-pip3 install -r requirements.txt
-# or
-# pip install -r requirements.txt
-```
+1.  Download the latest CSV data files from ARCEP (via data.gouv.fr) and the INSEE data into the `arcep/` subdirectory.
+2.  Run `generatedb.py` to process these CSV files and create/update the `whoistel.sqlite3` database in the project root.
 
 ### 3. Run `whoistel.py`
 
@@ -83,15 +74,7 @@ For the specific test number `+33740756315`, the script currently reports it as 
 
 ## Development & Testing
 
-To run the tests, ensure `pytest` is installed. If you ran `./updatearcep.sh`, `pytest` (listed in `requirements.txt`) should already be installed. Otherwise, you can install it as part of all dependencies:
-```bash
-pip3 install -r requirements.txt
-```
-Or specifically:
-```bash
-pip3 install pytest
-```
-Then, from the project root:
+To run the tests, ensure `pytest` is installed (`pip install pytest`). Then, from the project root:
 
 ```bash
 pytest
