@@ -44,11 +44,12 @@ chmod +x updatearcep.sh
 ```
 
 This script will:
-1.  Install necessary Python dependencies from `requirements.txt` (e.g., `pandas`).
+1.  Attempt to install necessary Python dependencies from `requirements.txt` (e.g., `pandas`) if not run in an environment where this step is skipped (like during a Docker build where `SKIP_PIP_INSTALL_IN_CONTAINER=true` is set). For local/manual execution, ensure dependencies are installed.
 2.  Download the latest CSV data files from ARCEP (via data.gouv.fr) and the INSEE data into the `arcep/` subdirectory.
 3.  Run `generatedb.py` to process these CSV files and create/update the `whoistel.sqlite3` database in the project root.
 
-Alternatively, to install dependencies manually (if you don't run `updatearcep.sh` or it fails to install them):
+**Important for local/manual use of `updatearcep.sh`**:
+Ensure Python dependencies are installed before running, or allow the script to install them. You can install them manually via:
 ```bash
 pip3 install -r requirements.txt
 # or

@@ -34,6 +34,8 @@ RUN chmod +x /app/updatearcep.sh
 # Run updatearcep.sh to download data and generate whoistel.sqlite3.
 # This also creates the arcep/ directory with downloaded/converted data.
 # This is done as root to ensure permissions for downloads and file creation.
+# Set ENV to make updatearcep.sh skip its internal pip install.
+ENV SKIP_PIP_INSTALL_IN_CONTAINER=true
 RUN /app/updatearcep.sh
 
 # Ensure the /app directory and its contents (including generated DB and arcep data)
