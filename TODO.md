@@ -39,18 +39,30 @@ This file tracks tasks for the `whoistel` project.
     *   [x] Ran `python whoistel.py +33740756315` and verified its output (Numéro inconnu).
     *   [x] Ran `pytest tests/test_whoistel.py` - all tests passed.
 *   [x] **Documentation Files**: Ensured `AGENTS.md` and `TODO.md` are created/overwritten with latest content.
+*   [x] **Integrate New ARCEP XLS Data Sources:**
+    *   [x] Updated `updatearcep.sh` to download `liste-zne.xls` and `correspondance-zab-departements.xls`.
+    *   [x] Created `xls_to_csv_converter.py` to convert XLS to CSV.
+    *   [x] Modified `generatedb.py` to:
+        *   [x] Create `CommunesZNE` and `ZABDepartement` tables.
+        *   [x] Populate `CommunesZNE` from `liste-zne_Correspondance_Communes_ZNE.csv`.
+        *   [x] Populate `ZABDepartement` from `correspondance-zab-departements_ZAB_D_partement.csv`.
+        *   [x] Changed `Communes.CodeInsee` and `CommunesZNE.CodeINSEECommune` to TEXT.
+*   [x] Updated `.gitignore` to exclude `arcep/` and other generated/downloaded files.
+*   [x] Updated `AGENTS.md` with rule about not reading full data files.
 
-### Pending Tasks (Deferred / Future Considerations)
-*   [ ] **`generatedb.py`:** Address placeholder CodeInsee (currently 0).
-    *   *Assessment: This is complex due to changes in data mapping. Deferred as not critical for primary CLI functionality.*
-*   [ ] **`generatedb.py`:** Address omitted ZNE to commune mapping.
-    *   *Assessment: Similar to CodeInsee, deferred.*
+### Pending Tasks
+*   [ ] **Data Initialization Robustness:** Verify and ensure `updatearcep.sh` and `generatedb.py` correctly initialize all necessary data (download, convert) and the database (`whoistel.sqlite3`) if the `arcep/` directory or the database file are missing (as they are now in `.gitignore`).
+*   [ ] **`generatedb.py`:** Address placeholder CodeInsee in `PlagesNumerosGeographiques` (currently 0).
+    *   *Assessment: This is complex. The `majournums.csv` doesn't directly link to ZNE chef-lieu INSEE. `liste-zne_Liste_des_ZNE.csv` exists but mapping logic isn't straightforward and was deferred. The current implementation uses a placeholder `0`.*
+*   [ ] **`whoistel.py`:** Utilize `CommunesZNE` and `ZABDepartement` tables.
+    *   *Currently, these tables are populated by `generatedb.py` but not yet used by `whoistel.py` for lookups (e.g., to list all communes in a ZNE or to use ZAB-department info).*
 *   [ ] **Further `+33740756315` Investigation (Data Permitting):**
-    *   If the user can provide the *expected operator* for `+33740756315`, further investigation into `majournums.csv` could be done to see if a different data extraction strategy in `generatedb.py` is needed for this specific number's range (e.g., using `Tranche_Debut` / `Tranche_Fin` instead of/alongside `EZABPQM` if `EZABPQM` is not the definitive prefix for its operator). Currently, the script correctly reports "unknown" based on available data and current processing.
+    *   If the user can provide the *expected operator* for `+33740756315`, further investigation into `majournums.csv` could be done to see if a different data extraction strategy in `generatedb.py` is needed for this specific number's range.
 *   [ ] Review all code for clarity, comments, and any remaining Python 2 artifacts (mostly done, but a final pass is good).
-*   [ ] Update `README.md` if necessary to reflect changes in usage or setup (e.g. `argparse` usage).
-*   [ ] Consider adding `requirements.txt` (currently only standard library + `pytest` for testing).
+*   [ ] Update `README.md` (Completed in this session).
+*   [ ] Create `requirements.txt` file listing dependencies (`pandas`, `openpyxl`, `xlrd`, `pytest`).
 
 ### Future Considerations (Post-MVP)
-*   Explore options for CodeInsee and ZNE/commune mapping if deemed important.
+*   Explore options for more accurate CodeInsee mapping in `PlagesNumerosGeographiques` if a clear data linkage strategy emerges.
 *   Investigate if any new, reliable, free APIs exist for supplementary information.
+*   Enhance `whoistel.py` output using the new ZNE/ZAB data (e.g., show department for ZAB, list communes in ZNE).

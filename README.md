@@ -13,19 +13,33 @@
 
 The program primarily uses the following information sources, converted to an SQLite database (`whoistel.sqlite3`) by the included scripts:
 
-*   **ARCEP Data (via data.gouv.fr):**
-    *   `majournums.csv`: Contains number ranges (including `EZABPQM`), their allocation type (geographic, mobile, etc.), and operator mnemonics. This is the primary source for number-to-operator mapping.
-    *   `identifiants_ce.csv`: Provides details about operators (e.g., full name for a given operator mnemonic).
+*   **ARCEP Data:**
+    *   **Via data.gouv.fr (CSV):**
+        *   `majournums.csv`: Contains number ranges (including `EZABPQM`), their allocation type (geographic, mobile, etc.), and operator mnemonics. This is the primary source for number-to-operator mapping.
+        *   `identifiants_ce.csv`: Provides details about operators (e.g., full name for a given operator mnemonic).
+    *   **Via arcep.fr (XLS, converted to CSV):**
+        *   `liste-zne.xls`: Provides mappings between communes and ZNE (Zone de Numérotation Elémentaire). Specifically, the "Correspondance Communes-ZNE" sheet is used.
+        *   `correspondance-zab-departements.xls`: Provides mappings between ZAB (Zone d'Appel de Base) prefixes and departments.
 *   **INSEE Data:**
     *   `insee.csv` (originally from `insee.zip` from galichon.com): Links INSEE codes (city codes) to city names, postal codes, and departments. Used for geographic number localization.
 
 The Annu.com and OVH Telecom API integrations from the original version have been removed as they are defunct or no longer suitable.
+
+## Database Schema Highlights
+
+The `generatedb.py` script creates several tables, including:
+*   `PlagesNumeros`: Stores number ranges and associated operator/type information from `majournums.csv`.
+*   `Operateurs`: Stores operator details from `identifiants_ce.csv`.
+*   `Communes`: Stores city/postal code/department information from `insee.csv`.
+*   `CommunesZNE`: Stores mappings between ZNEs and commune INSEE codes, derived from `liste-zne.xls`. `CodeINSEECommune` is stored as TEXT to accommodate alphanumeric Corsican codes.
+*   `ZABDepartement`: Stores mappings between ZAB prefixes and department numbers, derived from `correspondance-zab-departements.xls`.
 
 ## Setup and Usage
 
 ### Prerequisites
 
 *   Python 3
+*   Python libraries: `pandas`, `openpyxl`, `xlrd` (install via `pip install pandas openpyxl xlrd`)
 *   Standard Unix utilities (`bash`, `wget`, `unzip`) for fetching data.
 *   `pytest` for running tests (optional, for development).
 
@@ -33,7 +47,12 @@ The Annu.com and OVH Telecom API integrations from the original version have bee
 
 Clone the repository or download the source files.
 
-### 2. Prepare Data and Database
+### 2. Install Dependencies (if not already present)
+```bash
+pip install pandas openpyxl xlrd
+```
+
+### 3. Prepare Data and Database
 
 Before the first use, and periodically to update the data, make the `updatearcep.sh` script executable and then run it from the project's root directory:
 
@@ -43,10 +62,12 @@ chmod +x updatearcep.sh
 ```
 
 This script will:
-1.  Download the latest CSV data files from ARCEP (via data.gouv.fr) and the INSEE data into the `arcep/` subdirectory.
-2.  Run `generatedb.py` to process these CSV files and create/update the `whoistel.sqlite3` database in the project root.
+1.  Download the latest CSV data files from ARCEP (via data.gouv.fr) into the `arcep/` subdirectory.
+2.  Download the `liste-zne.xls` and `correspondance-zab-departements.xls` files from arcep.fr into the `arcep/` subdirectory.
+3.  Run the `xls_to_csv_converter.py` script (using `python3`) to convert the downloaded XLS files into multiple CSV files (one per sheet) within the `arcep/` directory. For example, `liste-zne.xls` will produce `arcep/liste-zne_Correspondance_Communes_ZNE.csv` among others.
+4.  Run `generatedb.py` to process all relevant CSV files (both directly downloaded and converted) and create/update the `whoistel.sqlite3` database in the project root.
 
-### 3. Run `whoistel.py`
+### 4. Run `whoistel.py`
 
 Once the database is generated, you can query a number:
 
@@ -97,7 +118,9 @@ Many items from the original 2013 TODO list have been impacted by the migration 
 *   The project is functional in Python 3.
 *   Data fetching and database generation are operational with current ARCEP CSV sources.
 *   **Operator Lookup for some 07xxxx numbers:** The primary test number `+33740756315` is not found in the database. This is due to the data in `majournums.csv` not providing a direct `EZABPQM` prefix match that `generatedb.py` can currently use to associate this specific number with an operator. The general lookup mechanism works for numbers where such data exists.
-*   **CodeInsee and ZNE Mapping:** Mapping for CodeInsee for geographic numbers (beyond a placeholder) and ZNE to commune mapping are currently not implemented due to complexities with the new data formats and lack of direct mappings in the primary CSVs. These are considered future enhancements if critical.
+*   **CodeInsee for Geographic Numbers:** Mapping for `CodeInsee` in the `PlagesNumerosGeographiques` table (used for localizing geographic numbers) currently uses a placeholder value of `0`. This is because the primary data source (`majournums.csv`) does not directly link geographic number ranges to ZNE chef-lieu INSEE codes, and the structure of other ARCEP files (like `liste-zne_Liste_des_ZNE.csv`) does not offer a straightforward mapping that has been implemented. The `CommunesZNE` table *does* link commune INSEE codes to ZNEs, but this is not yet used by `whoistel.py` for number lookup.
+*   **ZNE to Commune Mapping:** While `generatedb.py` now populates a `CommunesZNE` table from `liste-zne.xls` (mapping ZNE numbers to commune INSEE codes), this information is not yet actively used by `whoistel.py` to, for example, list all communes within a ZNE for a given geographic number.
 *   **Surtax Information:** Information on surcharges in `whoistel.py` is based on old logic and may not be accurate.
+*   **Data Initialization:** The `arcep/` directory (containing downloaded and converted data) and `whoistel.sqlite3` (the database) are in `.gitignore`. The `updatearcep.sh` script is responsible for creating these if they are missing.
 
-This version provides a functional CLI tool based on the latest available ARCEP data structure.
+This version provides a functional CLI tool based on the latest available ARCEP data structure, with new tables for ZNE and ZAB information.
