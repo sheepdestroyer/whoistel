@@ -22,8 +22,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy necessary application scripts.
 # These are needed for the application to run and for future in-container DB updates.
-# Ensure requirements.txt is also in /app for updatearcep.sh if it invokes pip directly.
-COPY whoistel.py xls_to_csv_converter.py generatedb.py updatearcep.sh requirements.txt /app/
+# requirements.txt is already in WORKDIR /app from the previous COPY and used by pip install.
+# updatearcep.sh uses `pip3 install -r requirements.txt` assuming it's in the current dir,
+# so it needs to be in /app as well if updatearcep.sh's CWD is /app.
+# The initial `COPY requirements.txt .` (where . is /app) handled this.
+COPY whoistel.py xls_to_csv_converter.py generatedb.py updatearcep.sh /app/
 
 # Ensure updatearcep.sh is executable
 RUN chmod +x /app/updatearcep.sh

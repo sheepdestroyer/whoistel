@@ -122,11 +122,13 @@ def getInfosINSEE(codeINSEE):
     logging.debug(f"INSEE query result: {infos}")
 
     if infos:
-        print_stdout("") # For spacing, similar to original logging.info("")
-        print_stdout(f'Commune : {infos[0]}')
-        print_stdout(f'Département : {infos[2]}')
-        print_stdout(f'Code postal : {str(infos[1]).zfill(5)}')
-        print_stdout(f'Code INSEE : {str(codeINSEE).zfill(5)}')
+        # The initial print_stdout("") for spacing is handled by the leading \n in the f-string if desired,
+        # or can be kept if more distinct spacing is needed.
+        # The suggestion included a leading \n, so I'll follow that.
+        print_stdout(f"\nCommune : {infos[0]}\n"
+                     f"Département : {infos[2]}\n"
+                     f"Code postal : {str(infos[1]).zfill(5)}\n"
+                     f"Code INSEE : {str(codeINSEE).zfill(5)}")
     else:
         logging.warning(f"Aucune information trouvée pour le Code INSEE : {str(codeINSEE).zfill(5)}")
 
@@ -141,21 +143,23 @@ def getInfosOperateur(codeOperateur):
         logging.warning(f"Opérateur non trouvé pour le code : {codeOperateur}")
         return
 
-    print_stdout("") # For spacing
-    print_stdout(f'Opérateur : {infos[0]}')
-    print_stdout(f'Code opérateur : {codeOperateur}')
-
+    output_lines = [
+        f"Opérateur : {infos[0]}",
+        f"Code opérateur : {codeOperateur}"
+    ]
     if infos[1]: # TypeOperateur
-        print_stdout(f'Type : {infos[1][0].upper() + infos[1][1:] if infos[1] else "N/A"}')
+        output_lines.append(f'Type : {infos[1][0].upper() + infos[1][1:] if infos[1] else "N/A"}')
     if infos[2]: # MailOperateur
-        print_stdout(f'Courriel : {infos[2]}')
+        output_lines.append(f'Courriel : {infos[2]}')
     if infos[3]: # SiteOperateur
         url = infos[3].lower()
         if not url.startswith('http'):
             url = 'http://' + url
         if '/' not in infos[3][8:]: # Check after "http://" or "https://"
             url += '/'
-        print_stdout(f'Site web : {url}')
+        output_lines.append(f'Site web : {url}')
+
+    print_stdout("\n" + "\n".join(output_lines))
 
 def getGeographicNumberARCEP():
     logging.debug(f"Attempting geographic number lookup for: {tel}")
@@ -241,11 +245,9 @@ def getSurtax():
 
         # Free numbers (Numéros Verts)
         if (newRates and type08 <= 5) or (type08 in (1, 2, 3, 4, 8)): # 0800-0805, 0808
-             print_stdout('Dénomination commerciale : Numéro Vert')
-             print_stdout('Prix : Entièrement gratuit (depuis fixe et mobile)')
+             print_stdout('Dénomination commerciale : Numéro Vert\nPrix : Entièrement gratuit (depuis fixe et mobile)')
         elif type08 <= 9: # 0806-0809 (excluding 0808 already covered)
-             print_stdout('Dénomination commerciale : Numéro Vert (Service gratuit + prix appel)')
-             print_stdout('Surtaxe : Non (coût d\'un appel vers un fixe)')
+             print_stdout('Dénomination commerciale : Numéro Vert (Service gratuit + prix appel)\nSurtaxe : Non (coût d\'un appel vers un fixe)')
 
         # Grey numbers (Numéros Gris) - cost of a local call or specific tariff
         elif 10 <= type08 <= 19 or type08 == 84: # 081x, 082x (partially, see below), 0884

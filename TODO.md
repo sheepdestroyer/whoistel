@@ -63,4 +63,4 @@ This file tracks tasks for the `whoistel` project.
     *   [ ] This requires `pandas` and `xlrd` (from `requirements.txt`) to be available in the runtime container image.
     *   [ ] Consider how the updated `whoistel.sqlite3` database will be persisted or how the running application will reload it.
 *   **CLI Output Refinement**:
-    *   [ ] Refactor `whoistel.py` to direct successful lookup results to `stdout` and keep logs (debug, info, warnings, errors) on `stderr`. This aligns with standard CLI tool conventions.
+    *   [x] Refactor `whoistel.py` to direct successful lookup results to `stdout` and keep logs (debug, info, warnings, errors) on `stderr`. This aligns with standard CLI tool conventions.
