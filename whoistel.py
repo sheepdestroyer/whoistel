@@ -46,11 +46,7 @@ logging.debug(f"Arguments parsed: {args}")
 raw_tel = args.numero_tel
 logging.debug(f"Raw telephone number input from positional arg: {raw_tel}")
 
-if raw_tel:
-    # A positional number was provided, it takes precedence.
-    # No other logic needed here as --test-numero flag is removed.
-    pass
-else:
+if not raw_tel:
     # No positional number, so use the internal default.
     raw_tel = DEFAULT_PHONE_NUMBER
     logging.info(f"Aucun numéro de téléphone positionnel fourni. Utilisation du numéro par défaut : {raw_tel}")
