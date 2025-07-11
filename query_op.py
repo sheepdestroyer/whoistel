@@ -1,4 +1,9 @@
 import sqlite3
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
 DB_FILE = "whoistel.sqlite3"
 phone_number_to_check = "0740756315"
 
@@ -9,7 +14,7 @@ op_code = None
 op_name = None
 found_prefix_in_db = None
 
-print(f"Querying for number: {phone_number_to_check}")
+logging.info(f"Querying for number: {phone_number_to_check}")
 
 # Try prefixes from most specific (e.g., "0740756") down to least specific (e.g., "07")
 # The PlageTel in PlagesNumeros is TEXT.
@@ -21,28 +26,29 @@ print(f"Querying for number: {phone_number_to_check}")
 max_prefix_len_to_try = 7
 for length in range(min(len(phone_number_to_check), max_prefix_len_to_try), 1, -1):
     prefix = phone_number_to_check[:length]
-    # print(f"DEBUG: Trying prefix: {prefix}")
+    logging.debug(f"Trying prefix: {prefix}")
     cursor.execute("SELECT CodeOperateur FROM PlagesNumeros WHERE PlageTel = ?", (prefix,))
     result = cursor.fetchone()
     if result:
         op_code = result[0]
         found_prefix_in_db = prefix
-        # print(f"DEBUG: Found op_code '{op_code}' for prefix '{prefix}' in PlagesNumeros")
+        logging.debug(f"Found op_code '{op_code}' for prefix '{prefix}' in PlagesNumeros")
         break
 
 if op_code:
+    logging.debug(f"Querying Operateurs table for CodeOperateur: {op_code}")
     cursor.execute("SELECT NomOperateur FROM Operateurs WHERE CodeOperateur = ?", (op_code,))
     op_result = cursor.fetchone()
     if op_result:
         op_name = op_result[0]
-        print(f"Operator for most specific prefix '{found_prefix_in_db}': {op_name} (Code: {op_code})")
+        logging.info(f"Operator for most specific prefix '{found_prefix_in_db}': {op_name} (Code: {op_code})")
     else:
-        print(f"Operator name not found for CodeOperateur '{op_code}' (from prefix '{found_prefix_in_db}')")
+        logging.warning(f"Operator name not found for CodeOperateur '{op_code}' (from prefix '{found_prefix_in_db}')")
 else:
-    print(f"No operator code found in PlagesNumeros for prefixes derived from {phone_number_to_check}.")
-    print("\nDEBUG: Sample of PlagesNumeros for '07%':")
+    logging.info(f"No operator code found in PlagesNumeros for prefixes derived from {phone_number_to_check}.")
+    logging.debug("\nDEBUG: Sample of PlagesNumeros for '07%':")
     cursor.execute("SELECT PlageTel, CodeOperateur FROM PlagesNumeros WHERE PlageTel LIKE '07%' LIMIT 20")
     for row in cursor.fetchall():
-        print(row)
+        logging.debug(row)
 
 conn.close()
