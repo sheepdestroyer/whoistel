@@ -1,21 +1,4 @@
 #!/bin/sh
-set -x
-
-# Ensure Python dependencies are installed
-echo "Checking and installing Python dependencies from requirements.txt..."
-if command -v pip3 &> /dev/null
-then
-    pip3 install -r requirements.txt
-elif command -v pip &> /dev/null
-then
-    echo "pip3 not found, trying pip..."
-    pip install -r requirements.txt
-else
-    echo "Error: Neither pip3 nor pip found. Please install pip."
-    exit 1
-fi
-echo "Dependency check complete."
-echo
 
 cd "$(dirname "$0")"
 mkdir -p arcep
