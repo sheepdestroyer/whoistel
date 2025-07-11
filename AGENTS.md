@@ -14,11 +14,10 @@ The primary goal is to have a working command-line tool (`whoistel.py`) that can
 3.  **Testing:**
     *   The phone number `+33740756315` must be used as a test case.
     *   The script must be runnable with this number by explicitly passing it as the main phone number argument (e.g., `python3 whoistel.py +33740756315`).
-    *   *(Future consideration: Modify the script to use this number as a default if no other is provided, or to accept it via a dedicated test execution flag.)*
-    *   Use `pytest` for validation. Write tests to cover core functionality, especially number lookups.
+    *   Use `pytest -v` for validation. Write tests to cover core functionality, especially number lookups.
     *   Run the script with the test number before submitting changes.
 4.  **Data Handling:**
-    *   **Never attempt to read `arcep/insee.csv` directly within the main application logic.** This file is large and contains commune, postal code, department, and INSEE code mappings. It's used during the database generation phase (`generatedb.py`) if necessary, but not directly by `whoistel.py`.
+    *   **Never attempt to read `.csv` or `.xls` files directly within the main application logic and your tests** These data files are large, converted if nececessary and used during the database generation phase (`generatedb.py`), but not directly by `whoistel.py`. Only inspect them using `head` or `tail`.
 5.  **Python Version:** The project targets Python 3. Ensure all code is Python 3 compatible.
 6.  **Dependency Management:** If new dependencies are added, ensure they are documented (e.g., in a `requirements.txt` if appropriate).
 7.  **Committing Code:**
