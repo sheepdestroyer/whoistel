@@ -39,7 +39,7 @@ The `generatedb.py` script creates several tables, including:
 ### Prerequisites
 
 *   Python 3
-*   Python libraries: `pandas`, `openpyxl`, `xlrd` (install via `pip install pandas openpyxl xlrd`)
+*   Python libraries: `pandas`, `openpyxl`, `xlrd`
 *   Standard Unix utilities (`bash`, `wget`, `unzip`) for fetching data.
 *   `pytest` for running tests (optional, for development).
 
