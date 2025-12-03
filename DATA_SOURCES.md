@@ -19,7 +19,7 @@ Data is downloaded from [data.gouv.fr](https://www.data.gouv.fr) and [Arcep Open
 
 ### INSEE / Geographic Data
 *   **Code INSEE and Communes (insee.csv)**
-    *   **Source:** Currently downloaded from `http://www.galichon.com/codesgeo/data/insee.zip`.
+*   **Source:** Currently downloaded from `https://www.galichon.com/codesgeo/data/insee.zip`.
     *   **Content:** Mapping of INSEE codes to Commune names and Departments.
     *   **Usage:** Used to provide location details for Geographic numbers.
 
