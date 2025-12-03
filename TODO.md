@@ -2,7 +2,19 @@
 
 This file tracks tasks for the `whoistel` project.
 
+## Planned Work (Current Sprint)
+*   [ ] **Containerization**:
+    *   [ ] Add Dockerfile/Containerfile for the web app.
+
 ## Completed
+*   [x] **Create Web UI (Flask)**:
+    *   [x] Implement Flask application (`webapp.py`).
+    *   [x] Refactor `whoistel.py` logic for reuse in the web app.
+    *   [x] Create HTML templates (Search, Result, History).
+*   [x] **History & Reporting System**:
+    *   [x] Create `history_manager.py` and `history.sqlite3`.
+    *   [x] Implement "Report Spam" functionality.
+    *   [x] Display spam counters and check history.
 *   [x] **Refactor Data Ingestion (`generatedb.py`)**:
     *   [x] Switched to `pandas` for robust CSV handling (fixing encoding issues).
     *   [x] Implemented schema for `PlagesNumerosGeographiques` (Geo) and `PlagesNumeros` (Mobile/Special).

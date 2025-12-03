@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Rechercher un numéro</h2>
+<form action="{{ url_for('check') }}" method="post">
+    <label for="number">Numéro de téléphone :</label>
+    <input type="text" name="number" id="number" placeholder="ex: 0123456789 ou +336..." required>
+    <input type="submit" value="Rechercher">
+</form>
+{% endblock %}

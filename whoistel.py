@@ -99,6 +99,57 @@ def search_number(conn, tel):
 
     return best_match
 
+def get_full_info(conn, tel):
+    """
+    Combines search results with operator and location details into a dictionary.
+    """
+    info = search_number(conn, tel)
+    result = {
+        'number': tel,
+        'found': False,
+        'type': None,
+        'prefix': None,
+        'operator': None,
+        'location': None,
+        'error': None
+    }
+
+    if not info:
+        result['error'] = "Numéro inconnu dans la base ARCEP (pas d'opérateur assigné trouvé)."
+        return result
+
+    result['found'] = True
+    result['type'] = info['type']
+    result['prefix'] = info['prefix']
+    result['code_operateur'] = info['code_operateur']
+
+    # Operator Info
+    op_info = get_operator_info(conn, info['code_operateur'])
+    if op_info:
+        result['operator'] = op_info
+    else:
+        result['operator'] = {'code': info['code_operateur'], 'nom': 'Inconnu', 'type': 'N/A', 'site': None, 'mail': None}
+
+    # Location Info
+    if info['code_insee'] and info['code_insee'] != 0:
+        commune_info = get_commune_info(conn, info['code_insee'])
+        result['location'] = commune_info
+
+    # If Geo and no CodeInsee, give Region hint
+    if info['type'] == 'Geographique' and (not result.get('location')):
+        region_map = {
+            '01': 'Île-de-France',
+            '02': 'Nord-Ouest',
+            '03': 'Nord-Est',
+            '04': 'Sud-Est',
+            '05': 'Sud-Ouest'
+        }
+        region_code = tel[:2]
+        if region_code in region_map:
+            result['location'] = {'region': region_map[region_code]}
+
+    return result
+
 def print_result(conn, tel, info):
     print(f"Numéro : {tel}")
 

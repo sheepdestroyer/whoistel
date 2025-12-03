@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Résultat pour {{ number }}</h2>
+
+{% if result.error %}
+    <div class="result-box" style="border-left: 5px solid red;">
+        <h3>Numéro non trouvé</h3>
+        <p>{{ result.error }}</p>
+    </div>
+{% else %}
+    <div class="result-box" style="border-left: 5px solid green;">
+        <h3>Informations ARCEP</h3>
+        <p><strong>Type :</strong> {{ result.type }}</p>
+        <p><strong>Préfixe :</strong> {{ result.prefix }}</p>
+
+        {% if result.operator %}
+            <h4>Opérateur</h4>
+            <ul>
+                <li><strong>Nom :</strong> {{ result.operator.nom }}</li>
+                <li><strong>Code :</strong> {{ result.operator.code }}</li>
+                {% if result.operator.site %}<li>Site : {{ result.operator.site }}</li>{% endif %}
+                {% if result.operator.mail %}<li>Email : {{ result.operator.mail }}</li>{% endif %}
+            </ul>
+        {% endif %}
+
+        {% if result.location %}
+            <h4>Localisation</h4>
+            <ul>
+                {% if result.location.commune %}
+                    <li><strong>Commune :</strong> {{ result.location.commune }} ({{ result.location.code_postal }})</li>
+                    <li><strong>Département :</strong> {{ result.location.departement }}</li>
+                {% elif result.location.region %}
+                    <li><strong>Région :</strong> {{ result.location.region }}</li>
+                {% endif %}
+            </ul>
+        {% endif %}
+    </div>
+{% endif %}
+
+<div class="result-box" style="border-left: 5px solid orange;">
+    <h3>Statistiques Communautaires</h3>
+    <p>Ce numéro a été signalé comme spam <strong>{{ spam_count }}</strong> fois.</p>
+</div>
+
+<h3>Ajouter un signalement / note</h3>
+<form action="{{ url_for('report') }}" method="post">
+    <input type="hidden" name="number" value="{{ number }}">
+
+    <label for="date">Date de l'appel (optionnel) :</label>
+    <input type="date" name="date" id="date">
+
+    <label>
+        <input type="checkbox" name="is_spam"> Signaler comme Spam / Démarchage
+    </label>
+    <br><br>
+
+    <label for="comment">Commentaire (optionnel) :</label><br>
+    <textarea name="comment" id="comment" rows="3" style="width:100%;"></textarea>
+    <br><br>
+
+    <input type="submit" value="Enregistrer le signalement">
+</form>
+
+{% endblock %}
