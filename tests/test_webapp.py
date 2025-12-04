@@ -68,3 +68,14 @@ def test_view_number_redirect_dirty(client):
     rv = client.get('/view/01.02.03.04.05')
     assert rv.status_code == 302
     assert '/view/0102030405' in rv.location
+
+def test_report_empty_date(client):
+    rv = client.post('/report', data={
+        'number': '0987654321',
+        'date': '',
+        'is_spam': 'on',
+        'comment': 'Test Empty Date'
+    }, follow_redirects=True)
+    assert rv.status_code == 200
+    rv = client.get('/history')
+    assert b'Test Empty Date' in rv.data

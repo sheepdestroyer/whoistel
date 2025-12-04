@@ -58,7 +58,7 @@ def get_operator_info(conn, code_operateur):
         site = row[3]
 
         # Simple validation to prevent XSS
-        if mail and '@' not in mail:
+        if mail and ('@' not in mail or '<' in mail or '>' in mail):
             mail = None
         if site and not (site.startswith('http://') or site.startswith('https://')):
             site = None

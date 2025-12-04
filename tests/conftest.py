@@ -2,6 +2,9 @@ import pytest
 import os
 import subprocess
 
+# Set SECRET_KEY for testing before any app import happens
+os.environ['SECRET_KEY'] = 'test-key-for-conftest'
+
 def get_project_root():
     """Returns the root directory of the project."""
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
