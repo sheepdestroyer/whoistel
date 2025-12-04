@@ -73,18 +73,20 @@ def get_operator_info(conn, code_operateur):
     return None
 
 def get_commune_info(conn, code_insee):
-    if not code_insee or code_insee == 0:
+    if not code_insee or str(code_insee) == '0':
         return None
 
     cursor = conn.cursor()
-    cursor.execute("SELECT NomCommune, CodePostal, NomDepartement FROM Communes WHERE CodeInsee=?", (code_insee,))
+    cursor.execute("SELECT NomCommune, CodePostal, NomDepartement, Latitude, Longitude FROM Communes WHERE CodeInsee=?", (code_insee,))
     row = cursor.fetchone()
     if row:
         return {
             'code_insee': code_insee,
             'commune': row[0],
             'code_postal': row[1],
-            'departement': row[2]
+            'departement': row[2],
+            'latitude': row[3],
+            'longitude': row[4]
         }
     return None
 
@@ -200,16 +202,25 @@ def print_result(conn, tel, info):
         print(f"\nOpérateur : Code {info['code_operateur']} (Détails non trouvés)")
 
     # Location Info
-    if info['code_insee'] and info['code_insee'] != 0:
+    if info['code_insee'] and str(info['code_insee']) != '0':
         commune_info = get_commune_info(conn, info['code_insee'])
         if commune_info:
             print("\n--- Localisation (Estimation) ---")
             print(f"Commune : {commune_info['commune']}")
             print(f"Département : {commune_info['departement']}")
             print(f"Code Postal : {commune_info['code_postal']}")
+            if commune_info['latitude'] and commune_info['longitude']:
+                print(f"GPS : {commune_info['latitude']}, {commune_info['longitude']}")
 
     # If Geo and no CodeInsee, give Region hint
-    if info['type'] == 'Geographique' and (not info['code_insee'] or info['code_insee'] == 0):
+    if info['type'] == 'Geographique' and (not info['code_insee'] or str(info['code_insee']) == '0'):
+        region_map = {
+            '01': 'Île-de-France',
+            '02': 'Nord-Ouest',
+            '03': 'Nord-Est',
+            '04': 'Sud-Est',
+            '05': 'Sud-Ouest'
+        }
         region_code = tel[:2]
         if region_code in REGION_MAP:
             print(f"\nLocalisation : Région {REGION_MAP[region_code]} (Détail commune non disponible)")

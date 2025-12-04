@@ -31,11 +31,17 @@ This file tracks tasks for the `whoistel` project.
 *   [x] **Documentation**:
     *   [x] Created `DATA_SOURCES.md`.
     *   [x] Researched availability of Subscriber (Reverse Directory) and Spam data sources.
+*   [x] **Data Source Update**:
+    *   [x] Replaced `galichon.com` with official "Communes de France - Base des codes postaux" (Enriched La Poste data) from `data.gouv.fr`.
+    *   [x] Enriched `Communes` table with Latitude, Longitude, and Department Name.
+    *   [x] Updated `whoistel.py` to display GPS coordinates if available.
 
 ## Known Issues / Future Work
 *   **Missing Data:** The range `0740` (and potentially others) is missing from the ARCEP `MAJNUM.csv` file. This causes lookups for numbers like `+33740756315` to return "Unknown".
-*   **Precise Location:** The mapping from Phone Prefix to specific ZNE/INSEE code is missing. Geographic lookups currently provide Region-level info (e.g., Sud-Est) but not the specific Commune.
-*   **INSEE Source:** The current source (`galichon.com`) is unofficial. Consider switching to an official INSEE dataset from data.gouv.fr.
+*   **Precise Location:** The mapping from Phone Prefix (EZABPQM) to specific ZNE/CodeInsee is missing in open data.
+    *   `PlagesNumerosGeographiques` has `CodeInsee` set to '0'.
+    *   Although the `Communes` table is now rich (with GPS), the link from phone number to commune is broken.
+*   **ZNE Mapping:** Need to find a source mapping `EZABPQM` -> `ZNE` -> `Commune` to enable precise location lookups.
 
 ## Research Findings (Integration Blocked)
 *   **Reverse Directory (Annuaire Inversé):** No Open Data source exists due to GDPR. Commercial APIs only.
