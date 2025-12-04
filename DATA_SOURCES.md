@@ -18,10 +18,11 @@ Data is downloaded from [data.gouv.fr](https://www.data.gouv.fr) and [Arcep Open
     *   **Content:** Mapping between Operator Codes (`CodeOperateur`) and names/details.
 
 ### INSEE / Geographic Data
-*   **Code INSEE and Communes (insee.csv)**
-    *   **Source:** Currently downloaded from `http://www.galichon.com/codesgeo/data/insee.zip`.
-    *   **Content:** Mapping of INSEE codes to Commune names and Departments.
-    *   **Usage:** Used to provide location details for Geographic numbers.
+*   **Communes, Codes Postaux, et Coordonnées**
+    *   **Source:** [Communes de France - Base des codes postaux (data.gouv.fr)](https://www.data.gouv.fr/datasets/communes-de-france-base-des-codes-postaux/)
+    *   **Original Source:** La Poste (Base officielle des codes postaux).
+    *   **Content:** Mapping of INSEE codes to Commune names, Zip Codes, Departments, and Regions. Includes **Latitude/Longitude**.
+    *   **Usage:** Used to provide location details (Commune, Zip, Dept, GPS) for Geographic numbers (when the link is available).
 
 ## Potential Additional Sources (Research Findings)
 
