@@ -52,11 +52,14 @@ def report():
     is_spam = request.form.get('is_spam') == 'on'
     comment = request.form.get('comment')
 
-    try:
-        # This will fail for None, empty string, or bad format
-        datetime.strptime(date, '%Y-%m-%d')
-    except (ValueError, TypeError):
-        date = datetime.now().strftime('%Y-%m-%d')
+    if not date:
+        date = None
+    else:
+        try:
+            datetime.strptime(date, '%Y-%m-%d')
+        except ValueError:
+            # Invalid format from user, store as NULL
+            date = None
 
     if number:
         history_manager.add_report(number, date, is_spam, comment)
