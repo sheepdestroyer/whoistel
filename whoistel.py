@@ -20,6 +20,20 @@ REGION_MAP = {
     '05': 'Sud-Ouest'
 }
 
+def clean_phone_number(raw_tel):
+    if not raw_tel:
+        return ""
+    # Remove separators and parenthesis
+    tel = raw_tel.replace(' ', '').replace('.', '').replace('-', '').replace('(', '').replace(')', '')
+
+    # Handle +33 (0) case which becomes +330... after removal
+    if tel.startswith('+330'):
+        tel = '0' + tel[4:]
+    elif tel.startswith('+33'):
+        tel = '0' + tel[3:]
+
+    return tel
+
 def setup_db_connection():
     if not os.path.exists(DB_FILE):
         logger.error(f"Erreur: La base de données '{DB_FILE}' est absente.")
@@ -199,9 +213,7 @@ def main():
     raw_tel = args.numero
 
     # Clean number
-    tel = raw_tel.replace(' ', '').replace('.', '').replace('-', '')
-    if tel.startswith('+33'):
-        tel = '0' + tel[3:]
+    tel = clean_phone_number(raw_tel)
 
     if not tel.isdigit():
         logger.error("Erreur: Le numéro doit contenir uniquement des chiffres (ou commencer par +33).")

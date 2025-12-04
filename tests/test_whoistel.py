@@ -68,3 +68,11 @@ def test_invalid_number_format_non_digit():
 
     assert result.returncode == 1
     assert "Erreur: Le numéro doit contenir uniquement des chiffres" in result.stderr
+
+def test_clean_phone_number():
+    """Tests the phone number cleaning logic."""
+    from whoistel import clean_phone_number
+    assert clean_phone_number("01.02.03.04.05") == "0102030405"
+    assert clean_phone_number("+33 1 02 03 04 05") == "0102030405"
+    assert clean_phone_number("+33 (0) 6 12 34 56 78") == "0612345678"
+    assert clean_phone_number("06-12-34-56-78") == "0612345678"

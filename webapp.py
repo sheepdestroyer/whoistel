@@ -20,9 +20,7 @@ def check():
         return redirect(url_for('index'))
 
     # Clean number
-    tel = raw_tel.replace(' ', '').replace('.', '').replace('-', '')
-    if tel.startswith('+33'):
-        tel = '0' + tel[3:]
+    tel = whoistel.clean_phone_number(raw_tel)
 
     return redirect(url_for('view_number', number=tel))
 

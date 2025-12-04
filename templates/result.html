@@ -19,8 +19,8 @@
             <ul>
                 <li><strong>Nom :</strong> {{ result.operator.nom }}</li>
                 <li><strong>Code :</strong> {{ result.operator.code }}</li>
-                {% if result.operator.site %}<li>Site : {{ result.operator.site }}</li>{% endif %}
-                {% if result.operator.mail %}<li>Email : {{ result.operator.mail }}</li>{% endif %}
+                {% if result.operator.site %}<li>Site : <a href="{{ result.operator.site }}" target="_blank" rel="noopener noreferrer">{{ result.operator.site }}</a></li>{% endif %}
+                {% if result.operator.mail %}<li>Email : <a href="mailto:{{ result.operator.mail }}">{{ result.operator.mail }}</a></li>{% endif %}
             </ul>
         {% endif %}
 
