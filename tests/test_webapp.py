@@ -13,6 +13,7 @@ def client():
     history_manager.init_history_db()
 
     app.config['TESTING'] = True
+    app.config['WTF_CSRF_ENABLED'] = False
 
     with app.test_client() as client:
         yield client

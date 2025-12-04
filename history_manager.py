@@ -58,14 +58,3 @@ def get_recent_reports(limit=50):
         rows = c.fetchall()
         # Convert rows to dicts
         return [dict(row) for row in rows]
-
-def get_number_reports(phone_number):
-    with closing(get_db_connection()) as conn:
-        c = conn.cursor()
-        c.execute('''
-            SELECT * FROM reports
-            WHERE phone_number = ?
-            ORDER BY created_at DESC
-        ''', (phone_number,))
-        rows = c.fetchall()
-        return [dict(row) for row in rows]

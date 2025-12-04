@@ -1,10 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for
+from flask_wtf import CSRFProtect
 from contextlib import closing
+import os
 import history_manager
 import whoistel
 from datetime import datetime
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-me')
+csrf = CSRFProtect(app)
 
 # Ensure history DB is initialized
 history_manager.init_history_db()
@@ -48,6 +52,10 @@ def report():
 
     # If date is empty, use today
     if not date:
+        date = datetime.now().strftime('%Y-%m-%d')
+    try:
+        datetime.strptime(date, '%Y-%m-%d')
+    except ValueError:
         date = datetime.now().strftime('%Y-%m-%d')
 
     if number:

@@ -45,6 +45,7 @@
 
 <h3>Ajouter un signalement / note</h3>
 <form action="{{ url_for('report') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="number" value="{{ number }}">
 
     <label for="date">Date de l'appel (optionnel) :</label>
