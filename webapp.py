@@ -8,6 +8,8 @@ from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+if not app.config['SECRET_KEY']:
+    raise ValueError("A SECRET_KEY environment variable must be set for security reasons.")
 csrf = CSRFProtect(app)
 
 # Ensure history DB is initialized
