@@ -2,6 +2,7 @@ import sqlite3
 import os
 import logging
 from datetime import datetime
+from contextlib import closing
 
 DB_FILE = 'history.sqlite3'
 logger = logging.getLogger(__name__)
@@ -15,8 +16,7 @@ def init_history_db():
     if not os.path.exists(DB_FILE):
         logger.info(f"Creating history database {DB_FILE}...")
 
-    conn = get_db_connection()
-    try:
+    with closing(get_db_connection()) as conn:
         c = conn.cursor()
         c.execute('''
             CREATE TABLE IF NOT EXISTS reports (
@@ -29,24 +29,18 @@ def init_history_db():
             )
         ''')
         conn.commit()
-    finally:
-        conn.close()
 
 def add_report(phone_number, report_date, is_spam, comment):
-    conn = get_db_connection()
-    try:
+    with closing(get_db_connection()) as conn:
         c = conn.cursor()
         c.execute('''
             INSERT INTO reports (phone_number, report_date, is_spam, comment)
             VALUES (?, ?, ?, ?)
         ''', (phone_number, report_date, 1 if is_spam else 0, comment))
         conn.commit()
-    finally:
-        conn.close()
 
 def get_spam_count(phone_number):
-    conn = get_db_connection()
-    try:
+    with closing(get_db_connection()) as conn:
         c = conn.cursor()
         c.execute('''
             SELECT COUNT(*) FROM reports
@@ -54,12 +48,9 @@ def get_spam_count(phone_number):
         ''', (phone_number,))
         count = c.fetchone()[0]
         return count
-    finally:
-        conn.close()
 
 def get_recent_reports(limit=50):
-    conn = get_db_connection()
-    try:
+    with closing(get_db_connection()) as conn:
         c = conn.cursor()
         c.execute('''
             SELECT * FROM reports
@@ -69,12 +60,9 @@ def get_recent_reports(limit=50):
         rows = c.fetchall()
         # Convert rows to dicts
         return [dict(row) for row in rows]
-    finally:
-        conn.close()
 
 def get_number_reports(phone_number):
-    conn = get_db_connection()
-    try:
+    with closing(get_db_connection()) as conn:
         c = conn.cursor()
         c.execute('''
             SELECT * FROM reports
@@ -83,5 +71,3 @@ def get_number_reports(phone_number):
         ''', (phone_number,))
         rows = c.fetchall()
         return [dict(row) for row in rows]
-    finally:
-        conn.close()

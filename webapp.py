@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
+from contextlib import closing
 import history_manager
 import whoistel
 from datetime import datetime
@@ -27,11 +28,8 @@ def check():
 
 @app.route('/view/<number>', methods=['GET'])
 def view_number(number):
-    conn = whoistel.setup_db_connection()
-    try:
+    with closing(whoistel.setup_db_connection()) as conn:
         result = whoistel.get_full_info(conn, number)
-    finally:
-        conn.close()
 
     # Get stats
     spam_count = history_manager.get_spam_count(number)

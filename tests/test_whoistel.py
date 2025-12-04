@@ -26,29 +26,6 @@ def run_whoistel_script(number):
     )
     return process
 
-@pytest.fixture(scope="module", autouse=True)
-def setup_database():
-    """
-    Ensures the database is generated before tests run.
-    """
-    root_dir = get_project_root()
-    update_script_path = os.path.join(root_dir, "updatearcep.sh")
-    db_path = os.path.join(root_dir, "whoistel.sqlite3")
-
-    if not os.path.exists(db_path):
-        print("\nDatabase not found. Running updatearcep.sh to generate it...")
-        try:
-            subprocess.run(["chmod", "+x", update_script_path], check=True, cwd=root_dir)
-            process = subprocess.run(
-                ["bash", update_script_path],
-                capture_output=True, text=True, check=True, cwd=root_dir
-            )
-        except subprocess.CalledProcessError as e:
-            pytest.fail(f"Database generation failed: {e.stderr}")
-
-    if not os.path.exists(db_path):
-         pytest.fail("Database whoistel.sqlite3 could not be generated.")
-
 def test_geographic_number_lookup():
     """Tests lookup for a known geographic number."""
     number = "0140000000"
