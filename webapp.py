@@ -27,15 +27,11 @@ def check():
 
 @app.route('/view/<number>', methods=['GET'])
 def view_number(number):
-    # Basic validation
-    if not number.isdigit() or len(number) != 10:
-        # Allow short numbers or show error?
-        # For now, just let whoistel handle it (it returns error)
-        pass
-
     conn = whoistel.setup_db_connection()
-    result = whoistel.get_full_info(conn, number)
-    conn.close()
+    try:
+        result = whoistel.get_full_info(conn, number)
+    finally:
+        conn.close()
 
     # Get stats
     spam_count = history_manager.get_spam_count(number)

@@ -4,12 +4,12 @@
 <h2>Résultat pour {{ number }}</h2>
 
 {% if result.error %}
-    <div class="result-box" style="border-left: 5px solid red;">
+    <div class="result-box error">
         <h3>Numéro non trouvé</h3>
         <p>{{ result.error }}</p>
     </div>
 {% else %}
-    <div class="result-box" style="border-left: 5px solid green;">
+    <div class="result-box success">
         <h3>Informations ARCEP</h3>
         <p><strong>Type :</strong> {{ result.type }}</p>
         <p><strong>Préfixe :</strong> {{ result.prefix }}</p>
@@ -38,7 +38,7 @@
     </div>
 {% endif %}
 
-<div class="result-box" style="border-left: 5px solid orange;">
+<div class="result-box community">
     <h3>Statistiques Communautaires</h3>
     <p>Ce numéro a été signalé comme spam <strong>{{ spam_count }}</strong> fois.</p>
 </div>
@@ -56,7 +56,7 @@
     <br><br>
 
     <label for="comment">Commentaire (optionnel) :</label><br>
-    <textarea name="comment" id="comment" rows="3" style="width:100%;"></textarea>
+    <textarea name="comment" id="comment" rows="3"></textarea>
     <br><br>
 
     <input type="submit" value="Enregistrer le signalement">

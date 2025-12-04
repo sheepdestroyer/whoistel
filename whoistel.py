@@ -12,6 +12,14 @@ logger = logging.getLogger(__name__)
 
 DB_FILE = 'whoistel.sqlite3'
 
+REGION_MAP = {
+    '01': 'Île-de-France',
+    '02': 'Nord-Ouest',
+    '03': 'Nord-Est',
+    '04': 'Sud-Est',
+    '05': 'Sud-Ouest'
+}
+
 def setup_db_connection():
     if not os.path.exists(DB_FILE):
         logger.error(f"Erreur: La base de données '{DB_FILE}' est absente.")
@@ -137,16 +145,9 @@ def get_full_info(conn, tel):
 
     # If Geo and no CodeInsee, give Region hint
     if info['type'] == 'Geographique' and (not result.get('location')):
-        region_map = {
-            '01': 'Île-de-France',
-            '02': 'Nord-Ouest',
-            '03': 'Nord-Est',
-            '04': 'Sud-Est',
-            '05': 'Sud-Ouest'
-        }
         region_code = tel[:2]
-        if region_code in region_map:
-            result['location'] = {'region': region_map[region_code]}
+        if region_code in REGION_MAP:
+            result['location'] = {'region': REGION_MAP[region_code]}
 
     return result
 
@@ -186,16 +187,9 @@ def print_result(conn, tel, info):
 
     # If Geo and no CodeInsee, give Region hint
     if info['type'] == 'Geographique' and (not info['code_insee'] or info['code_insee'] == 0):
-        region_map = {
-            '01': 'Île-de-France',
-            '02': 'Nord-Ouest',
-            '03': 'Nord-Est',
-            '04': 'Sud-Est',
-            '05': 'Sud-Ouest'
-        }
         region_code = tel[:2]
-        if region_code in region_map:
-            print(f"\nLocalisation : Région {region_map[region_code]} (Détail commune non disponible)")
+        if region_code in REGION_MAP:
+            print(f"\nLocalisation : Région {REGION_MAP[region_code]} (Détail commune non disponible)")
 
 def main():
     parser = argparse.ArgumentParser(description="Outil de recherche d'informations sur les numéros de téléphone français (ARCEP).")

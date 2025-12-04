@@ -16,62 +16,72 @@ def init_history_db():
         logger.info(f"Creating history database {DB_FILE}...")
 
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            phone_number TEXT NOT NULL,
-            report_date TEXT,
-            is_spam INTEGER DEFAULT 0,
-            comment TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                phone_number TEXT NOT NULL,
+                report_date TEXT,
+                is_spam INTEGER DEFAULT 0,
+                comment TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+    finally:
+        conn.close()
 
 def add_report(phone_number, report_date, is_spam, comment):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
-        INSERT INTO reports (phone_number, report_date, is_spam, comment)
-        VALUES (?, ?, ?, ?)
-    ''', (phone_number, report_date, 1 if is_spam else 0, comment))
-    conn.commit()
-    conn.close()
+    try:
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO reports (phone_number, report_date, is_spam, comment)
+            VALUES (?, ?, ?, ?)
+        ''', (phone_number, report_date, 1 if is_spam else 0, comment))
+        conn.commit()
+    finally:
+        conn.close()
 
 def get_spam_count(phone_number):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
-        SELECT COUNT(*) FROM reports
-        WHERE phone_number = ? AND is_spam = 1
-    ''', (phone_number,))
-    count = c.fetchone()[0]
-    conn.close()
-    return count
+    try:
+        c = conn.cursor()
+        c.execute('''
+            SELECT COUNT(*) FROM reports
+            WHERE phone_number = ? AND is_spam = 1
+        ''', (phone_number,))
+        count = c.fetchone()[0]
+        return count
+    finally:
+        conn.close()
 
 def get_recent_reports(limit=50):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
-        SELECT * FROM reports
-        ORDER BY created_at DESC
-        LIMIT ?
-    ''', (limit,))
-    rows = c.fetchall()
-    conn.close()
-    # Convert rows to dicts
-    return [dict(row) for row in rows]
+    try:
+        c = conn.cursor()
+        c.execute('''
+            SELECT * FROM reports
+            ORDER BY created_at DESC
+            LIMIT ?
+        ''', (limit,))
+        rows = c.fetchall()
+        # Convert rows to dicts
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
 
 def get_number_reports(phone_number):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
-        SELECT * FROM reports
-        WHERE phone_number = ?
-        ORDER BY created_at DESC
-    ''', (phone_number,))
-    rows = c.fetchall()
-    conn.close()
-    return [dict(row) for row in rows]
+    try:
+        c = conn.cursor()
+        c.execute('''
+            SELECT * FROM reports
+            WHERE phone_number = ?
+            ORDER BY created_at DESC
+        ''', (phone_number,))
+        rows = c.fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
