@@ -22,11 +22,12 @@ def setup_database():
     # Create Tables
     # PlagesNumerosGeographiques: Geo numbers (01-05). PlageTel is the prefix (e.g. "01056").
     # Changed PlageTel to TEXT for consistency and flexibility.
+    # Changed CodeInsee to TEXT to support 2A/2B and leading zeros.
     c.execute('''
     CREATE TABLE PlagesNumerosGeographiques(
         PlageTel TEXT PRIMARY KEY,
         CodeOperateur TEXT,
-        CodeInsee INTEGER
+        CodeInsee TEXT
     );
     ''')
 
@@ -50,12 +51,15 @@ def setup_database():
     ''')
 
     # Communes
+    # Added Latitude, Longitude. Changed CodeInsee/CodePostal to TEXT.
     c.execute('''
     CREATE TABLE Communes(
-        CodeInsee INTEGER PRIMARY KEY,
+        CodeInsee TEXT PRIMARY KEY,
         NomCommune TEXT,
-        CodePostal INTEGER,
-        NomDepartement TEXT
+        CodePostal TEXT,
+        NomDepartement TEXT,
+        Latitude REAL,
+        Longitude REAL
     );
     ''')
 
@@ -116,9 +120,9 @@ def import_numeros(conn):
         df_non_geo = df_metro[~mask_geo].copy()
 
         # Prepare Geo Table
-        # PlageTel, CodeOperateur, CodeInsee (0 placeholder)
+        # PlageTel, CodeOperateur, CodeInsee (0 placeholder as TEXT)
         df_geo = df_geo[['PlageTel', 'CodeOperateur']]
-        df_geo['CodeInsee'] = 0
+        df_geo['CodeInsee'] = '0'
 
         # Drop duplicates
         df_geo.drop_duplicates(subset=['PlageTel'], inplace=True)
@@ -140,28 +144,42 @@ def import_numeros(conn):
         logger.error(f"Error importing numbers: {e}")
 
 def import_communes(conn):
-    logger.info('Importing Communes from arcep/insee.csv...')
+    logger.info('Importing Communes from arcep/communes-france.csv...')
     try:
-        # Columns: Commune;Codepos;Departement;INSEE
-        # The file is headerless? No, header is present: Commune;Codepos;Departement;INSEE
-        # Check delimiter.
-        df = pd.read_csv('arcep/insee.csv', sep=';', encoding='cp1252', dtype=str)
+        # Columns: code_commune_INSEE,nom_commune_postal,code_postal,libelle_acheminement,ligne_5,latitude,longitude,code_commune,article,nom_commune,nom_commune_complet,code_departement,nom_departement,code_region,nom_region
+        # Separator is comma.
+        df = pd.read_csv('arcep/communes-france.csv', sep=',', dtype=str)
 
         # Select and rename
-        # We need CodeInsee, NomCommune, CodePostal, NomDepartement
-        data = df[['INSEE', 'Commune', 'Codepos', 'Departement']].copy()
-        data.columns = ['CodeInsee', 'NomCommune', 'CodePostal', 'NomDepartement']
+        # We need CodeInsee, NomCommune, CodePostal, NomDepartement, Latitude, Longitude
+        data = df[['code_commune_INSEE', 'nom_commune', 'code_postal', 'nom_departement', 'latitude', 'longitude', 'ligne_5']].copy()
+        data.columns = ['CodeInsee', 'NomCommune', 'CodePostal', 'NomDepartement', 'Latitude', 'Longitude', 'Ligne_5']
 
-        # Clean
-        data.dropna(subset=['CodeInsee'], inplace=True)
-        data['CodeInsee'] = pd.to_numeric(data['CodeInsee'], errors='coerce')
-        data.dropna(subset=['CodeInsee'], inplace=True)
-        data['CodeInsee'] = data['CodeInsee'].astype(int)
+        # Clean CodeInsee (pad to 5)
+        data['CodeInsee'] = data['CodeInsee'].str.zfill(5)
 
-        data['CodePostal'] = pd.to_numeric(data['CodePostal'], errors='coerce').fillna(0).astype(int)
+        # Clean CodePostal (pad to 5)
+        data['CodePostal'] = data['CodePostal'].str.zfill(5)
 
-        # Remove duplicates
+        # Handle Coordinates
+        # Convert to numeric, errors='coerce' to handle missing/invalid
+        data['Latitude'] = pd.to_numeric(data['Latitude'], errors='coerce')
+        data['Longitude'] = pd.to_numeric(data['Longitude'], errors='coerce')
+
+        # Prioritize main entry (empty Ligne_5)
+        # Sort by Ligne_5 (Ascending). NaN or Empty should be first?
+        # Pandas sort_values treats NaNs as last by default.
+        # But here they are empty strings or NaNs.
+        data['Ligne_5'] = data['Ligne_5'].fillna('')
+        # We want entries with empty Ligne_5 first.
+        # Sort values: '' comes before 'LOMME'.
+        data.sort_values(by='Ligne_5', ascending=True, inplace=True)
+
+        # Remove duplicates by CodeInsee, keeping the first (which is the main one due to sort)
         data.drop_duplicates(subset=['CodeInsee'], inplace=True)
+
+        # Drop Ligne_5 column as we don't store it
+        data.drop(columns=['Ligne_5'], inplace=True)
 
         data.to_sql('Communes', conn, if_exists='append', index=False)
         logger.info(f"Imported {len(data)} communes.")

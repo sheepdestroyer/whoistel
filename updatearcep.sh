@@ -32,13 +32,9 @@ wget -N -O majournums.csv https://www.data.gouv.fr/fr/datasets/r/90e8bdd0-0f5c-4
 echo "Downloading ARCEP operator identifiers (identifiants_ce.csv)..."
 wget -N -O identifiants_ce.csv https://www.data.gouv.fr/fr/datasets/r/b0f62183-cd0c-498d-8153-aa1594e5e8d9
 
-# INSEE data
-echo "Downloading INSEE data..."
-wget -N http://www.galichon.com/codesgeo/data/insee.zip
-
-echo "Unzipping INSEE data..."
-unzip -o insee.zip
-rm -f insee.zip
+# INSEE / La Poste data (Enriched with Coordinates and Dept Names)
+echo "Downloading Enriched Communes data..."
+wget -N -O communes-france.csv https://www.data.gouv.fr/api/1/datasets/r/dbe8a621-a9c4-4bc3-9cae-be1699c5ff25
 
 cd ..
 echo
