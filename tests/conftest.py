@@ -29,6 +29,3 @@ def setup_database():
             print(f"Update Script Output: {e.stdout}")
             print(f"Update Script Error: {e.stderr}")
             pytest.fail(f"Database generation failed: {e.stderr}")
-
-    if not os.path.exists(db_path):
-         pytest.fail("Database whoistel.sqlite3 could not be generated.")

@@ -40,7 +40,8 @@ def view_number(number):
 
 @app.route('/report', methods=['POST'])
 def report():
-    number = request.form.get('number')
+    # Clean number before storing
+    number = whoistel.clean_phone_number(request.form.get('number'))
     date = request.form.get('date')
     is_spam = request.form.get('is_spam') == 'on'
     comment = request.form.get('comment')
