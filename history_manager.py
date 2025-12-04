@@ -12,8 +12,7 @@ def get_db_connection():
     return conn
 
 def init_history_db():
-    if not os.path.exists(DB_FILE):
-        logger.info(f"Creating history database {DB_FILE}...")
+    logger.info(f"Initializing history database schema in {DB_FILE}...")
 
     with closing(get_db_connection()) as conn:
         c = conn.cursor()
@@ -21,7 +20,7 @@ def init_history_db():
             CREATE TABLE IF NOT EXISTS reports (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 phone_number TEXT NOT NULL,
-                report_date TEXT,
+                report_date DATE,
                 is_spam INTEGER DEFAULT 0,
                 comment TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
