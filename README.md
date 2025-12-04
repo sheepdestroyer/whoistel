@@ -88,9 +88,10 @@ The project includes a simple Web UI using Flask.
 
 ### Running Locally
 
-To start the web application in development mode:
+To start the web application in development mode, you must set the `SECRET_KEY` environment variable:
 
 ```bash
+export SECRET_KEY='your-secret-key-for-dev'
 python3 webapp.py
 ```
 
@@ -100,10 +101,11 @@ The application will be available at `http://127.0.0.1:5000`.
 
 **Warning:** Do not use `python3 webapp.py` (which uses `app.run()`) in a production environment. It is not designed for security or performance under load.
 
-For production, use a WSGI server like Gunicorn:
+For production, use a WSGI server like Gunicorn, and ensure `SECRET_KEY` is set:
 
 ```bash
 pip install gunicorn
+export SECRET_KEY='your-production-secret-key'
 gunicorn --bind 0.0.0.0:5000 webapp:app
 ```
 

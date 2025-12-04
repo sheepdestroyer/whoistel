@@ -54,12 +54,21 @@ def get_operator_info(conn, code_operateur):
     cursor.execute("SELECT NomOperateur, TypeOperateur, MailOperateur, SiteOperateur FROM Operateurs WHERE CodeOperateur=?", (code_operateur,))
     row = cursor.fetchone()
     if row:
+        mail = row[2]
+        site = row[3]
+
+        # Simple validation to prevent XSS
+        if mail and '@' not in mail:
+            mail = None
+        if site and not (site.startswith('http://') or site.startswith('https://')):
+            site = None
+
         return {
             'code': code_operateur,
             'nom': row[0],
             'type': row[1],
-            'mail': row[2],
-            'site': row[3]
+            'mail': mail,
+            'site': site
         }
     return None
 

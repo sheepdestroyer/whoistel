@@ -7,7 +7,7 @@ import whoistel
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-me')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 csrf = CSRFProtect(app)
 
 # Ensure history DB is initialized
@@ -50,12 +50,10 @@ def report():
     is_spam = request.form.get('is_spam') == 'on'
     comment = request.form.get('comment')
 
-    # If date is empty, use today
-    if not date:
-        date = datetime.now().strftime('%Y-%m-%d')
     try:
+        # This will fail for None, empty string, or bad format
         datetime.strptime(date, '%Y-%m-%d')
-    except ValueError:
+    except (ValueError, TypeError):
         date = datetime.now().strftime('%Y-%m-%d')
 
     if number:
