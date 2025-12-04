@@ -26,13 +26,17 @@ def check():
 
 @app.route('/view/<number>', methods=['GET'])
 def view_number(number):
+    cleaned_number = whoistel.clean_phone_number(number)
+    if cleaned_number != number:
+        return redirect(url_for('view_number', number=cleaned_number))
+
     with closing(whoistel.setup_db_connection()) as conn:
-        result = whoistel.get_full_info(conn, number)
+        result = whoistel.get_full_info(conn, cleaned_number)
 
     # Get stats
-    spam_count = history_manager.get_spam_count(number)
+    spam_count = history_manager.get_spam_count(cleaned_number)
 
-    return render_template('result.html', result=result, spam_count=spam_count, number=number)
+    return render_template('result.html', result=result, spam_count=spam_count, number=cleaned_number)
 
 @app.route('/report', methods=['POST'])
 def report():

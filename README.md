@@ -82,6 +82,31 @@ For the specific test number `+33740756315`, the script currently reports it as 
 *   `--no-annu`: (Obsolete and ignored)
 *   `--no-ovh`: (Obsolete and ignored)
 
+## Web Application
+
+The project includes a simple Web UI using Flask.
+
+### Running Locally
+
+To start the web application in development mode:
+
+```bash
+python3 webapp.py
+```
+
+The application will be available at `http://127.0.0.1:5000`.
+
+### Production Deployment
+
+**Warning:** Do not use `python3 webapp.py` (which uses `app.run()`) in a production environment. It is not designed for security or performance under load.
+
+For production, use a WSGI server like Gunicorn:
+
+```bash
+pip install gunicorn
+gunicorn --bind 0.0.0.0:5000 webapp:app
+```
+
 ## Development & Testing
 
 To run the tests, ensure `pytest` is installed. If you ran `./updatearcep.sh`, `pytest` (listed in `requirements.txt`) should already be installed. Otherwise, you can install it as part of all dependencies:

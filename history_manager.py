@@ -1,7 +1,6 @@
 import sqlite3
 import os
 import logging
-from datetime import datetime
 from contextlib import closing
 
 DB_FILE = 'history.sqlite3'

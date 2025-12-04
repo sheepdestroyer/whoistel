@@ -60,3 +60,9 @@ def test_check_known_missing_number(client):
     # +33740756315 -> 0740756315
     rv = client.get('/view/0740756315')
     assert b'Num\xc3\xa9ro inconnu dans la base ARCEP' in rv.data
+
+def test_view_number_redirect_dirty(client):
+    # /view/01.02... should redirect to /view/0102...
+    rv = client.get('/view/01.02.03.04.05')
+    assert rv.status_code == 302
+    assert '/view/0102030405' in rv.location
