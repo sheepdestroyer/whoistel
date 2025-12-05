@@ -26,29 +26,6 @@ def run_whoistel_script(number):
     )
     return process
 
-@pytest.fixture(scope="module", autouse=True)
-def setup_database():
-    """
-    Ensures the database is generated before tests run.
-    """
-    root_dir = get_project_root()
-    update_script_path = os.path.join(root_dir, "updatearcep.sh")
-    db_path = os.path.join(root_dir, "whoistel.sqlite3")
-
-    if not os.path.exists(db_path):
-        print("\nDatabase not found. Running updatearcep.sh to generate it...")
-        try:
-            subprocess.run(["chmod", "+x", update_script_path], check=True, cwd=root_dir)
-            process = subprocess.run(
-                ["bash", update_script_path],
-                capture_output=True, text=True, check=True, cwd=root_dir
-            )
-        except subprocess.CalledProcessError as e:
-            pytest.fail(f"Database generation failed: {e.stderr}")
-
-    if not os.path.exists(db_path):
-         pytest.fail("Database whoistel.sqlite3 could not be generated.")
-
 def test_geographic_number_lookup():
     """Tests lookup for a known geographic number."""
     number = "0140000000"
@@ -90,4 +67,74 @@ def test_invalid_number_format_non_digit():
     result = run_whoistel_script(number)
 
     assert result.returncode == 1
-    assert "Erreur: Le numéro doit contenir uniquement des chiffres" in result.stderr
+    assert result.returncode == 1
+    assert "uniquement des chiffres après nettoyage" in result.stderr
+
+def test_clean_phone_number():
+    """Tests the phone number cleaning logic."""
+    from whoistel import clean_phone_number
+    # Formatted valid numbers
+    assert clean_phone_number("01.02.03.04.05") == "0102030405"
+    assert clean_phone_number("+33 1 02 03 04 05") == "0102030405"
+    assert clean_phone_number("+33 (0) 6 12 34 56 78") == "0612345678"
+    assert clean_phone_number("06-12-34-56-78") == "0612345678"
+    assert clean_phone_number("06\t12 34\n56 78") == "0612345678"
+
+    # Falsy / missing inputs
+    assert clean_phone_number("") == ""
+    assert clean_phone_number(None) == ""
+
+def test_operator_info_validation():
+    """Tests the email and URL validation logic in get_operator_info."""
+    from whoistel import get_operator_info
+    from unittest.mock import MagicMock
+
+    # Mock connection and cursor
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+
+    # Case 1: Valid email and URL
+    # Return dict to simulate sqlite3.Row access by name
+    mock_cursor.fetchone.return_value = {
+        'NomOperateur': 'OpName', 
+        'TypeOperateur': 'OpType', 
+        'MailOperateur': 'contact@example.com', 
+        'SiteOperateur': 'https://example.com'
+    }
+    result = get_operator_info(mock_conn, '1234')
+    assert result['mail'] == 'contact@example.com'
+    assert result['site'] == 'https://example.com'
+
+    # Case 2: Invalid email
+    mock_cursor.fetchone.return_value = {
+        'NomOperateur': 'OpName', 
+        'TypeOperateur': 'OpType', 
+        'MailOperateur': 'invalid-email', 
+        'SiteOperateur': 'https://example.com'
+    }
+    result = get_operator_info(mock_conn, '1234')
+    assert result['mail'] is None
+    assert result['site'] == 'https://example.com'
+
+    # Case 3: Invalid URL (bad scheme)
+    mock_cursor.fetchone.return_value = {
+        'NomOperateur': 'OpName', 
+        'TypeOperateur': 'OpType', 
+        'MailOperateur': 'contact@example.com', 
+        'SiteOperateur': 'ftp://example.com'
+    }
+    result = get_operator_info(mock_conn, '1234')
+    assert result['mail'] == 'contact@example.com'
+    assert result['site'] is None
+
+    # Case 4: Invalid URL (no netloc)
+    mock_cursor.fetchone.return_value = {
+        'NomOperateur': 'OpName', 
+        'TypeOperateur': 'OpType', 
+        'MailOperateur': 'contact@example.com', 
+        'SiteOperateur': 'http://'
+    }
+    result = get_operator_info(mock_conn, '1234')
+    assert result['mail'] == 'contact@example.com'
+    assert result['site'] is None
