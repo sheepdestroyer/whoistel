@@ -32,3 +32,19 @@ arcep_xls_inspection/
 # Logs and Artifacts
 *.png
 verification/
+
+# Development artifacts
+analysis_*.txt
+gitbranch.txt
+gitlog.txt
+gitstatus.txt
+latest_comments_*.json
+listing.txt
+manual_report.txt
+manual_reviews_check.json
+pr_status_*.json
+pytest_*.txt
+review_outcome.txt
+test_result.txt
+test_whoistel_out.txt
+wait_for_review.py

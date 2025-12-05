@@ -42,6 +42,10 @@ def init_history_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        # Add a composite index for faster spam count lookups
+        c.execute('''
+            CREATE INDEX IF NOT EXISTS idx_reports_phone_number_spam ON reports (phone_number, is_spam);
+        ''')
         conn.commit()
 
 @with_db_connection
