@@ -21,23 +21,20 @@ def format_datetime(value, format='%d/%m/%Y %H:%M'):
         return ""
 
     dt_obj = None
-    if isinstance(value, str):
-        try:
-            dt_obj = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            try:
-                dt_obj = datetime.strptime(value, '%Y-%m-%d')
-                # For date-only strings, we use a specific date format.
-                return dt_obj.strftime('%d/%m/%Y')
-            except ValueError:
-                return value  # Return as-is if not a recognized format
-    elif isinstance(value, datetime):
+    if isinstance(value, datetime):
         dt_obj = value
-    
+    elif isinstance(value, str):
+        for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+            try:
+                dt_obj = datetime.strptime(value, fmt)
+                break  # Parsed successfully
+            except ValueError:
+                pass  # Try next format
+
     if dt_obj:
         return dt_obj.strftime(format)
 
-    return value # Return original value if not a string or datetime
+    return value # Return original value if parsing failed
 
 def get_history_db():
     if 'history_db' not in g:

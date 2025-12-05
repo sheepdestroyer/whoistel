@@ -2,3 +2,4 @@ pandas
 Flask
 Flask-WTF
 email-validator
+gunicorn

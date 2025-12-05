@@ -245,9 +245,9 @@ def main():
 
     cleaned_number = clean_phone_number(raw_tel)
     
-    # Ensure cleaned number only contains digits (or +)
-    if not re.match(r'^\+?[0-9]+$', cleaned_number):
-         print("Erreur: Le numéro doit contenir uniquement des chiffres (ou commencer par +33).", file=sys.stderr)
+    # Ensure cleaned number only contains digits
+    if not cleaned_number.isdigit():
+         print("Erreur: Le numéro fourni est invalide. Il doit contenir uniquement des chiffres après nettoyage.", file=sys.stderr)
          sys.exit(1)
     
     if len(cleaned_number) != 10:
