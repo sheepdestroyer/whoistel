@@ -23,7 +23,12 @@ def format_datetime(value, format='%d/%m/%Y %H:%M'):
         try:
             value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
         except ValueError:
-             return value
+            try:
+                # Fallback for date-only strings
+                value = datetime.strptime(value, '%Y-%m-%d')
+                return value.strftime('%d/%m/%Y')
+            except ValueError:
+                 return value
     return value.strftime(format)
 
 def get_history_db():
