@@ -52,7 +52,7 @@ def setup_db_connection():
     except sqlite3.Error as e:
         msg = f"Erreur lors de la connexion à la base de données: {e}"
         logger.error(msg)
-        raise DatabaseError(msg)
+        raise DatabaseError(msg) from e
 
 def get_operator_info(conn, code_operateur):
     if not code_operateur:
