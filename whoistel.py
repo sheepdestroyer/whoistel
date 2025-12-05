@@ -256,7 +256,8 @@ def main():
 
     # Use valid database connection
     try:
-        with setup_db_connection() as conn:
+        from contextlib import closing
+        with closing(setup_db_connection()) as conn:
              result = get_full_info(conn, cleaned_number)
              print_result(result)
     except DatabaseError as e:

@@ -95,7 +95,6 @@ def view_number(number):
     result = whoistel.get_full_info(conn, cleaned_number)
 
     # Get stats
-    # Get stats
     spam_count = history_manager.get_spam_count(cleaned_number, conn=get_history_db())
 
     return render_template('result.html', result=result, spam_count=spam_count, number=cleaned_number)
@@ -113,17 +112,18 @@ def report():
     is_spam = request.form.get('is_spam') == 'on'
     comment = (request.form.get('comment') or '').strip()[:MAX_COMMENT_LENGTH]
 
-    try:
-        # This validates the date format. It will fail for invalid formats,
-        # empty strings, or if the date is not provided (None).
-        datetime.strptime(date, '%Y-%m-%d')
-    except (ValueError, TypeError):
-        # If validation fails, store as NULL in the database.
+    if date:
+        try:
+            datetime.strptime(date, '%Y-%m-%d')
+        except ValueError:
+            flash(f"Le format de la date '{date}' est invalide et a été ignoré.", "warning")
+            date = None
+    else:
         date = None
 
     if number:
-        if not is_spam and not comment:
-            flash("Veuillez cocher la case spam ou ajouter un commentaire pour enregistrer un signalement.", "error")
+        if not is_spam and not comment and not date:
+            flash("Veuillez cocher la case spam, ajouter un commentaire ou une date pour enregistrer un signalement.", "error")
             return redirect(url_for('view_number', number=number))
 
         history_manager.add_report(number, date, is_spam, comment, conn=get_history_db())
