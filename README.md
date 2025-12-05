@@ -92,6 +92,7 @@ To start the web application in development mode, you must set the `SECRET_KEY` 
 
 ```bash
 export SECRET_KEY='your-secret-key-for-dev'
+export FLASK_DEBUG=1
 python3 webapp.py
 ```
 
