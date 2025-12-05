@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 #-*- encoding: Utf-8 -*-
 import sqlite3
-import sqlite3
 import argparse
 import sys
 import os
@@ -48,6 +47,7 @@ def setup_db_connection():
         raise DatabaseError(msg)
     try:
         conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
         return conn
     except sqlite3.Error as e:
         msg = f"Erreur lors de la connexion à la base de données: {e}"
@@ -62,8 +62,8 @@ def get_operator_info(conn, code_operateur):
     cursor.execute("SELECT NomOperateur, TypeOperateur, MailOperateur, SiteOperateur FROM Operateurs WHERE CodeOperateur=?", (code_operateur,))
     row = cursor.fetchone()
     if row:
-        mail = row[2]
-        site = row[3]
+        mail = row['MailOperateur']
+        site = row['SiteOperateur']
 
         # Simple validation to prevent XSS
         # Robust validation
@@ -85,8 +85,8 @@ def get_operator_info(conn, code_operateur):
 
         return {
             'code': code_operateur,
-            'nom': row[0],
-            'type': row[1],
+            'nom': row['NomOperateur'],
+            'type': row['TypeOperateur'],
             'mail': mail,
             'site': site
         }
@@ -102,11 +102,11 @@ def get_commune_info(conn, code_insee):
     if row:
         return {
             'code_insee': code_insee,
-            'commune': row[0],
-            'code_postal': row[1],
-            'departement': row[2],
-            'latitude': row[3],
-            'longitude': row[4]
+            'commune': row['NomCommune'],
+            'code_postal': row['CodePostal'],
+            'departement': row['NomDepartement'],
+            'latitude': row['Latitude'],
+            'longitude': row['Longitude']
         }
     return None
 
@@ -133,8 +133,8 @@ def search_number(conn, tel):
             if row:
                 best_match = {
                     'prefix': prefix,
-                    'code_operateur': row[0],
-                    'code_insee': row[1],
+                    'code_operateur': row['CodeOperateur'],
+                    'code_insee': row['CodeInsee'],
                     'type': 'Geographique'
                 }
                 break
@@ -144,7 +144,7 @@ def search_number(conn, tel):
             if row:
                 best_match = {
                     'prefix': prefix,
-                    'code_operateur': row[0],
+                    'code_operateur': row['CodeOperateur'],
                     'code_insee': None,
                     'type': 'Non-Geographique'
                 }

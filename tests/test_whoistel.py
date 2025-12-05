@@ -67,7 +67,7 @@ def test_invalid_number_format_non_digit():
     result = run_whoistel_script(number)
 
     assert result.returncode == 1
-    assert "Il doit contenir uniquement des chiffres" in result.stderr
+    assert "uniquement des chiffres après nettoyage" in result.stderr
 
 def test_clean_phone_number():
     """Tests the phone number cleaning logic."""
@@ -89,25 +89,46 @@ def test_operator_info_validation():
     mock_conn.cursor.return_value = mock_cursor
 
     # Case 1: Valid email and URL
-    mock_cursor.fetchone.return_value = ('OpName', 'OpType', 'contact@example.com', 'https://example.com')
+    # Return dict to simulate sqlite3.Row access by name
+    mock_cursor.fetchone.return_value = {
+        'NomOperateur': 'OpName', 
+        'TypeOperateur': 'OpType', 
+        'MailOperateur': 'contact@example.com', 
+        'SiteOperateur': 'https://example.com'
+    }
     result = get_operator_info(mock_conn, '1234')
     assert result['mail'] == 'contact@example.com'
     assert result['site'] == 'https://example.com'
 
     # Case 2: Invalid email
-    mock_cursor.fetchone.return_value = ('OpName', 'OpType', 'invalid-email', 'https://example.com')
+    mock_cursor.fetchone.return_value = {
+        'NomOperateur': 'OpName', 
+        'TypeOperateur': 'OpType', 
+        'MailOperateur': 'invalid-email', 
+        'SiteOperateur': 'https://example.com'
+    }
     result = get_operator_info(mock_conn, '1234')
     assert result['mail'] is None
     assert result['site'] == 'https://example.com'
 
     # Case 3: Invalid URL (bad scheme)
-    mock_cursor.fetchone.return_value = ('OpName', 'OpType', 'contact@example.com', 'ftp://example.com')
+    mock_cursor.fetchone.return_value = {
+        'NomOperateur': 'OpName', 
+        'TypeOperateur': 'OpType', 
+        'MailOperateur': 'contact@example.com', 
+        'SiteOperateur': 'ftp://example.com'
+    }
     result = get_operator_info(mock_conn, '1234')
     assert result['mail'] == 'contact@example.com'
     assert result['site'] is None
 
     # Case 4: Invalid URL (no netloc)
-    mock_cursor.fetchone.return_value = ('OpName', 'OpType', 'contact@example.com', 'http://')
+    mock_cursor.fetchone.return_value = {
+        'NomOperateur': 'OpName', 
+        'TypeOperateur': 'OpType', 
+        'MailOperateur': 'contact@example.com', 
+        'SiteOperateur': 'http://'
+    }
     result = get_operator_info(mock_conn, '1234')
     assert result['mail'] == 'contact@example.com'
     assert result['site'] is None

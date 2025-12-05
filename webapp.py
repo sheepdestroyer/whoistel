@@ -111,7 +111,7 @@ def report():
     number = whoistel.clean_phone_number(request.form.get('number'))
     date = request.form.get('date')
     is_spam = request.form.get('is_spam') == 'on'
-    comment = (request.form.get('comment') or '')[:MAX_COMMENT_LENGTH]
+    comment = (request.form.get('comment') or '').strip()[:MAX_COMMENT_LENGTH]
 
     try:
         # This validates the date format. It will fail for invalid formats,

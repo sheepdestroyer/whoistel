@@ -49,3 +49,11 @@ test_result.txt
 test_whoistel_out.txt
 wait_for_review.py
 manual_*.json
+auth_status.txt
+gh_help.txt
+manual_*.py
+manual_*.txt
+*_comments.json
+*_reviews.json
+git_log.txt
+feedback_summary.txt

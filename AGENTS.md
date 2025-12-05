@@ -88,3 +88,21 @@ git commit -m "Address Cycle X comments"
 git push
 ```
 Return to Step 1.
+
+## Post-Mortem: Repeated Review Request Failure (Cycle 26)
+
+**Issue**: The agent failed to fetch new Code Review comments and instead repeatedly posted review requests ("gemini review"), triggering the daily quota limit.
+
+**Root Cause**:
+1.  **Improper Monitoring**: The agent relied on a polling script (`monitor_c26.py`) that likely wasn't capturing or outputting the review state correctly, or the agent failed to interpret the specific output conditions (e.g., distinguishing between a pending review and a lack of new reviews).
+2.  **Blind Retries**: Instead of verifying the *absence* of a review definitively (by checking the raw comments list manually via `gh pr view --json comments`), the agent assumed the request hadn't triggered and re-sent the command `/gemini review`.
+3.  **Lack of Backoff**: There was no exponential backoff or sufficient wait time between retry attempts.
+
+**Corrective Actions**:
+1.  **Exhaustive State Check**: Before requesting a new review, explicitly fetch and count existing comments and reviews. Only request a new review if:
+    *   One hasn't been requested in the last X minutes.
+    *   No new comments have appeared since the last request.
+2.  **Use Raw Tools**: Do not rely solely on custom monitoring scripts which can mask errors. Use extensive `gh` CLI commands directly to verify state.
+3.  **Respect Quotas**: Be mindful of the cost of each interaction and avoid tight loops of API calls.
+
+**Resolution**: The agent manually fetched all comments, identified the missing feedback, and proceeded to address it without further superfluous review requests.
