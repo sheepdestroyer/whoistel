@@ -3,8 +3,8 @@ header { background: #333; color: #fff; padding: 10px; margin-bottom: 20px; }
 header nav a { color: #fff; margin-right: 15px; text-decoration: none; }
 .container { background: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
 input[type="text"], input[type="date"] { padding: 8px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
-input[type="submit"], button { padding: 10px 15px; background: #007BFF; color: #fff; border: none; cursor: pointer; }
-input[type="submit"]:hover { background: #0056b3; }
+input[type="submit"], button, .button { padding: 10px 15px; background: #007BFF; color: #fff; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+input[type="submit"]:hover, button:hover, .button:hover { background: #0056b3; }
 .result-box { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; }
 .spam-alert { color: red; font-weight: bold; }
 table { width: 100%; border-collapse: collapse; margin-top: 20px; }

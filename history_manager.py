@@ -67,8 +67,13 @@ def get_spam_count(phone_number, conn=None):
     count = c.fetchone()[0]
     return count
 
+DEFAULT_RECENT_REPORTS_LIMIT = 50
+
 @with_db_connection
-def get_recent_reports(limit=50, conn=None):
+def get_recent_reports(limit=DEFAULT_RECENT_REPORTS_LIMIT, conn=None):
+    """
+    Retrieves the most recent reports.
+    """
     c = conn.cursor()
     c.execute('''
         SELECT * FROM reports

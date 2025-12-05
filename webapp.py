@@ -15,6 +15,8 @@ csrf = CSRFProtect(app)
 # Ensure history DB is initialized
 history_manager.init_history_db()
 
+MAX_COMMENT_LENGTH = 1024
+
 @app.template_filter('format_datetime')
 def format_datetime(value, format='%d/%m/%Y %H:%M'):
     if not value:
@@ -24,12 +26,12 @@ def format_datetime(value, format='%d/%m/%Y %H:%M'):
     if isinstance(value, datetime):
         dt_obj = value
     elif isinstance(value, str):
-        for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
-            try:
-                dt_obj = datetime.strptime(value, fmt)
-                break  # Parsed successfully
-            except ValueError:
-                pass  # Try next format
+        # Determine format based on presence of time part
+        fmt = '%Y-%m-%d %H:%M:%S' if ' ' in value else '%Y-%m-%d'
+        try:
+            dt_obj = datetime.strptime(value, fmt)
+        except ValueError:
+            pass  # Parsing failed
 
     if dt_obj:
         return dt_obj.strftime(format)
@@ -98,7 +100,7 @@ def report():
     number = whoistel.clean_phone_number(request.form.get('number'))
     date = request.form.get('date')
     is_spam = request.form.get('is_spam') == 'on'
-    comment = (request.form.get('comment') or '')[:1024]
+    comment = (request.form.get('comment') or '')[:MAX_COMMENT_LENGTH]
 
     try:
         # This validates the date format. It will fail for invalid formats,
