@@ -20,11 +20,20 @@ def get_history_db():
         g.history_db = history_manager.get_db_connection()
     return g.history_db
 
+def get_main_db():
+    if 'main_db' not in g:
+        g.main_db = whoistel.setup_db_connection()
+    return g.main_db
+
 @app.teardown_appcontext
-def close_history_db(error):
-    db = g.pop('history_db', None)
-    if db is not None:
-        db.close()
+def close_dbs(error):
+    history_db = g.pop('history_db', None)
+    if history_db is not None:
+        history_db.close()
+    
+    main_db = g.pop('main_db', None)
+    if main_db is not None:
+        main_db.close()
 
 @app.route('/', methods=['GET'])
 def index():
@@ -48,8 +57,8 @@ def view_number(number):
     if cleaned_number != number:
         return redirect(url_for('view_number', number=cleaned_number))
 
-    with closing(whoistel.setup_db_connection()) as conn:
-        result = whoistel.get_full_info(conn, cleaned_number)
+    conn = get_main_db()
+    result = whoistel.get_full_info(conn, cleaned_number)
 
     # Get stats
     # Get stats
