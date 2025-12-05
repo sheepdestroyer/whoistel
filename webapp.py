@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash, g
 from flask_wtf import CSRFProtect
 from contextlib import closing
 import os
@@ -15,6 +15,17 @@ csrf = CSRFProtect(app)
 # Ensure history DB is initialized
 history_manager.init_history_db()
 
+def get_history_db():
+    if 'history_db' not in g:
+        g.history_db = history_manager.get_db_connection()
+    return g.history_db
+
+@app.teardown_appcontext
+def close_history_db(error):
+    db = g.pop('history_db', None)
+    if db is not None:
+        db.close()
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -23,6 +34,7 @@ def index():
 def check():
     raw_tel = request.form.get('number')
     if not raw_tel:
+        flash("Veuillez saisir un numéro.", "error")
         return redirect(url_for('index'))
 
     # Clean number
@@ -40,7 +52,8 @@ def view_number(number):
         result = whoistel.get_full_info(conn, cleaned_number)
 
     # Get stats
-    spam_count = history_manager.get_spam_count(cleaned_number)
+    # Get stats
+    spam_count = history_manager.get_spam_count(cleaned_number, conn=get_history_db())
 
     return render_template('result.html', result=result, spam_count=spam_count, number=cleaned_number)
 
@@ -66,13 +79,14 @@ def report():
         date = None
 
     if number:
-        history_manager.add_report(number, date, is_spam, comment)
+        history_manager.add_report(number, date, is_spam, comment, conn=get_history_db())
+        flash("Signalement enregistré.", "success")
         return redirect(url_for('view_number', number=number))
     return redirect(url_for('index'))
 
 @app.route('/history', methods=['GET'])
 def history():
-    reports = history_manager.get_recent_reports()
+    reports = history_manager.get_recent_reports(conn=get_history_db())
     return render_template('history.html', reports=reports)
 
 if __name__ == '__main__':

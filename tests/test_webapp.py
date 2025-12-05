@@ -92,7 +92,7 @@ def test_database_connection_error(client):
 def test_report_comment_truncation(client):
     """Tests that the comment field is truncated to 1024 characters."""
     long_comment = "a" * 2000
-    with patch('history_manager.add_report') as mock_add_report:
+    with patch('webapp.history_manager.add_report') as mock_add_report:
         client.post('/report', data={
             'number': '0123456789',
             'comment': long_comment

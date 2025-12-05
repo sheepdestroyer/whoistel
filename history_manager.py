@@ -27,17 +27,20 @@ def init_history_db():
         ''')
         conn.commit()
 
-def add_report(phone_number, report_date, is_spam, comment):
-    with closing(get_db_connection()) as conn:
+def add_report(phone_number, report_date, is_spam, comment, conn=None):
+    if conn:
         c = conn.cursor()
         c.execute('''
             INSERT INTO reports (phone_number, report_date, is_spam, comment)
             VALUES (?, ?, ?, ?)
         ''', (phone_number, report_date, 1 if is_spam else 0, comment))
         conn.commit()
+    else:
+        with closing(get_db_connection()) as conn:
+            add_report(phone_number, report_date, is_spam, comment, conn)
 
-def get_spam_count(phone_number):
-    with closing(get_db_connection()) as conn:
+def get_spam_count(phone_number, conn=None):
+    if conn:
         c = conn.cursor()
         c.execute('''
             SELECT COUNT(*) FROM reports
@@ -45,9 +48,12 @@ def get_spam_count(phone_number):
         ''', (phone_number,))
         count = c.fetchone()[0]
         return count
+    else:
+        with closing(get_db_connection()) as conn:
+            return get_spam_count(phone_number, conn)
 
-def get_recent_reports(limit=50):
-    with closing(get_db_connection()) as conn:
+def get_recent_reports(limit=50, conn=None):
+    if conn:
         c = conn.cursor()
         c.execute('''
             SELECT * FROM reports
@@ -55,5 +61,7 @@ def get_recent_reports(limit=50):
             LIMIT ?
         ''', (limit,))
         rows = c.fetchall()
-        # Convert rows to dicts
         return [dict(row) for row in rows]
+    else:
+        with closing(get_db_connection()) as conn:
+            return get_recent_reports(limit, conn)
