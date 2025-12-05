@@ -88,3 +88,17 @@ def test_database_connection_error(client):
         rv = client.get('/view/0123456789')
         assert rv.status_code == 500
         assert b'Database error occurred' in rv.data
+
+def test_report_comment_truncation(client):
+    """Tests that the comment field is truncated to 1024 characters."""
+    long_comment = "a" * 2000
+    with patch('history_manager.add_report') as mock_add_report:
+        client.post('/report', data={
+            'number': '0123456789',
+            'comment': long_comment
+        })
+        # Check that add_report was called with a truncated comment
+        args, _ = mock_add_report.call_args
+        # args: (number, date, is_spam, comment)
+        assert len(args[3]) == 1024
+        assert args[3] == "a" * 1024

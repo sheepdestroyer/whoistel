@@ -29,8 +29,8 @@ REGION_MAP = {
 def clean_phone_number(raw_tel):
     if not raw_tel:
         return ""
-    # Remove separators and parenthesis
-    tel = re.sub(r'[ .\-()]', '', raw_tel)
+    # Remove separators and parenthesis (including tabs, non-breaking spaces)
+    tel = re.sub(r'[\s.\-()]', '', raw_tel)
 
     # Handle +33 (0) case which becomes +330... after removal
     if tel.startswith('+330'):
