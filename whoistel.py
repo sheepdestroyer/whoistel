@@ -195,48 +195,42 @@ def get_full_info(conn, tel):
 
     return result
 
-def print_result(conn, tel, info):
-    print(f"Numéro : {tel}")
+def print_result(result):
+    print(f"Numéro : {result['number']}")
 
-    if not info:
-        print("Résultat : Numéro inconnu dans la base ARCEP (pas d'opérateur assigné trouvé).")
-        # Add a note about possible reasons
+    if not result['found']:
+        print(f"Résultat : {result.get('error', 'Inconnu')}")
         print("Note : Certains numéros récents ou portés peuvent ne pas figurer dans le fichier public Open Data.")
         sys.exit(1)
 
-    print(f"Type détecté : {info['type']}")
-    print(f"Préfixe identifié : {info['prefix']}")
+    print(f"Type détecté : {result.get('type')}")
+    print(f"Préfixe identifié : {result.get('prefix')}")
 
     # Operator Info
-    op_info = get_operator_info(conn, info['code_operateur'])
-    if op_info:
+    op_info = result.get('operator')
+    if op_info and op_info.get('nom') != 'Inconnu':
         print("\n--- Opérateur ---")
-        print(f"Nom : {op_info['nom']}")
-        print(f"Code ARCEP : {op_info['code']}")
-        if op_info['site']:
-            print(f"Site Web : {op_info['site']}")
-        if op_info['mail']:
-            print(f"Email : {op_info['mail']}")
+        print(f"Nom : {op_info.get('nom')}")
+        print(f"Code ARCEP : {op_info.get('code')}")
+        if op_info.get('site'):
+            print(f"Site Web : {op_info.get('site')}")
+        if op_info.get('mail'):
+            print(f"Email : {op_info.get('mail')}")
     else:
-        print(f"\nOpérateur : Code {info['code_operateur']} (Détails non trouvés)")
+        print(f"\nOpérateur : Code {result.get('code_operateur')} (Détails non trouvés)")
 
     # Location Info
-    if info['code_insee'] and str(info['code_insee']) != '0':
-        commune_info = get_commune_info(conn, info['code_insee'])
-        if commune_info:
+    loc = result.get('location')
+    if loc:
+        if 'commune' in loc:
             print("\n--- Localisation (Estimation) ---")
-            print(f"Commune : {commune_info['commune']}")
-            print(f"Département : {commune_info['departement']}")
-            print(f"Code Postal : {commune_info['code_postal']}")
-            if commune_info['latitude'] and commune_info['longitude']:
-                print(f"GPS : {commune_info['latitude']}, {commune_info['longitude']}")
-
-    # If Geo and no CodeInsee, give Region hint
-    if info['type'] == 'Geographique' and (not info['code_insee'] or str(info['code_insee']) == '0'):
-
-        region_code = tel[:2]
-        if region_code in REGION_MAP:
-            print(f"\nLocalisation : Région {REGION_MAP[region_code]} (Détail commune non disponible)")
+            print(f"Commune : {loc.get('commune')}")
+            print(f"Département : {loc.get('departement')}")
+            print(f"Code Postal : {loc.get('code_postal')}")
+            if loc.get('latitude') and loc.get('longitude'):
+                print(f"GPS : {loc.get('latitude')}, {loc.get('longitude')}")
+        elif 'region' in loc:
+            print(f"\nLocalisation : Région {loc['region']} (Détail commune non disponible)")
 
 def main():
     parser = argparse.ArgumentParser(description="Outil de recherche d'informations sur les numéros de téléphone français (ARCEP).")
@@ -244,34 +238,28 @@ def main():
     args = parser.parse_args()
 
     raw_tel = args.numero
+    
+    # Check format roughly
+    if not re.match(r'^\+?[0-9 .]+$', raw_tel):
+             print("Erreur: Le numéro doit contenir uniquement des chiffres (ou commencer par +33).", file=sys.stderr)
+             sys.exit(1)
 
-    # Clean number
-    tel = clean_phone_number(raw_tel)
+    cleaned_number = clean_phone_number(raw_tel)
+    
+    if len(cleaned_number) != 10:
+        logger.warning(f"Attention: Le numéro {cleaned_number} ne fait pas 10 chiffres. La recherche peut échouer.")
 
-    if not tel.isdigit():
-        logger.error("Erreur: Le numéro doit contenir uniquement des chiffres (ou commencer par +33).")
-        sys.exit(1)
-
-    if len(tel) != 10:
-        # Warning for non-10 digit numbers?
-        # Short numbers exist (3xxx, 118xxx, 15, 17...)
-        # Logic for short numbers could be added here.
-        if len(tel) <= 4 or tel.startswith('118'):
-             print(f"Numéro court ou spécial : {tel}")
-             # We could look it up in PlagesNumeros too if it's there?
-             # 3xxx are in PlagesNumeros?
-             # Let's try searching anyway.
-             pass
-        else:
-             logger.warning(f"Attention: Le numéro {tel} ne fait pas 10 chiffres. La recherche peut échouer.")
-
+    # Use valid database connection
     try:
         conn = setup_db_connection()
-    except DatabaseError:
+        try:
+             result = get_full_info(conn, cleaned_number)
+             print_result(result)
+        finally:
+             conn.close()
+    except DatabaseError as e:
+        logger.error(str(e))
         sys.exit(1)
-    result = search_number(conn, tel)
-    print_result(conn, tel, result)
-    conn.close()
 
 if __name__ == "__main__":
     main()

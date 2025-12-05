@@ -2,12 +2,14 @@ import json
 import sys
 
 try:
-    with open('latest_comments.json', 'r') as f:
+    with open('latest_comments_c9.json', 'r') as f:
         comments = json.load(f)
 
-    # Filter for comments newer than the Cycle 7 batch (approx 10:35Z)
-    # Using 10:40:00Z to ensure we only see completely new feedback
-    cutoff = '2025-12-05T10:40:00Z'
+    # Filter for comments newer than Cycle 8 (which was around 11:50-12:00 UTC?)
+    # Local time is 13:20 CET -> 12:20 UTC.
+    # Previous check was 10:40 UTC. Cycle 8 comments were 10:51 UTC.
+    # So we want anything > 11:00 UTC.
+    cutoff = '2025-12-05T11:00:00Z'
     new_comments = [c for c in comments if c.get('created_at', '') > cutoff]
     
     print(f"Total comments: {len(comments)}")

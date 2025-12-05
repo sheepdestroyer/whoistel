@@ -1,0 +1,23 @@
+Total comments: 68
+New comments (Cycle 8?): 3
+----------------------------------------
+Date: 2025-12-05T12:21:27Z
+File: analyze_comments.py
+Line: 27
+Body: ![high](https://www.gstatic.com/codereviewagent/high-priority.svg)
+
+This file, along with `.antigravity/context.md`, `cycle_8_check.txt`, and `pr_comments_retry_2.txt`, appears to be a temporary development artifact or log file. Committing such files to the repository adds noise, can be confusing for other developers, and is not good practice. Please remove these files from the pull request. Consider updating `.gitignore` to prevent them from being accidentally committed in the future if they are generated.
+----------------------------------------
+Date: 2025-12-05T12:21:27Z
+File: templates/history.html
+Line: 25
+Body: ![medium](https://www.gstatic.com/codereviewagent/medium-priority.svg)
+
+The `created_at` timestamp is displayed directly from the database. This can result in a format that is not very user-friendly (e.g., `2023-10-27 14:30:00`). For better readability and a more polished UI, consider formatting this timestamp. This could be done in the `history` view function in `webapp.py` before passing the data to the template, or by using a Jinja filter. A format like `DD/MM/YYYY HH:MM` might be more appropriate for a French-language UI.
+----------------------------------------
+Date: 2025-12-05T12:21:27Z
+File: whoistel.py
+Line: 239
+Body: ![medium](https://www.gstatic.com/codereviewagent/medium-priority.svg)
+
+This logic for determining the region is also present in the new `get_full_info` function. The `print_result` function duplicates a lot of the logic that was refactored into `get_full_info` (e.g., fetching operator details, location info). To improve maintainability and ensure the CLI output is consistent with the web UI, the `main` function should be updated to call `get_full_info`. This would allow `print_result` to be simplified into a function that just formats the rich dictionary returned by `get_full_info`, rather than re-fetching and processing data itself.

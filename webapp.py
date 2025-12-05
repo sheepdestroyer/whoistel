@@ -15,6 +15,17 @@ csrf = CSRFProtect(app)
 # Ensure history DB is initialized
 history_manager.init_history_db()
 
+@app.template_filter('format_datetime')
+def format_datetime(value, format='%d/%m/%Y %H:%M'):
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        try:
+            value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+             return value
+    return value.strftime(format)
+
 def get_history_db():
     if 'history_db' not in g:
         g.history_db = history_manager.get_db_connection()
