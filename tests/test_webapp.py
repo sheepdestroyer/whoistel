@@ -108,16 +108,16 @@ def test_csrf_protection(client):
     # Note: The client fixture disables CSRF by default (WTF_CSRF_ENABLED=False).
     # We need to enable it for this specific test.
     app.config['WTF_CSRF_ENABLED'] = True
-    
-    # Try to post without a CSRF token
-    rv = client.post('/report', data={
-        'number': '0123456789',
-        'is_spam': 'on'
-    })
-    
-    # Should return 400 Bad Request (CSRF token missing)
-    assert rv.status_code == 400
-    
-    # Reset config
-    app.config['WTF_CSRF_ENABLED'] = False
+    try:
+        # Try to post without a CSRF token
+        rv = client.post('/report', data={
+            'number': '0123456789',
+            'is_spam': 'on'
+        })
+        
+        # Should return 400 Bad Request (CSRF token missing)
+        assert rv.status_code == 400
+    finally:
+        # Reset config
+        app.config['WTF_CSRF_ENABLED'] = False
 

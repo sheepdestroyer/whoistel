@@ -240,7 +240,7 @@ def main():
     raw_tel = args.numero
     
     # Check format roughly
-    if not re.match(r'^\+?[0-9 .]+$', raw_tel):
+    if not re.match(r'^\+?[0-9 .()-]+$', raw_tel):
              print("Erreur: Le numéro doit contenir uniquement des chiffres (ou commencer par +33).", file=sys.stderr)
              sys.exit(1)
 

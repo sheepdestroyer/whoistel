@@ -4,32 +4,32 @@
 <h2>Historique des Signalements Récents</h2>
 
 {% if reports %}
-    <table>
-        <thead>
-            <tr>
-                <th>Numéro</th>
-                <th>Date Appel</th>
-                <th>Spam?</th>
-                <th>Commentaire</th>
-                <th>Signalé le</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for report in reports %}
-            <tr>
-                <td><a href="{{ url_for('view_number', number=report.phone_number) }}">{{ report.phone_number }}</a></td>
-                <td>{{ report.report_date|format_datetime }}</td>
-                <td class="{{ 'spam-alert' if report.is_spam else '' }}">{{ 'OUI' if report.is_spam else 'NON' }}</td>
-                <td>{{ report.comment }}</td>
-                <td>{{ report['created_at']|format_datetime }}</td>
-                <td><a href="{{ url_for('view_number', number=report.phone_number) }}">Voir</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<table>
+    <thead>
+        <tr>
+            <th>Numéro</th>
+            <th>Date Appel</th>
+            <th>Spam?</th>
+            <th>Commentaire</th>
+            <th>Signalé le</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for report in reports %}
+        <tr>
+            <td><a href="{{ url_for('view_number', number=report.phone_number) }}">{{ report.phone_number }}</a></td>
+            <td>{{ report.report_date|format_datetime }}</td>
+            <td class="{{ 'spam-alert' if report.is_spam else '' }}">{{ 'OUI' if report.is_spam else 'NON' }}</td>
+            <td>{{ report.comment }}</td>
+            <td>{{ report.created_at|format_datetime }}</td>
+            <td><a href="{{ url_for('view_number', number=report.phone_number) }}">Voir</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% else %}
-    <p>Aucun signalement pour le moment.</p>
+<p>Aucun signalement pour le moment.</p>
 {% endif %}
 
 {% endblock %}
