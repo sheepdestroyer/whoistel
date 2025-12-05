@@ -220,9 +220,7 @@ def print_result(result):
     else:
         print(f"\nOpérateur : Code {result.get('code_operateur')} (Détails non trouvés)")
 
-    # Location Info
-    loc = result.get('location')
-    if loc:
+    if loc := result.get('location'):
         if 'commune' in loc:
             print("\n--- Localisation (Estimation) ---")
             print(f"Commune : {loc.get('commune')}")
