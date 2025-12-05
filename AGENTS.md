@@ -64,7 +64,7 @@ gh pr comment {PR_NUMBER} --body "/gemini review"
 ```
 
 ### 2. Wait
-Allow time for the review to process (typically 3-5 minutes).
+Allow time for the review to process (typically 3-5 minutes). An initial `sleep 180` will do, no less.
 
 ### 3. Fetch Comments (Correctly)
 Use the API endpoint with pagination to ensure you get *everything*.
