@@ -122,6 +122,10 @@ def report():
         date = None
 
     if number:
+        if not is_spam and not comment:
+            flash("Veuillez cocher la case spam ou ajouter un commentaire pour enregistrer un signalement.", "error")
+            return redirect(url_for('view_number', number=number))
+
         history_manager.add_report(number, date, is_spam, comment, conn=get_history_db())
         flash("Signalement enregistré.", "success")
         return redirect(url_for('view_number', number=number))

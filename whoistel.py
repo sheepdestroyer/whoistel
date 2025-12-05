@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #-*- encoding: Utf-8 -*-
 import sqlite3
-import contextlib
+import sqlite3
 import argparse
 import sys
 import os
@@ -255,9 +255,8 @@ def main():
         logger.warning(f"Attention: Le numéro {cleaned_number} ne fait pas 10 chiffres. La recherche peut échouer.")
 
     # Use valid database connection
-    # Use valid database connection
     try:
-        with contextlib.closing(setup_db_connection()) as conn:
+        with setup_db_connection() as conn:
              result = get_full_info(conn, cleaned_number)
              print_result(result)
     except DatabaseError as e:
