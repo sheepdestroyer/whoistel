@@ -17,7 +17,7 @@ The primary goal is to have a working command-line tool (`whoistel.py`) that can
     *   Use `pytest -v` for validation. Write tests to cover core functionality, especially number lookups.
     *   Run the script with the test number before submitting changes.
 4.  **Data Handling:**
-    *   **Never attempt to read data files directly (like `.csv` or `.xls` ) within the main application logic and your tests** These data files are large, converted if nececessary and used during the database generation phase (`generatedb.py`), but not directly by `whoistel.py`. Only inspect them using `head` or `tail`.
+    *   **Never attempt to read data files directly (like `.csv` or `.xls`) within the main application logic and your tests** These data files are large, converted if necessary and used during the database generation phase (`generatedb.py`), but not directly by `whoistel.py`. Only inspect them using `head` or `tail`.
 5.  **Python Version:** The project targets Python 3. Ensure all code is Python 3 compatible.
 6.  **Dependency Management:** If new dependencies are added, ensure they are documented (e.g., in a `requirements.txt` if appropriate).
 7.  **Committing Code:**
