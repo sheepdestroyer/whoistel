@@ -6,6 +6,8 @@ import sys
 import os
 import logging
 import re
+from urllib.parse import urlparse
+from email_validator import validate_email, EmailNotValidError
 
 class DatabaseError(Exception):
     pass
@@ -63,10 +65,22 @@ def get_operator_info(conn, code_operateur):
         site = row[3]
 
         # Simple validation to prevent XSS
-        if mail and ('@' not in mail or '<' in mail or '>' in mail):
-            mail = None
-        if site and not (site.startswith('http://') or site.startswith('https://')):
-            site = None
+        # Robust validation
+        if mail:
+            try:
+                validate_email(mail, check_deliverability=False)
+            except EmailNotValidError:
+                mail = None
+
+        if site:
+            try:
+                parsed = urlparse(site)
+                if not all([parsed.scheme, parsed.netloc]):
+                    site = None
+                elif parsed.scheme not in ['http', 'https']:
+                    site = None
+            except ValueError:
+                site = None
 
         return {
             'code': code_operateur,

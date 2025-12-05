@@ -76,3 +76,37 @@ def test_clean_phone_number():
     assert clean_phone_number("+33 1 02 03 04 05") == "0102030405"
     assert clean_phone_number("+33 (0) 6 12 34 56 78") == "0612345678"
     assert clean_phone_number("06-12-34-56-78") == "0612345678"
+
+def test_operator_info_validation():
+    """Tests the email and URL validation logic in get_operator_info."""
+    from whoistel import get_operator_info
+    from unittest.mock import MagicMock
+
+    # Mock connection and cursor
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+
+    # Case 1: Valid email and URL
+    mock_cursor.fetchone.return_value = ('OpName', 'OpType', 'contact@example.com', 'https://example.com')
+    result = get_operator_info(mock_conn, '1234')
+    assert result['mail'] == 'contact@example.com'
+    assert result['site'] == 'https://example.com'
+
+    # Case 2: Invalid email
+    mock_cursor.fetchone.return_value = ('OpName', 'OpType', 'invalid-email', 'https://example.com')
+    result = get_operator_info(mock_conn, '1234')
+    assert result['mail'] is None
+    assert result['site'] == 'https://example.com'
+
+    # Case 3: Invalid URL (bad scheme)
+    mock_cursor.fetchone.return_value = ('OpName', 'OpType', 'contact@example.com', 'ftp://example.com')
+    result = get_operator_info(mock_conn, '1234')
+    assert result['mail'] == 'contact@example.com'
+    assert result['site'] is None
+
+    # Case 4: Invalid URL (no netloc)
+    mock_cursor.fetchone.return_value = ('OpName', 'OpType', 'contact@example.com', 'http://')
+    result = get_operator_info(mock_conn, '1234')
+    assert result['mail'] == 'contact@example.com'
+    assert result['site'] is None
