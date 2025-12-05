@@ -183,7 +183,7 @@ def get_full_info(conn, tel):
         result['operator'] = {'code': info['code_operateur'], 'nom': 'Inconnu', 'type': 'N/A', 'site': None, 'mail': None}
 
     # Location Info
-    if info['code_insee'] and info['code_insee'] != 0:
+    if info['code_insee'] and info['code_insee'] != '0':
         commune_info = get_commune_info(conn, info['code_insee'])
         result['location'] = commune_info
 
