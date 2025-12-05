@@ -31,6 +31,7 @@ def format_datetime(value, format='%d/%m/%Y %H:%M'):
         try:
             dt_obj = datetime.strptime(value, fmt)
         except ValueError:
+            app.logger.warning(f"Could not parse datetime string: '{value}'")
             pass  # Parsing failed
 
     if dt_obj:

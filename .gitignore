@@ -48,3 +48,4 @@ review_outcome.txt
 test_result.txt
 test_whoistel_out.txt
 wait_for_review.py
+manual_*.json
