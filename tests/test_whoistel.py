@@ -73,11 +73,16 @@ def test_invalid_number_format_non_digit():
 def test_clean_phone_number():
     """Tests the phone number cleaning logic."""
     from whoistel import clean_phone_number
+    # Formatted valid numbers
     assert clean_phone_number("01.02.03.04.05") == "0102030405"
     assert clean_phone_number("+33 1 02 03 04 05") == "0102030405"
     assert clean_phone_number("+33 (0) 6 12 34 56 78") == "0612345678"
     assert clean_phone_number("06-12-34-56-78") == "0612345678"
     assert clean_phone_number("06\t12 34\n56 78") == "0612345678"
+
+    # Falsy / missing inputs
+    assert clean_phone_number("") == ""
+    assert clean_phone_number(None) == ""
 
 def test_operator_info_validation():
     """Tests the email and URL validation logic in get_operator_info."""
