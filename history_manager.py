@@ -49,7 +49,7 @@ def init_history_db():
         conn.commit()
 
 @with_db_connection
-def add_report(phone_number, report_date, is_spam, comment, conn=None):
+def add_report(phone_number, report_date, is_spam, comment, *, conn=None):
     c = conn.cursor()
     c.execute('''
         INSERT INTO reports (phone_number, report_date, is_spam, comment)
@@ -58,7 +58,7 @@ def add_report(phone_number, report_date, is_spam, comment, conn=None):
     conn.commit()
 
 @with_db_connection
-def get_spam_count(phone_number, conn=None):
+def get_spam_count(phone_number, *, conn=None):
     c = conn.cursor()
     c.execute('''
         SELECT COUNT(*) FROM reports
@@ -70,7 +70,7 @@ def get_spam_count(phone_number, conn=None):
 DEFAULT_RECENT_REPORTS_LIMIT = 50
 
 @with_db_connection
-def get_recent_reports(limit=DEFAULT_RECENT_REPORTS_LIMIT, conn=None):
+def get_recent_reports(limit=DEFAULT_RECENT_REPORTS_LIMIT, *, conn=None):
     """
     Retrieves the most recent reports.
     """

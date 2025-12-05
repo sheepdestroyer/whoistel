@@ -26,13 +26,15 @@ def format_datetime(value, format='%d/%m/%Y %H:%M'):
     if isinstance(value, datetime):
         dt_obj = value
     elif isinstance(value, str):
-        # Determine format based on presence of time part
-        fmt = '%Y-%m-%d %H:%M:%S' if ' ' in value else '%Y-%m-%d'
-        try:
-            dt_obj = datetime.strptime(value, fmt)
-        except ValueError:
+        # Try parsing multiple formats, from most to least specific
+        for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+            try:
+                dt_obj = datetime.strptime(value, fmt)
+                break
+            except ValueError:
+                pass
+        else:  # No format matched
             app.logger.warning(f"Could not parse datetime string: '{value}'")
-            pass  # Parsing failed
 
     if dt_obj:
         return dt_obj.strftime(format)
