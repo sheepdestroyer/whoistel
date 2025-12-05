@@ -67,6 +67,7 @@ def test_invalid_number_format_non_digit():
     result = run_whoistel_script(number)
 
     assert result.returncode == 1
+    assert result.returncode == 1
     assert "uniquement des chiffres après nettoyage" in result.stderr
 
 def test_clean_phone_number():
