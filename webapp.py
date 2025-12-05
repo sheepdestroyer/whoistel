@@ -75,11 +75,19 @@ def check():
     # Clean number
     tel = whoistel.clean_phone_number(raw_tel)
 
+    if not tel.isdigit():
+        flash("Le numéro de téléphone est invalide. Il ne doit contenir que des chiffres et des séparateurs courants.", "error")
+        return redirect(url_for('index'))
+
     return redirect(url_for('view_number', number=tel))
 
 @app.route('/view/<number>', methods=['GET'])
 def view_number(number):
     cleaned_number = whoistel.clean_phone_number(number)
+    
+    if not cleaned_number.isdigit():
+        return render_template('error.html', message="Le format du numéro est invalide."), 400
+
     if cleaned_number != number:
         return redirect(url_for('view_number', number=cleaned_number))
 
