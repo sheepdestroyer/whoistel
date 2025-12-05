@@ -239,12 +239,16 @@ def main():
 
     raw_tel = args.numero
     
-    # Check format roughly
-    if not re.match(r'^\+?[0-9 .()-]+$', raw_tel):
-             print("Erreur: Le numéro doit contenir uniquement des chiffres (ou commencer par +33).", file=sys.stderr)
-             sys.exit(1)
+    # Remove redundant initial regex check
+    # if not re.match(r'^\+?[0-9 .()-]+$', raw_tel): ...
+    # clean_phone_number handles more cases.
 
     cleaned_number = clean_phone_number(raw_tel)
+    
+    # Ensure cleaned number only contains digits (or +)
+    if not re.match(r'^\+?[0-9]+$', cleaned_number):
+         print("Erreur: Le numéro doit contenir uniquement des chiffres (ou commencer par +33).", file=sys.stderr)
+         sys.exit(1)
     
     if len(cleaned_number) != 10:
         logger.warning(f"Attention: Le numéro {cleaned_number} ne fait pas 10 chiffres. La recherche peut échouer.")

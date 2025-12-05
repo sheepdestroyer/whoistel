@@ -17,23 +17,27 @@ history_manager.init_history_db()
 
 @app.template_filter('format_datetime')
 def format_datetime(value, format='%d/%m/%Y %H:%M'):
-    if value is None:
+    if not value:
         return ""
+
+    dt_obj = None
     if isinstance(value, str):
         try:
-            # Try parsing as datetime first
-            dt = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-            return dt.strftime(format)
+            dt_obj = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
         except ValueError:
             try:
-                # Fallback for date-only strings
-                dt = datetime.strptime(value, '%Y-%m-%d')
-                return dt.strftime('%d/%m/%Y')
+                dt_obj = datetime.strptime(value, '%Y-%m-%d')
+                # For date-only strings, we use a specific date format.
+                return dt_obj.strftime('%d/%m/%Y')
             except ValueError:
-                 return value # Not a recognized date/datetime string
+                return value  # Return as-is if not a recognized format
+    elif isinstance(value, datetime):
+        dt_obj = value
     
-    # If not a string, assume it's a datetime object and format it.
-    return value.strftime(format)
+    if dt_obj:
+        return dt_obj.strftime(format)
+
+    return value # Return original value if not a string or datetime
 
 def get_history_db():
     if 'history_db' not in g:

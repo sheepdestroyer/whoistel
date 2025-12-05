@@ -24,6 +24,13 @@ def client():
     os.close(db_fd)
     os.unlink(db_path)
 
+@pytest.fixture
+def client_with_csrf(client):
+    """Fixture that enables CSRF protection for specific tests."""
+    app.config['WTF_CSRF_ENABLED'] = True
+    yield client
+    app.config['WTF_CSRF_ENABLED'] = False
+
 def test_index(client):
     rv = client.get('/')
     assert b'Rechercher un num' in rv.data
@@ -103,21 +110,16 @@ def test_report_comment_truncation(client):
         assert len(args[3]) == 1024
         assert args[3] == "a" * 1024
 
-def test_csrf_protection(client):
+def test_csrf_protection(client_with_csrf):
     """Tests that CSRF protection is active."""
-    # Note: The client fixture disables CSRF by default (WTF_CSRF_ENABLED=False).
-    # We need to enable it for this specific test.
-    app.config['WTF_CSRF_ENABLED'] = True
-    try:
-        # Try to post without a CSRF token
-        rv = client.post('/report', data={
-            'number': '0123456789',
-            'is_spam': 'on'
-        })
-        
-        # Should return 400 Bad Request (CSRF token missing)
-        assert rv.status_code == 400
-    finally:
-        # Reset config
-        app.config['WTF_CSRF_ENABLED'] = False
+    # The fixture client_with_csrf enables CSRF.
+    
+    # Try to post without a CSRF token
+    rv = client_with_csrf.post('/report', data={
+        'number': '0123456789',
+        'is_spam': 'on'
+    })
+    
+    # Should return 400 Bad Request (CSRF token missing)
+    assert rv.status_code == 400
 
