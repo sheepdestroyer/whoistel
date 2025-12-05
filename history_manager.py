@@ -1,5 +1,6 @@
 import sqlite3
 import logging
+import os
 from contextlib import closing
 from functools import wraps
 
@@ -16,7 +17,7 @@ def with_db_connection(func):
                 return func(*args, **kwargs)
     return wrapper
 
-DB_FILE = 'history.sqlite3'
+DB_FILE = os.environ.get('HISTORY_DB_FILE', 'history.sqlite3')
 logger = logging.getLogger(__name__)
 
 def get_db_connection():
