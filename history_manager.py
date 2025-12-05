@@ -13,8 +13,10 @@ def with_db_connection(func):
             return func(*args, **kwargs)
         else:
             with closing(get_db_connection()) as new_conn:
-                kwargs['conn'] = new_conn
-                return func(*args, **kwargs)
+                # Create a copy of kwargs to avoid modifying the original dict
+                new_kwargs = kwargs.copy()
+                new_kwargs['conn'] = new_conn
+                return func(*args, **new_kwargs)
     return wrapper
 
 DB_FILE = os.environ.get('HISTORY_DB_FILE', 'history.sqlite3')

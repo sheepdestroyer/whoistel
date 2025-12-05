@@ -30,6 +30,5 @@ arcep_xls_inspection/
 *.swo
 
 # Logs and Artifacts
-*.log
 *.png
 verification/

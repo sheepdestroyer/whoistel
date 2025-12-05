@@ -34,7 +34,7 @@ def format_datetime(value, format='%d/%m/%Y %H:%M'):
     if dt_obj:
         return dt_obj.strftime(format)
 
-    return value # Return original value if parsing failed
+    return "" # Return empty string if parsing failed
 
 def get_history_db():
     if 'history_db' not in g:

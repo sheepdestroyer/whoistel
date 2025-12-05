@@ -4,38 +4,40 @@
 <h2>Résultat pour {{ number }}</h2>
 
 {% if result.error %}
-    <div class="result-box error">
-        <h3>Numéro non trouvé</h3>
-        <p>{{ result.error }}</p>
-    </div>
+<div class="result-box error">
+    <h3>Numéro non trouvé</h3>
+    <p>{{ result.error }}</p>
+</div>
 {% else %}
-    <div class="result-box success">
-        <h3>Informations ARCEP</h3>
-        <p><strong>Type :</strong> {{ result.type }}</p>
-        <p><strong>Préfixe :</strong> {{ result.prefix }}</p>
+<div class="result-box success">
+    <h3>Informations ARCEP</h3>
+    <p><strong>Type :</strong> {{ result.type }}</p>
+    <p><strong>Préfixe :</strong> {{ result.prefix }}</p>
 
-        {% if result.operator %}
-            <h4>Opérateur</h4>
-            <ul>
-                <li><strong>Nom :</strong> {{ result.operator.nom }}</li>
-                <li><strong>Code :</strong> {{ result.operator.code }}</li>
-                {% if result.operator.site %}<li>Site : <a href="{{ result.operator.site }}" target="_blank" rel="noopener noreferrer">{{ result.operator.site }}</a></li>{% endif %}
-                {% if result.operator.mail %}<li>Email : <a href="mailto:{{ result.operator.mail }}">{{ result.operator.mail }}</a></li>{% endif %}
-            </ul>
-        {% endif %}
+    {% if result.operator %}
+    <h4>Opérateur</h4>
+    <ul>
+        <li><strong>Nom :</strong> {{ result.operator.nom }}</li>
+        <li><strong>Code :</strong> {{ result.operator.code }}</li>
+        {% if result.operator.site %}<li>Site : <a href="{{ result.operator.site }}" target="_blank"
+                rel="noopener noreferrer">{{ result.operator.site }}</a></li>{% endif %}
+        {% if result.operator.mail %}<li>Email : <a href="mailto:{{ result.operator.mail }}">{{ result.operator.mail
+                }}</a></li>{% endif %}
+    </ul>
+    {% endif %}
 
-        {% if result.location %}
-            <h4>Localisation</h4>
-            <ul>
-                {% if result.location.commune %}
-                    <li><strong>Commune :</strong> {{ result.location.commune }} ({{ result.location.code_postal }})</li>
-                    <li><strong>Département :</strong> {{ result.location.departement }}</li>
-                {% elif result.location.region %}
-                    <li><strong>Région :</strong> {{ result.location.region }}</li>
-                {% endif %}
-            </ul>
+    {% if result.location %}
+    <h4>Localisation</h4>
+    <ul>
+        {% if result.location.commune %}
+        <li><strong>Commune :</strong> {{ result.location.commune }} ({{ result.location.code_postal }})</li>
+        <li><strong>Département :</strong> {{ result.location.departement }}</li>
+        {% elif result.location.region %}
+        <li><strong>Région :</strong> {{ result.location.region }}</li>
         {% endif %}
-    </div>
+    </ul>
+    {% endif %}
+</div>
 {% endif %}
 
 <div class="result-box community">
@@ -48,19 +50,25 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="number" value="{{ number }}">
 
-    <label for="date">Date de l'appel (optionnel) :</label>
-    <input type="date" name="date" id="date">
+    <div class="form-group">
+        <label for="date">Date de l'appel (optionnel) :</label>
+        <input type="date" name="date" id="date">
+    </div>
 
-    <label>
-        <input type="checkbox" name="is_spam"> Signaler comme Spam / Démarchage
-    </label>
-    <br><br>
+    <div class="form-group">
+        <label>
+            <input type="checkbox" name="is_spam"> Signaler comme Spam / Démarchage
+        </label>
+    </div>
 
-    <label for="comment">Commentaire (optionnel) :</label><br>
-    <textarea name="comment" id="comment" rows="3"></textarea>
-    <br><br>
+    <div class="form-group">
+        <label for="comment">Commentaire (optionnel) :</label>
+        <textarea name="comment" id="comment" rows="3"></textarea>
+    </div>
 
-    <input type="submit" value="Enregistrer le signalement">
+    <div class="form-group">
+        <input type="submit" value="Enregistrer le signalement">
+    </div>
 </form>
 
 {% endblock %}
