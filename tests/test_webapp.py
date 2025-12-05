@@ -2,7 +2,7 @@ import pytest
 import os
 import tempfile
 import sqlite3
-from webapp import app
+from webapp import app, MAX_COMMENT_LENGTH
 import history_manager
 import whoistel
 from unittest.mock import patch
@@ -98,7 +98,7 @@ def test_database_connection_error(client):
 
 def test_report_comment_truncation(client):
     """Tests that the comment field is truncated to 1024 characters."""
-    long_comment = "a" * (app.MAX_COMMENT_LENGTH + 1000) # Ensure it's longer than MAX_COMMENT_LENGTH
+    long_comment = "a" * (MAX_COMMENT_LENGTH + 1000) # Ensure it's longer than MAX_COMMENT_LENGTH
     with patch('history_manager.add_report') as mock_add_report:
         client.post('/report', data={
             'number': '0123456789',
@@ -108,8 +108,8 @@ def test_report_comment_truncation(client):
         
         args, kwargs = mock_add_report.call_args
         # Check comment was truncated
-        assert len(args[3]) == app.MAX_COMMENT_LENGTH
-        assert args[3] == "a" * app.MAX_COMMENT_LENGTH
+        assert len(args[3]) == MAX_COMMENT_LENGTH
+        assert args[3] == "a" * MAX_COMMENT_LENGTH
 
 def test_csrf_protection(client_with_csrf):
     """Tests that CSRF protection is active."""
