@@ -1,0 +1,22 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.0, pytest-9.0.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/sheepdestroyer/LAB/whoistel
+plugins: anyio-4.11.0
+collecting ... collected 5 items / 1 error
+
+==================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_webapp.py _____________________
+ImportError while importing test module '/home/sheepdestroyer/LAB/whoistel/tests/test_webapp.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib64/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_webapp.py:5: in <module>
+    from webapp import app
+E   ModuleNotFoundError: No module named 'webapp'
+=========================== short test summary info ============================
+ERROR tests/test_webapp.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.06s ===============================

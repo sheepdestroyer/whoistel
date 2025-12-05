@@ -1,0 +1,22 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.0, pytest-9.0.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/sheepdestroyer/LAB/whoistel
+plugins: anyio-4.11.0
+collecting ... collected 13 items
+
+tests/test_webapp.py::test_index PASSED                                  [  7%]
+tests/test_webapp.py::test_check_number_redirect PASSED                  [ 15%]
+tests/test_webapp.py::test_view_number_unknown PASSED                    [ 23%]
+tests/test_webapp.py::test_report_flow PASSED                            [ 30%]
+tests/test_webapp.py::test_check_known_missing_number PASSED             [ 38%]
+tests/test_webapp.py::test_view_number_redirect_dirty PASSED             [ 46%]
+tests/test_webapp.py::test_report_empty_date PASSED                      [ 53%]
+tests/test_webapp.py::test_database_connection_error PASSED              [ 61%]
+tests/test_whoistel.py::test_geographic_number_lookup PASSED             [ 69%]
+tests/test_whoistel.py::test_non_geographic_test_number_lookup PASSED    [ 76%]
+tests/test_whoistel.py::test_valid_geo_number_lookup PASSED              [ 84%]
+tests/test_whoistel.py::test_invalid_number_format_non_digit PASSED      [ 92%]
+tests/test_whoistel.py::test_clean_phone_number PASSED                   [100%]
+
+============================== 13 passed in 2.18s ==============================

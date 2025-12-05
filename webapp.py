@@ -44,6 +44,11 @@ def view_number(number):
 
     return render_template('result.html', result=result, spam_count=spam_count, number=cleaned_number)
 
+@app.errorhandler(whoistel.DatabaseError)
+def handle_db_error(e):
+    app.logger.error(f"Database error: {e}")
+    return render_template('error.html', message="Database error occurred"), 500
+
 @app.route('/report', methods=['POST'])
 def report():
     # Clean number before storing
@@ -52,14 +57,13 @@ def report():
     is_spam = request.form.get('is_spam') == 'on'
     comment = request.form.get('comment')
 
-    if not date:
+    try:
+        # This validates the date format. It will fail for invalid formats,
+        # empty strings, or if the date is not provided (None).
+        datetime.strptime(date, '%Y-%m-%d')
+    except (ValueError, TypeError):
+        # If validation fails, store as NULL in the database.
         date = None
-    else:
-        try:
-            datetime.strptime(date, '%Y-%m-%d')
-        except ValueError:
-            # Invalid format from user, store as NULL
-            date = None
 
     if number:
         history_manager.add_report(number, date, is_spam, comment)

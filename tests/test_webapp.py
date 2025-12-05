@@ -4,6 +4,8 @@ import tempfile
 import sqlite3
 from webapp import app
 import history_manager
+import whoistel
+from unittest.mock import patch
 
 @pytest.fixture
 def client():
@@ -79,3 +81,10 @@ def test_report_empty_date(client):
     assert rv.status_code == 200
     rv = client.get('/history')
     assert b'Test Empty Date' in rv.data
+
+def test_database_connection_error(client):
+    with patch('whoistel.setup_db_connection') as mock_db:
+        mock_db.side_effect = whoistel.DatabaseError("Connection failed")
+        rv = client.get('/view/0123456789')
+        assert rv.status_code == 500
+        assert b'Database error occurred' in rv.data

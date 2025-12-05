@@ -5,6 +5,10 @@ import argparse
 import sys
 import os
 import logging
+import re
+
+class DatabaseError(Exception):
+    pass
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s') # Simplified format for CLI
@@ -24,7 +28,7 @@ def clean_phone_number(raw_tel):
     if not raw_tel:
         return ""
     # Remove separators and parenthesis
-    tel = raw_tel.replace(' ', '').replace('.', '').replace('-', '').replace('(', '').replace(')', '')
+    tel = re.sub(r'[ .\-()]', '', raw_tel)
 
     # Handle +33 (0) case which becomes +330... after removal
     if tel.startswith('+330'):
@@ -36,15 +40,16 @@ def clean_phone_number(raw_tel):
 
 def setup_db_connection():
     if not os.path.exists(DB_FILE):
-        logger.error(f"Erreur: La base de données '{DB_FILE}' est absente.")
-        logger.error("Veuillez exécuter le script 'updatearcep.sh' ou 'generatedb.py' pour la générer.")
-        sys.exit(1)
+        msg = f"Erreur: La base de données '{DB_FILE}' est absente. Veuillez exécuter le script 'updatearcep.sh' ou 'generatedb.py' pour la générer."
+        logger.error(msg)
+        raise DatabaseError(msg)
     try:
         conn = sqlite3.connect(DB_FILE)
         return conn
     except sqlite3.Error as e:
-        logger.error(f"Erreur lors de la connexion à la base de données: {e}")
-        sys.exit(1)
+        msg = f"Erreur lors de la connexion à la base de données: {e}"
+        logger.error(msg)
+        raise DatabaseError(msg)
 
 def get_operator_info(conn, code_operateur):
     if not code_operateur:
@@ -214,13 +219,7 @@ def print_result(conn, tel, info):
 
     # If Geo and no CodeInsee, give Region hint
     if info['type'] == 'Geographique' and (not info['code_insee'] or str(info['code_insee']) == '0'):
-        region_map = {
-            '01': 'Île-de-France',
-            '02': 'Nord-Ouest',
-            '03': 'Nord-Est',
-            '04': 'Sud-Est',
-            '05': 'Sud-Ouest'
-        }
+
         region_code = tel[:2]
         if region_code in REGION_MAP:
             print(f"\nLocalisation : Région {REGION_MAP[region_code]} (Détail commune non disponible)")
@@ -252,7 +251,10 @@ def main():
         else:
              logger.warning(f"Attention: Le numéro {tel} ne fait pas 10 chiffres. La recherche peut échouer.")
 
-    conn = setup_db_connection()
+    try:
+        conn = setup_db_connection()
+    except DatabaseError:
+        sys.exit(1)
     result = search_number(conn, tel)
     print_result(conn, tel, result)
     conn.close()
