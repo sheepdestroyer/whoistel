@@ -11,8 +11,7 @@ def check_status():
         comments = json.load(f)
 
     # Find start time
-    start_time = next((r['submitted_at'] for r in reviews if r['id'] == target_review_id), None)
-    if not start_time:
+    if not (start_time := next((r['submitted_at'] for r in reviews if r['id'] == target_review_id), None)):
         print("Target review not found")
         return
 

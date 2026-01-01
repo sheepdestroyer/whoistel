@@ -27,7 +27,7 @@ The primary goal is to have a working command-line tool (`whoistel.py`) that can
 8.  **Error Handling:** Implement robust error handling, especially for API calls and data parsing.
 9.  **User Interaction:** The primary interface is command-line. Ensure output is clear and informative. Successful results should go to `stdout`, while logs, errors, and diagnostic information should go to `stderr`.
 10. **Containerization**:
-    *   Assist with the creation and debugging of the production ready `Containerfile`.
+    *   Assist with the creation and debugging of the production-ready `Containerfile`.
     *   Provide instructions for building and running the container locally if requested.
     *   Note: Direct execution of `docker` or `podman` commands by the agent may be subject to environment limitations.
 

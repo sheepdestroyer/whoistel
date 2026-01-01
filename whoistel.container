@@ -10,6 +10,7 @@ HealthInterval=30s
 HealthTimeout=5s
 HealthRetries=3
 # Environment=SECRET_KEY=  <-- Set this in your deployment, do not hardcode default!
+Volume=/var/lib/whoistel/data:/app/data
 # Auto-update if a registry is used in the future
 # AutoUpdate=registry
 

@@ -34,8 +34,7 @@ def main():
     timeout = 10 * 60
     
     while time.time() - start_time < timeout:
-        review = check_for_reviews(commit)
-        if review:
+        if review := check_for_reviews(commit):
             print("\nREVIEW DETECTED!")
             print(f"State: {review.get('state')}")
             print(f"Body: {review.get('body')}")
