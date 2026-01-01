@@ -8,6 +8,7 @@ import logging
 import re
 from urllib.parse import urlparse
 from email_validator import validate_email, EmailNotValidError
+from contextlib import closing
 
 class DatabaseError(Exception):
     pass
@@ -43,6 +44,10 @@ def clean_phone_number(raw_tel):
     return tel
 
 def setup_db_connection():
+    """
+    Establishes a connection to the SQLite database.
+    Raises DatabaseError if DB file is missing or connection fails.
+    """
     if not os.path.exists(DB_FILE):
         msg = f"Erreur: La base de données '{DB_FILE}' est absente. Veuillez exécuter le script 'updatearcep.sh' ou 'generatedb.py' pour la générer."
         logger.error(msg)
@@ -57,6 +62,10 @@ def setup_db_connection():
         raise DatabaseError(msg) from e
 
 def get_operator_info(conn, code_operateur):
+    """
+    Retrieves operator details (name, type, email, site) from the database by operator code.
+    Validates email and URL fields to prevent malformed data.
+    """
     if not code_operateur:
         return None
 
@@ -67,8 +76,7 @@ def get_operator_info(conn, code_operateur):
         mail = row['MailOperateur']
         site = row['SiteOperateur']
 
-        # Simple validation to prevent XSS
-        # Robust validation
+        # Validate email and URL to prevent injection/XSS
         if mail:
             try:
                 validate_email(mail, check_deliverability=False)
@@ -252,7 +260,6 @@ def main():
 
     # Use valid database connection
     try:
-        from contextlib import closing
         with closing(setup_db_connection()) as conn:
              result = get_full_info(conn, cleaned_number)
              print_result(result)

@@ -118,7 +118,7 @@ def test_report_comment_truncation(client):
             'comment': long_comment
         })
         
-        args, kwargs = mock_add_report.call_args
+        args, _ = mock_add_report.call_args
         # Check comment was truncated
         assert len(args[3]) == MAX_COMMENT_LENGTH
         assert args[3] == "a" * MAX_COMMENT_LENGTH
@@ -137,7 +137,7 @@ def test_csrf_protection(client_with_csrf):
     assert rv.status_code == 400
 
 
-def test_format_datetime_filter(client):
+def test_format_datetime_filter():
     """Test the format_datetime utility function directly."""
     from webapp import format_datetime
     from datetime import datetime
