@@ -63,4 +63,4 @@ ENV SECRET_KEY=changeme_in_production
 # ENTRYPOINT makes the container behave like an executable.
 # CMD provides default arguments.
 ENTRYPOINT ["gunicorn"]
-CMD ["-w", "4", "-b", "0.0.0.0:5000", "webapp:app"]
+CMD ["-w", "1", "-b", "0.0.0.0:5000", "webapp:app"]
