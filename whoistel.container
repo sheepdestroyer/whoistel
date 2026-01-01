@@ -1,0 +1,18 @@
+[Unit]
+Description=WhoisTel Web Application Container
+After=network-online.target
+
+[Container]
+Image=localhost/whoistel-web:latest
+PublishPort=5000:5000
+Environment=SECRET_KEY=changeme_in_production
+# Auto-update if a registry is used in the future
+# AutoUpdate=registry
+
+[Service]
+# Restart service on failure
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

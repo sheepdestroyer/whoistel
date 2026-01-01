@@ -12,6 +12,10 @@ RUN useradd --system --create-home --shell /bin/nologin --user-group appuser
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Install system dependencies required for data processing
+RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
+
+
 # Set the working directory in the container
 WORKDIR /app
 
@@ -26,7 +30,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # updatearcep.sh uses `pip3 install -r requirements.txt` assuming it's in the current dir,
 # so it needs to be in /app as well if updatearcep.sh's CWD is /app.
 # The initial `COPY requirements.txt .` (where . is /app) handled this.
-COPY whoistel.py xls_to_csv_converter.py generatedb.py updatearcep.sh /app/
+# Copy application files
+COPY whoistel.py generatedb.py updatearcep.sh webapp.py history_manager.py query_op.py /app/
+COPY static /app/static
+COPY templates /app/templates
 
 # Ensure updatearcep.sh is executable
 RUN chmod +x /app/updatearcep.sh
@@ -46,13 +53,14 @@ RUN mkdir -p /app/data && chown -R appuser:appuser /app
 # Switch to the non-root user
 USER appuser
 
-# EXPOSE 8000 is kept in preparation for future web service functionality.
-EXPOSE 8000
+# Expose port 5000 for Flask/Gunicorn
+EXPOSE 5000
 
 # Define environment variables (can be overridden at runtime)
 ENV PYTHONPATH=/app
+ENV SECRET_KEY=changeme_in_production
 
 # ENTRYPOINT makes the container behave like an executable.
-# CMD provides default arguments (e.g., --help) if no arguments are given to `docker run`.
-ENTRYPOINT ["python", "/app/whoistel.py"]
-CMD ["--help"]
+# CMD provides default arguments.
+ENTRYPOINT ["gunicorn"]
+CMD ["-w", "4", "-b", "0.0.0.0:5000", "webapp:app"]
