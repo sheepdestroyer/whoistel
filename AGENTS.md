@@ -40,7 +40,7 @@ By following these guidelines, we aim to create a robust and reliable version of
 
 
 # GitHub PR Review Cycle
-A PR Review Cycle triggers, fetches and address Code Reviews on GitHub's PR until there is nothing left to fix and the PR is Ready to Merge.
+A PR Review Cycle triggers, fetches and addresses Code Reviews on GitHub's PR until there is nothing left to fix and the PR is Ready to Merge.
 
 ## Learned Lessons: Fetching Comments
 In order to initiate or restart a successful Code Review Cycle, here is what we learned:

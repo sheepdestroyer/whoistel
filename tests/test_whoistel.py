@@ -79,7 +79,7 @@ def test_clean_phone_number():
     assert clean_phone_number("+33 (0) 6 12 34 56 78") == "0612345678"
     assert clean_phone_number("06-12-34-56-78") == "0612345678"
     assert clean_phone_number("06\t12 34\n56 78") == "0612345678"
-
+    
     # Falsy / missing inputs
     assert clean_phone_number("") == ""
     assert clean_phone_number(None) == ""

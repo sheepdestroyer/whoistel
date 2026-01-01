@@ -40,6 +40,18 @@ def test_check_number_redirect(client):
     assert rv.status_code == 302
     assert '/view/0123456789' in rv.location
 
+def test_check_number_missing_number_validation_error(client):
+    rv = client.post('/check', data={'number': ''}, follow_redirects=True)
+    # Should flash that a number is required and redirect back to the index
+    assert b'Veuillez saisir un num' in rv.data
+    assert b'Rechercher un num' in rv.data
+
+def test_check_number_invalid_number_validation_error(client):
+    rv = client.post('/check', data={'number': 'abcd'}, follow_redirects=True)
+    # Should flash an invalid-characters error and redirect back to the index
+    assert b'est invalide' in rv.data
+    assert b'Rechercher un num' in rv.data
+
 def test_view_number_unknown(client):
     # Tests checking a number that likely doesn't exist or is generic
     rv = client.get('/view/0123456789')
@@ -123,4 +135,26 @@ def test_csrf_protection(client_with_csrf):
     
     # Should return 400 Bad Request (CSRF token missing)
     assert rv.status_code == 400
+
+
+def test_format_datetime_filter(client):
+    """Test the format_datetime utility function directly."""
+    from webapp import format_datetime
+    from datetime import datetime
+    
+    # Test with datetime object
+    dt = datetime(2023, 1, 1, 12, 34, 56)
+    assert format_datetime(dt) == "01/01/2023 12:34"
+    
+    # Test with valid strings
+    assert format_datetime("2023-01-01 12:34:56") == "01/01/2023 12:34"
+    assert format_datetime("2023-01-01") == "01/01/2023 00:00"
+    
+    # Test with None or empty
+    assert format_datetime(None) == ""
+    assert format_datetime("") == ""
+    
+    # Test with invalid string (should warn and return empty)
+    # Note: We are not capturing logs here but ensuring it doesn't raise
+    assert format_datetime("invalid-date") == ""
 

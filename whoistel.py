@@ -37,6 +37,8 @@ def clean_phone_number(raw_tel):
         tel = '0' + tel[4:]
     elif tel.startswith('+33'):
         tel = '0' + tel[3:]
+    elif tel.startswith('0033'):
+        tel = '0' + tel[4:]
 
     return tel
 
@@ -51,7 +53,7 @@ def setup_db_connection():
         return conn
     except sqlite3.Error as e:
         msg = f"Erreur lors de la connexion à la base de données: {e}"
-        logger.error(msg)
+        logger.exception(msg)
         raise DatabaseError(msg) from e
 
 def get_operator_info(conn, code_operateur):
@@ -238,16 +240,12 @@ def main():
 
     raw_tel = args.numero
     
-    # Remove redundant initial regex check
-    # if not re.match(r'^\+?[0-9 .()-]+$', raw_tel): ...
-    # clean_phone_number handles more cases.
-
     cleaned_number = clean_phone_number(raw_tel)
     
     # Ensure cleaned number only contains digits
     if not cleaned_number.isdigit():
-         print("Erreur: Le numéro fourni est invalide. Il doit contenir uniquement des chiffres après nettoyage.", file=sys.stderr)
-         sys.exit(1)
+        print("Erreur: Le numéro fourni est invalide. Il doit contenir uniquement des chiffres après nettoyage.", file=sys.stderr)
+        sys.exit(1)
     
     if len(cleaned_number) != 10:
         logger.warning(f"Attention: Le numéro {cleaned_number} ne fait pas 10 chiffres. La recherche peut échouer.")
@@ -258,8 +256,8 @@ def main():
         with closing(setup_db_connection()) as conn:
              result = get_full_info(conn, cleaned_number)
              print_result(result)
-    except DatabaseError as e:
-        logger.error(str(e))
+    except DatabaseError:
+        # Error already logged when exception was raised
         sys.exit(1)
 
 if __name__ == "__main__":
