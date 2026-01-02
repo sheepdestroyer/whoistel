@@ -72,8 +72,7 @@ def get_spam_count(phone_number, *, conn=None):
         SELECT COUNT(*) FROM reports
         WHERE phone_number = ? AND is_spam = 1
     ''', (phone_number,))
-    count = c.fetchone()[0]
-    return count
+    return c.fetchone()[0]
 
 DEFAULT_RECENT_REPORTS_LIMIT = 50
 

@@ -35,11 +35,11 @@ def clean_phone_number(raw_tel):
 
     # Handle +33 (0) case which becomes +330... after removal
     if tel.startswith('+330'):
-        tel = '0' + tel[4:]
+        tel = f"0{tel[4:]}"
     elif tel.startswith('+33'):
-        tel = '0' + tel[3:]
+        tel = f"0{tel[3:]}"
     elif tel.startswith('0033'):
-        tel = '0' + tel[4:]
+        tel = f"0{tel[4:]}"
 
     return tel
 

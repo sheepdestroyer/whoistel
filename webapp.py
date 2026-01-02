@@ -36,10 +36,7 @@ def format_datetime(value, format='%d/%m/%Y %H:%M'):
         else:  # No format matched
             app.logger.warning(f"Could not parse datetime string: '{value}'")
 
-    if dt_obj:
-        return dt_obj.strftime(format)
-
-    return "" # Return empty string if parsing failed
+    return dt_obj.strftime(format) if dt_obj else ""
 
 def get_history_db():
     if 'history_db' not in g:
@@ -116,7 +113,7 @@ def report():
         try:
             datetime.strptime(date, '%Y-%m-%d')
         except ValueError:
-            flash(f"Le format de la date '{date}' est invalide et a été ignoré.", "warning")
+            flash(f"Le format de la date '{date}' est invalide (attendu: AAAA-MM-JJ) et a été ignoré.", "warning")
             date = None
     else:
         date = None

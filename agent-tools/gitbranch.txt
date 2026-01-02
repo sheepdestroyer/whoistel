@@ -1,2 +1,0 @@
-* feature/web-ui-history 2c2fddf [origin/feature/web-ui-history: behind 1] Fix Cycle 10 feedback: Cleanup and DateTime formatting
-  master                 bb8d4b4 [origin/master] Merge pull request #28 from sheepdestroyer/update-communes-source

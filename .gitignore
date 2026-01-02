@@ -35,8 +35,4 @@ verification/
 wait_for_review.py
 
 # Agent Workspace for clean repro
-# Agent Workspace for clean repro
 agent-tools/agent-workspace/
-agent-tools/agent-workspace/reviews_cycle*.json
-agent-tools/agent-workspace/comments_c*.json
-agent-tools/agent-workspace/*_debug.txt
