@@ -74,10 +74,7 @@ def filter_feedback_since(feedback, since_iso):
         for item in items:
             # GitHub uses multiple keys for timestamps
             ts_str = item.get('submitted_at') or item.get('updated_at') or item.get('created_at')
-            try:
-                item_dt = parse_ts(ts_str)
-            except (ValueError, TypeError):
-                item_dt = None
+            item_dt = parse_ts(ts_str)
             
             if item_dt and item_dt > since_dt:
                 new_items.append({**item, '_type': label})

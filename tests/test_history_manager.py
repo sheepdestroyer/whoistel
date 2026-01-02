@@ -129,6 +129,44 @@ def test_history_manager_get_recent_reports_with_conn(history_db_connection):
     assert latest["comment"] == "Spam 2"
     assert latest["phone_number"] == number_1
 
+def test_history_manager_get_recent_reports_limit(history_db_connection):
+    """Test that the limit parameter actually constrains the number of returned reports."""
+    conn = history_db_connection
+    number_1 = "0111111111"
+    number_2 = "0222222222"
+
+    # Insert multiple reports
+    history_manager.add_report(
+        phone_number=number_1,
+        report_date="2023-01-01",
+        is_spam=False,
+        comment="Oldest report",
+        conn=conn,
+    )
+    history_manager.add_report(
+        phone_number=number_1,
+        report_date="2023-01-02",
+        is_spam=False,
+        comment="Middle report",
+        conn=conn,
+    )
+    history_manager.add_report(
+        phone_number=number_2,
+        report_date="2023-01-03",
+        is_spam=True,
+        comment="Most recent report",
+        conn=conn,
+    )
+
+    # Fetch only the two most recent reports and verify limit and ordering
+    recent_reports = history_manager.get_recent_reports(limit=2, conn=conn)
+
+    assert len(recent_reports) == 2
+    # Assuming ordering is by created_at DESC or id DESC.
+    # The first should be number_2, the second should be number_1 (Middle report)
+    assert recent_reports[0]["comment"] == "Most recent report"
+    assert recent_reports[1]["comment"] == "Middle report"
+
 def test_history_manager_add_report_and_get_spam_count_without_conn(tmp_path, monkeypatch):
     """Exercise with_db_connection by using add_report/get_spam_count without an explicit conn."""
     # Point the history manager to a temporary DB file

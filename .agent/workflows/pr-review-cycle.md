@@ -23,28 +23,15 @@ description: Official workflow for managing PR Review Cycles with AI bots (Gemin
     ```bash
     python3 agent-tools/pr_helper.py monitor {PR_NUMBER} --since {TIMESTAMP} --output "agent-tools/agent-workspace/feedback.json"
     ```
-    *   // turbo
     *   Alternatively, use `gh` CLI to check status manually if the script fails.
 
-4.  **Analyze Feedback**
-    *   Review the JSON output or GitHub comments.
-    *   **Filter**: Ignore outdated comments or comments on lines you've already fixed.
-    *   **Actionable?**: If bots say "LGTM" or "Ready to Merge" with zero actionable issues, proceed to Step 6.
-    *   **Issues?**: If issues are found, proceed to Step 5.
-
-5.  **Implement Fixes (The Loop)**
-    *   Apply fixes to the code.
-    *   Verify locally (Step 1).
-    *   Push changes.
-    *   **GO TO STEP 2**. (Repeat the cycle).
-
-6.  **Finalize**
-    *   Ensure all bots explicitly approve.
-    *   Confirm no new regressions.
-    *   Notify user of "Ready to Merge" status.
+4.  **Analyze & Implement**
+    *   Read `feedback.json`.
+    *   Implement fixes for all valid issues.
+    *   **Loop**: Return to Step 1 until "Ready to Merge".
 
 > [!NOTE]
 > **Pagination**: When using the `gh` CLI manually (e.g., `gh api`), ensure you use the `--paginate` flag to retrieve all comments. Default limits may hide critical feedback in long PRs.
 
 > [!WARNING]
-> **Timezones**: Always use **UTC** (Coordinated Universal Time) for all timestamps interaction with GitHub API. Ensure your datetime objects are checking timezone-aware (e.g., `tzinfo=timezone.utc`). Comparing naive (local) vs aware (API) datetimes causes crashes.
+> **Timezones**: Always use **UTC** (Coordinated Universal Time) for all timestamps when interacting with the GitHub API. Ensure your datetime objects are timezone-aware (e.g., `tzinfo=timezone.utc`). Comparing naive (local) vs aware (API) datetimes causes crashes.

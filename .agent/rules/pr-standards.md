@@ -42,5 +42,6 @@ A Review Cycle is a **LOOP**, not a check.
 *   **Filtering**: When filtering comments by time (e.g., `--since`), provide the timestamp in ISO 8601 UTC format (`YYYY-MM-DDTHH:MM:SSZ`) to ensure accurate retrieval.
 
 ## 9. Agent Autonomy
-*   **No Idling**: Agents must actively monitor polling scripts. Do NOT exit/notify the user just to wait.
+*   **No Idling**: Agents must actively monitor polling scripts. Do NOT exit/notify the user just to wait for a bot or a long process.
+*   **Autonomous Action**: Agents are AUTHORIZED and REQUIRED to `git commit` and `git push` fixes autonomously if tests pass. Do not ask the user to push for you.
 *   **Self-Correction**: If a tool fails (e.g., specific monitoring script), fallback to raw `gh` commands immediately.

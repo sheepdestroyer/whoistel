@@ -148,7 +148,7 @@ def test_check_known_missing_number(client):
     assert '/view/0700000000' in rv.location
 
 def test_view_number_redirect_dirty(client):
-    # /view/01.02...def test_view_number_redirect_dirty(client):
+    # /view/01.02...
     """Test that accessing a dirty number URL redirects to the clean version."""
     rv = client.get('/view/01.23.45.67.89')
     assert rv.status_code == 302
@@ -276,3 +276,40 @@ def test_report_html_comment_escaped_in_history(client):
     # Ensure the comment is HTML-escaped in the rendered page
     # Jinja2 auto-escaping converts < to &lt;, > to &gt;
     assert b'&lt;script&gt;alert(1)&lt;/script&gt;' in rv.data
+
+def test_report_invalid_number_format(client):
+    """Test that reporting with an invalid number format shows an error and redirects."""
+    invalid_number = 'abcd'
+    rv = client.post('/report', data={
+        'number': invalid_number,
+        'date': '2024-01-01',
+        'comment': 'Spam call',
+        'is_spam': 'on',
+    }, follow_redirects=True)
+
+    # The request should end up back on the view page for that number, which returns 400 for invalid format
+    assert rv.status_code == 400
+    assert rv.request.path == f'/view/{invalid_number}'
+
+    # The specific flash message about invalid phone number format should be present
+    response_text = rv.get_data(as_text=True)
+    assert "Erreur interne : Numéro de téléphone invalide lors du signalement." in response_text
+
+def test_report_comment_truncation_flash_message(client):
+    """Tests that a flash message is shown to the user when the comment is truncated."""
+    long_comment = "a" * (MAX_COMMENT_LENGTH + 10)
+
+    rv = client.post(
+        '/report',
+        data={
+            'number': '0123456789',
+            'date': '2023-01-01',
+            'comment': long_comment,
+            'is_spam': 'on',
+        },
+        follow_redirects=True,
+    )
+
+    assert rv.status_code == 200
+    expected_message = f"Votre commentaire a été tronqué à {MAX_COMMENT_LENGTH} caractères."
+    assert expected_message.encode("utf-8") in rv.data

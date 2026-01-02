@@ -184,6 +184,22 @@ def test_get_full_info_known_and_unknown(db_connection):
     assert "error" in unknown_result
     assert "inconnu" in unknown_result["error"]
 
+def test_get_full_info_non_geographic(db_connection):
+    """Tests get_full_info end-to-end for a non-geographic number."""
+    from whoistel import get_full_info
+
+    # Non-geographic number (from conftest sample data: 09876... -> OP2)
+    non_geo_number = "0987654321"
+    non_geo_result = get_full_info(db_connection, non_geo_number)
+
+    assert non_geo_result["found"] is True
+    assert non_geo_result["type"] == "Non-Geographique"
+    assert non_geo_result["operator"]["nom"] == "Operator Two"
+
+    # For non-geographic numbers, there may be no location or only a region
+    location = non_geo_result.get("location")
+    assert (location is None) or (set(location.keys()) == {"region"})
+
 def test_print_result_output(capsys):
     """Tests print_result presentation, including the 'Num\u00e9ro inconnu' branch."""
     from whoistel import print_result
@@ -251,13 +267,8 @@ def test_cli_db_error_from_setup_db_connection(capsys):
     
     # We can patch setup_db_connection to raise DatabaseError
     with patch('whoistel.setup_db_connection', side_effect=whoistel.DatabaseError("Test DB Error")):
-        exit_code, _ = run_whoistel_main(capsys, ["0123456789"])
+        exit_code, output = run_whoistel_main(capsys, ["0123456789"])
     
     assert exit_code == 1
-    # Check that it didn't crash with traceback but handled it
-    # Note: run_whoistel_main catches SystemExit. 
-    # whoistel.main catches DatabaseError and sys.exit(1).
-    # so we expect exit code 1.
-    # Logging goes to stderr by default if not configured otherwise? 
-    # But typically uncaught exceptions or log.exception go to stderr.
-    pass # Asserting exit code 1 is the main thing.
+    # Check that it didn't crash with traceback but handled it with a user-facing error
+    assert "Test DB Error" in output.err
