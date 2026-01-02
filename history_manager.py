@@ -3,6 +3,7 @@ import logging
 import os
 from contextlib import closing
 from functools import wraps
+import whoistel
 
 def with_db_connection(func):
     """Decorator to manage DB connection if not provided."""
@@ -13,19 +14,26 @@ def with_db_connection(func):
             return func(*args, **kwargs)
             
         with closing(get_db_connection()) as new_conn:
-            # Modify kwargs in-place and restore to avoid copying
             kwargs['conn'] = new_conn
-            result = func(*args, **kwargs)
-            return result
+            try:
+                return func(*args, **kwargs)
+            finally:
+                if 'conn' in kwargs:
+                    del kwargs['conn']
     return wrapper
 
 DB_FILE = os.environ.get('HISTORY_DB_FILE', 'history.sqlite3')
 logger = logging.getLogger(__name__)
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        return conn
+    except sqlite3.Error as e:
+        msg = f"Erreur lors de la connexion à la base de données d'historique: {e}"
+        logger.exception(msg)
+        raise whoistel.DatabaseError(msg) from e
 
 def init_history_db():
     logger.info(f"Initializing history database schema in {DB_FILE}...")
