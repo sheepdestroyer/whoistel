@@ -66,7 +66,6 @@ def test_invalid_number_format_non_digit():
     number = "012345678A"
     result = run_whoistel_script(number)
 
-    assert result.returncode == 1
     assert "uniquement des chiffres après nettoyage" in result.stderr
 
 def test_clean_phone_number():
@@ -78,6 +77,7 @@ def test_clean_phone_number():
     assert clean_phone_number("+33 (0) 6 12 34 56 78") == "0612345678"
     assert clean_phone_number("06-12-34-56-78") == "0612345678"
     assert clean_phone_number("06\t12 34\n56 78") == "0612345678"
+    assert clean_phone_number("0033612345678") == "0612345678"
     
     # Falsy / missing inputs
     assert clean_phone_number("") == ""

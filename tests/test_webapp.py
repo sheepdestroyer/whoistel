@@ -11,11 +11,13 @@ from unittest.mock import patch
 def client():
     # Create a temporary database for history
     db_fd, db_path = tempfile.mkstemp()
+    original_db_file = history_manager.DB_FILE
     history_manager.DB_FILE = db_path
     history_manager.init_history_db()
 
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
+    # noqa: S105
     app.config['SECRET_KEY'] = 'test-key'
 
     with app.test_client() as client:
@@ -23,6 +25,8 @@ def client():
 
     os.close(db_fd)
     os.unlink(db_path)
+    # Restore original DB_FILE
+    history_manager.DB_FILE = original_db_file
 
 @pytest.fixture
 def client_with_csrf(client):
@@ -100,6 +104,24 @@ def test_report_empty_date(client):
     assert rv.status_code == 200
     rv = client.get('/history')
     assert b'Test Empty Date' in rv.data
+
+def test_view_invalid_number_format_returns_400(client):
+    # A completely non-numeric number should be rejected and return 400
+    rv = client.get('/view/abcd')
+    assert rv.status_code == 400
+
+def test_report_validation_error_requires_at_least_one_field(client):
+    rv = client.post('/report', data={
+        'number': '0123456789',
+        'is_spam': '',
+        'comment': '',
+        'date': '',
+    }, follow_redirects=True)
+
+    # Should redirect back to the view page for that number
+    assert b'0123456789' in rv.data
+    # Should flash an error about needing at least spam/comment/date
+    assert b'cocher la case spam' in rv.data
 
 def test_database_connection_error(client):
     with patch('whoistel.setup_db_connection') as mock_db:

@@ -7,9 +7,6 @@ env/
 venv/
 .venv/
 
-# Temporary python artifacts
-__pycache__/
-*.pyc
 
 # Database
 history.sqlite3

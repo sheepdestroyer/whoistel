@@ -76,7 +76,7 @@ def get_operator_info(conn, code_operateur):
         mail = row['MailOperateur']
         site = row['SiteOperateur']
 
-        # Validate email and URL to prevent injection/XSS
+        # Validate and sanitize email/URL to prevent display of malformed data
         if mail:
             try:
                 validate_email(mail, check_deliverability=False)
@@ -212,7 +212,7 @@ def print_result(result):
     if not result['found']:
         print(f"Résultat : {result.get('error', 'Inconnu')}")
         print("Note : Certains numéros récents ou portés peuvent ne pas figurer dans le fichier public Open Data.")
-        sys.exit(1)
+        return False
 
     print(f"Type détecté : {result.get('type')}")
     print(f"Préfixe identifié : {result.get('prefix')}")
@@ -240,6 +240,8 @@ def print_result(result):
                 print(f"GPS : {loc.get('latitude')}, {loc.get('longitude')}")
         elif 'region' in loc:
             print(f"\nLocalisation : Région {loc['region']} (Détail commune non disponible)")
+    
+    return True
 
 def main():
     parser = argparse.ArgumentParser(description="Outil de recherche d'informations sur les numéros de téléphone français (ARCEP).")
@@ -262,7 +264,8 @@ def main():
     try:
         with closing(setup_db_connection()) as conn:
              result = get_full_info(conn, cleaned_number)
-             print_result(result)
+             if not print_result(result):
+                 sys.exit(1)
     except DatabaseError:
         # Error already logged when exception was raised
         sys.exit(1)

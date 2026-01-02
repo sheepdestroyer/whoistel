@@ -52,7 +52,7 @@ def get_main_db():
     return g.main_db
 
 @app.teardown_appcontext
-def close_dbs(error):
+def close_dbs(_error):
     history_db = g.pop('history_db', None)
     if history_db is not None:
         history_db.close()
