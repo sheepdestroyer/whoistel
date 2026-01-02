@@ -9,23 +9,20 @@ def with_db_connection(func):
     """Decorator to manage DB connection if not provided."""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        conn = kwargs.get('conn')
-        if conn:
+        if 'conn' in kwargs and kwargs.get('conn') is not None:
             return func(*args, **kwargs)
             
         with closing(get_db_connection()) as new_conn:
-            kwargs['conn'] = new_conn
-            try:
-                return func(*args, **kwargs)
-            finally:
-                if 'conn' in kwargs:
-                    del kwargs['conn']
+            new_kwargs = kwargs.copy()
+            new_kwargs['conn'] = new_conn
+            return func(*args, **new_kwargs)
     return wrapper
 
 DB_FILE = os.environ.get('HISTORY_DB_FILE', 'history.sqlite3')
 logger = logging.getLogger(__name__)
 
 def get_db_connection():
+    """Establishes and returns a connection to the SQLite history database."""
     try:
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
@@ -36,6 +33,7 @@ def get_db_connection():
         raise whoistel.DatabaseError(msg) from e
 
 def init_history_db():
+    """Initializes the history database schema and indexes."""
     logger.info(f"Initializing history database schema in {DB_FILE}...")
 
     with closing(get_db_connection()) as conn:
@@ -58,6 +56,16 @@ def init_history_db():
 
 @with_db_connection
 def add_report(phone_number, report_date, is_spam, comment, *, conn=None):
+    """
+    Adds a new spam report to the history database.
+    
+    Args:
+        phone_number (str): The cleaned 10-digit phone number.
+        report_date (str): Optional date of incident (AAAA-MM-JJ).
+        is_spam (bool): Whether the report marks the number as spam.
+        comment (str): Optional description.
+        conn (sqlite3.Connection): Optional existing connection.
+    """
     c = conn.cursor()
     c.execute('''
         INSERT INTO reports (phone_number, report_date, is_spam, comment)
@@ -67,6 +75,7 @@ def add_report(phone_number, report_date, is_spam, comment, *, conn=None):
 
 @with_db_connection
 def get_spam_count(phone_number, *, conn=None):
+    """Returns the total number of spam reports for a given phone number."""
     c = conn.cursor()
     c.execute('''
         SELECT COUNT(*) FROM reports

@@ -28,6 +28,15 @@ REGION_MAP = {
 }
 
 def clean_phone_number(raw_tel):
+    """
+    Cleans a raw phone number by removing separators and handling international prefixes.
+    
+    Args:
+        raw_tel (str): Raw input phone number.
+        
+    Returns:
+        str: Cleaned digits-only number or empty string.
+    """
     if not raw_tel:
         return ""
     # Remove separators and parenthesis (including tabs, non-breaking spaces)
@@ -103,6 +112,9 @@ def get_operator_info(conn, code_operateur):
     return None
 
 def get_commune_info(conn, code_insee):
+    """
+    Retrieves commune name from the database based on INSEE code.
+    """
     if not code_insee or str(code_insee) == '0':
         return None
 
@@ -121,6 +133,16 @@ def get_commune_info(conn, code_insee):
     return None
 
 def search_number(conn, tel):
+    """
+    Search for a phone number range in the database.
+    
+    Args:
+        conn (sqlite3.Connection): Database connection.
+        tel (str): Cleaned 10-digit phone number.
+        
+    Returns:
+        sqlite3.Row: Matching record or None.
+    """
     cursor = conn.cursor()
 
     # 1. Determine if Geo or Non-Geo
@@ -207,6 +229,15 @@ def get_full_info(conn, tel):
     return result
 
 def print_result(result):
+    """
+    Prints the formatted search result to stdout.
+    
+    Args:
+        result (dict): Full info dictionary from get_full_info.
+        
+    Returns:
+        bool: True if result found and printed, False otherwise.
+    """
     print(f"Numéro : {result['number']}")
 
     if not result['found']:
@@ -244,6 +275,7 @@ def print_result(result):
     return True
 
 def main():
+    """CLI entry point for searching phone number information."""
     parser = argparse.ArgumentParser(description="Outil de recherche d'informations sur les numéros de téléphone français (ARCEP).")
     parser.add_argument("numero", help="Numéro de téléphone à rechercher (ex: 0123456789, +33612345678)")
     args = parser.parse_args()

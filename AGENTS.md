@@ -40,7 +40,7 @@ By following these guidelines, we aim to create a robust and reliable version of
 
 
 # GitHub PR Review Cycle
-A PR Review Cycle triggers, fetches and addresses Code Reviews on GitHub's PR until there is nothing left to fix and the PR is Ready to Merge.
+A PR Review Cycle triggers, fetches and addresses Code Reviews on GitHub's PR until there is nothing left to fix and the PR is validated by the AI Reviewers.
 
 **The Loop Rule**: A Review Cycle is NOT complete after one iteration. It is a loop:
 1.  **Push**: Push changes to the PR branch.
@@ -88,27 +88,34 @@ The Review Loop must **NOT** be interrupted unless:
 -   **Increments**: Wait in at least 2-minute increments.
 -   **Do not stop** doing nothing. If you are not fixing, you are waiting. If you are not waiting, you are pushing.
 
-### 3. Fetch Comments (Cleanly)
+### 3. Fetch & Monitor (Unified)
 **STRICT RULE**: You must **NEVER** write status files, logs, or debug dumps to the repository root.
 *   **Allowed Location**: `agent-tools/agent-workspace/`
-*   **Forbidden**: `.` (root), `agent-tools/` (root of tools)
+*   **Persistent Scripts**: `agent-tools/`
 
-Use the **`agent-tools/agent-workspace/`** directory for all intermediate files. **`agent-tools/`** is reserved for persistent scripts committed to the repo.
+The **`agent-tools/pr_helper.py`** provides a single interface for the entire cycle. Documentation is available in [agent-tools.md](file:///home/sheepdestroyer/LAB/whoistel/agent-tools/agent-tools.md).
 
 **Polling Rules**:
-1.  **Check ALL Channels**: You must check:
-    *   Top-level Reviews (`repos/{owner}/{repo}/pulls/{number}/reviews`)
-    *   Inline Comments (`repos/{owner}/{repo}/pulls/{number}/comments`)
-    *   Issue Comments (`repos/{owner}/{repo}/issues/{number}/comments`)
+1.  **Check ALL Channels**: The tool automatically checks Reviews, Inline Comments, and Issue Comments.
 2.  **Initial Wait**: Wait **at least 3 minutes** after requesting a review.
 3.  **Interval**: Poll every **2 minutes**.
-4.  **Tool**: Use `agent-tools/poll_reviews.py` which aggregates these channels.
 
 ```bash
 mkdir -p agent-tools/agent-workspace
-# Default waits: 180s initial, 120s interval
-python3 agent-tools/poll_reviews.py {PR_NUMBER} --since {TIMESTAMP} > "agent-tools/agent-workspace/status.json"
+# Request
+python3 agent-tools/pr_helper.py trigger {PR_NUMBER}
+
+# Monitor (includes 3m initial wait and 2m polling)
+python3 agent-tools/pr_helper.py monitor {PR_NUMBER} --since {TIMESTAMP} --output "agent-tools/agent-workspace/feedback.json"
 ```
+
+### 4. Final Validation (The Exit Rule)
+A PR Review Cycle is only complete when:
+1.  **All** fixes are pushed.
+2.  A **Final Review** has been triggered (`/gemini review`).
+3.  Gemini Code Assist (and/or CodeRabbit) identifies **Zero** new issues and explicitly states "Ready to Merge" or similar.
+
+**DO NOT** conclude a task based on local verification alone. The bot's validation is the required gateway.
 
 ### 4. Analyze & Filter (Agent Responsibility)
 The Agent must parse the JSON to find comments created **after** the last push/fix cycle.

@@ -19,6 +19,7 @@ MAX_COMMENT_LENGTH = 1024
 
 @app.template_filter('format_datetime')
 def format_datetime(value, format='%d/%m/%Y %H:%M'):
+    """Jinja2 filter to format datetime objects or ISO strings."""
     if not value:
         return ""
 
@@ -39,17 +40,20 @@ def format_datetime(value, format='%d/%m/%Y %H:%M'):
     return dt_obj.strftime(format) if dt_obj else ""
 
 def get_history_db():
+    """Returns a request-scoped database connection for the history database."""
     if 'history_db' not in g:
         g.history_db = history_manager.get_db_connection()
     return g.history_db
 
 def get_main_db():
+    """Returns a request-scoped database connection for the main ARCEP database."""
     if 'main_db' not in g:
         g.main_db = whoistel.setup_db_connection()
     return g.main_db
 
 @app.teardown_appcontext
 def close_dbs(_error):
+    """Closes all database connections at the end of the request."""
     history_db = g.pop('history_db', None)
     if history_db is not None:
         history_db.close()
@@ -60,10 +64,12 @@ def close_dbs(_error):
 
 @app.route('/', methods=['GET'])
 def index():
+    """Renders the landing page with the search form."""
     return render_template('index.html')
 
 @app.route('/check', methods=['POST'])
 def check():
+    """Validates the input number and redirects to the view page."""
     raw_tel = request.form.get('number')
     if not raw_tel:
         flash("Veuillez saisir un numéro.", "error")
@@ -80,6 +86,7 @@ def check():
 
 @app.route('/view/<number>', methods=['GET'])
 def view_number(number):
+    """Displays information and history for a specific phone number."""
     cleaned_number = whoistel.clean_phone_number(number)
     
     if not cleaned_number.isdigit():
@@ -98,11 +105,13 @@ def view_number(number):
 
 @app.errorhandler(whoistel.DatabaseError)
 def handle_db_error(e):
+    """Global handler for DatabaseError exceptions."""
     app.logger.error(f"Database error: {e}")
     return render_template('error.html', message="Database error occurred"), 500
 
 @app.route('/report', methods=['POST'])
 def report():
+    """Handles submission of spam reports and comments."""
     # Clean number before storing
     number = whoistel.clean_phone_number(request.form.get('number'))
     date = request.form.get('date')
@@ -130,6 +139,7 @@ def report():
 
 @app.route('/history', methods=['GET'])
 def history():
+    """Displays the list of recent spam reports."""
     reports = history_manager.get_recent_reports(conn=get_history_db())
     return render_template('history.html', reports=reports)
 

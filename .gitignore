@@ -29,6 +29,9 @@ arcep_xls_inspection/
 # Logs and Artifacts
 *.png
 verification/
+final_test_out.txt
+pytest_output.txt
+pytest_out*.txt
 
 # Development artifacts
 # NOTE: All temporary agent artifacts should be written to agent-workspace/
