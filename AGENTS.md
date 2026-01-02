@@ -138,6 +138,9 @@ git push
 ```
 Return to Step 1.
 
+> [!NOTE]
+> **Pagination**: When debugging with the `gh` CLI manually (e.g., `gh api`), always use the `--paginate` flag to ensure you see all comments. Default limits may hide feedback in long discussions.
+
 ## Post-Mortem: Repeated Review Request Failure (Cycle 26)
 
 **Issue**: The agent failed to fetch new Code Review comments and instead repeatedly posted review requests ("gemini review"), triggering the daily quota limit.

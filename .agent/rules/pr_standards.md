@@ -31,3 +31,7 @@ A Review Cycle is a **LOOP**, not a check.
 *   **CodeRabbit**: Use `@coderabbitai review` for deep static analysis and logical bugs.
 *   **Sourcery**: Use `@sourcery-ai review` for Pythonic refactoring suggestions.
 *   **Respect**: Address all actionable feedback. If a bot suggests a fix that is wrong, explain why in a comment or ignore it if trivial, but prefer to address it if possible.
+
+## 7. CLI Pagination
+*   **Mandatory Flag**: When using `gh api` to fetch comments or reviews, YOU MUST ALWAYS use `--paginate`.
+    *   *Reason*: Large PRs often exceed the default page size (30 items). Without `--paginate`, validation cycles may miss critical feedback or approval states.

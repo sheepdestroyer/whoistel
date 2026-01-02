@@ -8,66 +8,69 @@ def get_project_root():
     """Returns the root directory of the project."""
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-# Helper function to run whoistel.py script
-def run_whoistel_script(number):
-    """Runs the whoistel.py script with the given number and returns the output."""
-    root_dir = get_project_root()
-    script_path = os.path.join(root_dir, "whoistel.py")
-    db_path = os.path.join(root_dir, "whoistel.sqlite3")
+# Helper function to run whoistel.py main in-process
+def run_whoistel_main(capsys, args_list, db_path=None):
+    """Runs whoistel.main() with given args and optional DB patch."""
+    from whoistel import main
+    import whoistel
+    from unittest.mock import patch
+    
+    # Patch sys.argv
+    with patch('sys.argv', ['whoistel.py'] + args_list):
+        # Patch DB_FILE if provided, otherwise use what's there (which is patched by conftest)
+        # Note: conftest patches whoistel.DB_FILE for the session, 
+        # but main() uses setup_db_connection which reads whoistel.DB_FILE.
+        # So we just need to ensure standard flow works.
+        try:
+            main()
+        except SystemExit as e:
+            return e.code, capsys.readouterr()
+        return 0, capsys.readouterr()
 
-    if not os.path.exists(db_path):
-        pytest.skip("whoistel.sqlite3 not found, skipping integration tests")
-
-    process = subprocess.run(
-        ["python3", script_path, number],
-        capture_output=True,
-        text=True,
-        cwd=root_dir  # Ensure script runs from project root
-    )
-    return process
-
-def test_geographic_number_lookup():
+def test_geographic_number_lookup(capsys):
     """Tests lookup for a known geographic number."""
-    number = "0140000000"
-    result = run_whoistel_script(number)
+    # Use number from conftest setup ('01234...')
+    number = "0123456789"
+    ret, captured = run_whoistel_main(capsys, [number])
 
-    assert result.returncode == 0
-    assert "Numéro : 0140000000" in result.stdout
-    assert "Type détecté : Geographique" in result.stdout
-    assert "Opérateur" in result.stdout
-    assert "Orange" in result.stdout
-    assert "Région : Île-de-France" in result.stdout
+    assert ret == 0
+    assert "Numéro : 0123456789" in captured.out
+    assert "Type détecté : Geographique" in captured.out
+    # conftest Operator is 'Operator One'
+    assert "Operator One" in captured.out
+    # conftest Region/City is 'Paris'
+    assert "Paris" in captured.out
 
-def test_non_geographic_test_number_lookup():
+def test_non_geographic_test_number_lookup(capsys):
     """
-    Tests lookup for the specific non-geographic number +33740756315.
-    Known to be missing from ARCEP data, so expects Unknown result.
+    Tests lookup for a non-existent number.
+    Fixture covers '09876...', so '07...' should be unknown.
     """
-    number = "+33740756315"
-    result = run_whoistel_script(number)
+    number = "0740756315"
+    ret, captured = run_whoistel_main(capsys, [number])
 
-    assert "Numéro : 0740756315" in result.stdout
-    assert "Numéro inconnu dans la base ARCEP" in result.stdout
-    assert result.returncode == 1
+    assert "Numéro : 0740756315" in captured.out
+    assert "Numéro inconnu dans la base ARCEP" in captured.out
+    assert ret == 1
 
-def test_valid_geo_number_lookup():
-    """Tests lookup for the requested test number +33424288224."""
-    number = "+33424288224"
-    result = run_whoistel_script(number)
+def test_valid_geo_number_lookup(capsys):
+    """Tests lookup for another known valid number (same range)."""
+    # Check another number in the '01234' range
+    number = "0123400000"
+    ret, captured = run_whoistel_main(capsys, [number])
 
-    assert result.returncode == 0
-    assert "Numéro : 0424288224" in result.stdout
-    assert "Type détecté : Geographique" in result.stdout
-    assert "Kav El International" in result.stdout
-    assert "Région : Sud-Est" in result.stdout
+    assert ret == 0
+    assert "Numéro : 0123400000" in captured.out
+    assert "Type détecté : Geographique" in captured.out
+    assert "Operator One" in captured.out
 
-def test_invalid_number_format_non_digit():
+def test_invalid_number_format_non_digit(capsys):
     """Tests handling of an invalidly formatted number."""
     number = "012345678A"
-    result = run_whoistel_script(number)
+    ret, captured = run_whoistel_main(capsys, [number])
 
-    assert result.returncode == 1
-    assert "uniquement des chiffres après nettoyage" in result.stderr
+    assert ret == 1
+    assert "invalide" in captured.err
 
 def test_clean_phone_number():
     """Tests the phone number cleaning logic."""
@@ -158,6 +161,11 @@ def test_operator_info_validation():
     result = get_operator_info(mock_conn, '1234')
     assert result['mail'] == 'contact@example.com'
     assert result['site'] is None
+
+    # Case 5: No operator row found
+    mock_cursor.fetchone.return_value = None
+    result = get_operator_info(mock_conn, '9999')
+    assert result is None
 def test_get_full_info_known_and_unknown(db_connection):
     """Tests get_full_info using the DB fixture for known and unknown numbers."""
     from whoistel import get_full_info

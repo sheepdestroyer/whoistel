@@ -54,9 +54,11 @@ def create_app(test_config=None):
         return dt_obj.strftime(format) if dt_obj else ""
 
     def _get_db(name, connect_func):
-        if name not in g:
-            setattr(g, name, connect_func())
-        return getattr(g, name)
+        db = getattr(g, name, None)
+        if db is None:
+            db = connect_func()
+            setattr(g, name, db)
+        return db
 
     @app.teardown_appcontext
     def close_dbs(_error):

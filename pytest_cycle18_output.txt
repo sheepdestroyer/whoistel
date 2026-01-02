@@ -1,0 +1,134 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.2, pytest-9.0.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/sheepdestroyer/LAB/whoistel
+plugins: cov-7.0.0, anyio-4.11.0
+collecting ... collected 28 items
+
+tests/test_history_manager.py::test_history_manager_add_report_and_get_spam_count_with_conn PASSED [  3%]
+tests/test_history_manager.py::test_history_manager_get_recent_reports_with_conn FAILED [  7%]
+tests/test_webapp.py::test_index PASSED                                  [ 10%]
+tests/test_webapp.py::test_check_number_redirect PASSED                  [ 14%]
+tests/test_webapp.py::test_check_number_missing_number_validation_error PASSED [ 17%]
+tests/test_webapp.py::test_check_number_invalid_number_validation_error PASSED [ 21%]
+tests/test_webapp.py::test_view_number_unknown PASSED                    [ 25%]
+tests/test_webapp.py::test_report_flow PASSED                            [ 28%]
+tests/test_webapp.py::test_report_non_spam_flow PASSED                   [ 32%]
+tests/test_webapp.py::test_report_invalid_date_format_shows_error_and_redirects_to_view PASSED [ 35%]
+tests/test_webapp.py::test_check_known_missing_number PASSED             [ 39%]
+tests/test_webapp.py::test_view_number_redirect_dirty PASSED             [ 42%]
+tests/test_webapp.py::test_report_empty_date PASSED                      [ 46%]
+tests/test_webapp.py::test_view_invalid_number_format_returns_400 PASSED [ 50%]
+tests/test_webapp.py::test_report_validation_error_requires_at_least_one_field PASSED [ 53%]
+tests/test_webapp.py::test_database_connection_error PASSED              [ 57%]
+tests/test_webapp.py::test_report_comment_truncation PASSED              [ 60%]
+tests/test_webapp.py::test_csrf_protection PASSED                        [ 64%]
+tests/test_webapp.py::test_format_datetime_filter PASSED                 [ 67%]
+tests/test_whoistel.py::test_geographic_number_lookup FAILED             [ 71%]
+tests/test_whoistel.py::test_non_geographic_test_number_lookup PASSED    [ 75%]
+tests/test_whoistel.py::test_valid_geo_number_lookup FAILED              [ 78%]
+tests/test_whoistel.py::test_invalid_number_format_non_digit PASSED      [ 82%]
+tests/test_whoistel.py::test_clean_phone_number PASSED                   [ 85%]
+tests/test_whoistel.py::test_is_valid_phone_format PASSED                [ 89%]
+tests/test_whoistel.py::test_operator_info_validation PASSED             [ 92%]
+tests/test_whoistel.py::test_get_full_info_known_and_unknown PASSED      [ 96%]
+tests/test_whoistel.py::test_print_result_output PASSED                  [100%]
+
+=================================== FAILURES ===================================
+______________ test_history_manager_get_recent_reports_with_conn _______________
+
+history_db_connection = <sqlite3.Connection object at 0x7f16a4c2c7c0>
+
+    def test_history_manager_get_recent_reports_with_conn(history_db_connection):
+        """Directly test get_recent_reports using an explicit SQLite connection."""
+        conn = history_db_connection
+    
+        number_1 = "0987654321"
+        number_2 = "0123987654"
+    
+        # Insert multiple reports
+        history_manager.add_report(
+            phone_number=number_1,
+            report_date="2023-01-01",
+            is_spam=True,
+            comment="Spam 1",
+            conn=conn,
+        )
+        history_manager.add_report(
+            phone_number=number_2,
+            report_date="2023-01-02",
+            is_spam=False,
+            comment="Not spam",
+            conn=conn,
+        )
+        history_manager.add_report(
+            phone_number=number_1,
+            report_date="2023-01-03",
+            is_spam=True,
+            comment="Spam 2",
+            conn=conn,
+        )
+    
+        # Fetch recent reports and check ordering/contents
+        recent = history_manager.get_recent_reports(limit=10, conn=conn)
+    
+        # We expect 3 entries total
+        assert len(recent) == 3
+    
+        # reports are row objects
+        numbers = [r["phone_number"] for r in recent]
+        comments = [r["comment"] for r in recent]
+    
+        # Should contain both numbers
+        assert number_1 in numbers
+        assert number_2 in numbers
+    
+        # Should contain our comments
+        assert "Spam 1" in comments
+        assert "Spam 2" in comments
+        assert "Not spam" in comments
+    
+        # get_recent_reports should be ordered by created_at DESC (default) or id DESC?
+        # history_manager.get_recent_reports likely orders by ID DESC or created_at DESC.
+        # The last inserted (Spam 2) should be first.
+        latest = recent[0]
+>       assert latest["comment"] == "Spam 2"
+E       AssertionError: assert 'Spam 1' == 'Spam 2'
+E         
+E         - Spam 2
+E         ?      ^
+E         + Spam 1
+E         ?      ^
+
+tests/test_history_manager.py:130: AssertionError
+________________________ test_geographic_number_lookup _________________________
+
+capsys = <_pytest.capture.CaptureFixture object at 0x7f16a4cce3c0>
+
+    def test_geographic_number_lookup(capsys):
+        """Tests lookup for a known geographic number."""
+        number = "0140000000"
+        ret, captured = run_whoistel_main(capsys, [number])
+    
+>       assert ret == 0
+E       assert 1 == 0
+
+tests/test_whoistel.py:35: AssertionError
+_________________________ test_valid_geo_number_lookup _________________________
+
+capsys = <_pytest.capture.CaptureFixture object at 0x7f16a4bab750>
+
+    def test_valid_geo_number_lookup(capsys):
+        """Tests lookup for the requested test number +33424288224."""
+        number = "+33424288224"
+        ret, captured = run_whoistel_main(capsys, [number])
+    
+>       assert ret == 0
+E       assert 1 == 0
+
+tests/test_whoistel.py:59: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_history_manager.py::test_history_manager_get_recent_reports_with_conn
+FAILED tests/test_whoistel.py::test_geographic_number_lookup - assert 1 == 0
+FAILED tests/test_whoistel.py::test_valid_geo_number_lookup - assert 1 == 0
+========================= 3 failed, 25 passed in 0.23s =========================

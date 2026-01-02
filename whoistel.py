@@ -303,13 +303,9 @@ def main():
     
     cleaned_number = clean_phone_number(raw_tel)
     
-    # Ensure cleaned number only contains digits
-    if not cleaned_number.isdigit():
-        print("Erreur: Le numéro fourni est invalide. Il doit contenir uniquement des chiffres après nettoyage.", file=sys.stderr)
+    if not is_valid_phone_format(cleaned_number):
+        print(f"Erreur: Le numéro {cleaned_number} est invalide. Il doit contenir exactement 10 chiffres.", file=sys.stderr)
         sys.exit(1)
-    
-    if len(cleaned_number) != 10:
-        logger.warning(f"Attention: Le numéro {cleaned_number} ne fait pas 10 chiffres. La recherche peut échouer.")
 
     # Use valid database connection
     try:

@@ -42,3 +42,6 @@ description: Official workflow for managing PR Review Cycles with AI bots (Gemin
     *   Ensure all bots explicitly approve.
     *   Confirm no new regressions.
     *   Notify user of "Ready to Merge" status.
+
+> [!NOTE]
+> **Pagination**: When using the `gh` CLI manually (e.g., `gh api`), ensure you use the `--paginate` flag to retrieve all comments. Default limits may hide critical feedback in long PRs.

@@ -101,7 +101,7 @@ def get_recent_reports(limit=DEFAULT_RECENT_REPORTS_LIMIT, *, conn=None):
     c = conn.cursor()
     c.execute('''
         SELECT * FROM reports
-        ORDER BY created_at DESC
+        ORDER BY created_at DESC, id DESC
         LIMIT ?
     ''', (limit,))
     rows = c.fetchall()

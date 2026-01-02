@@ -36,3 +36,4 @@ agent-tools/agent-workspace/
 
 # Agent Rules & Workflows
 !.agent/
+!.agent/**
