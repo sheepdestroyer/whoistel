@@ -17,7 +17,7 @@ def client():
 
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
-    # noqa: S105
+
     app.config['SECRET_KEY'] = 'test-key'
 
     with app.test_client() as client:

@@ -58,7 +58,7 @@ EXPOSE 5000
 
 # Define environment variables (can be overridden at runtime)
 ENV PYTHONPATH=/app
-ENV SECRET_KEY=changeme_in_production
+
 
 # ENTRYPOINT makes the container behave like an executable.
 # CMD provides default arguments.

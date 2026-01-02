@@ -1,12 +1,11 @@
 import pytest
 import os
-import subprocess
 import tempfile
 import sqlite3
 import whoistel
 
 # Set SECRET_KEY for testing before any app import happens
-os.environ['SECRET_KEY'] = 'test-key-for-conftest' # noqa: S105-for-conftest'
+os.environ['SECRET_KEY'] = 'test-key-for-conftest' # noqa: S105
 
 def get_project_root():
     """Returns the root directory of the project."""
