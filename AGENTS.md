@@ -47,8 +47,8 @@ A PR Review Cycle triggers, fetches and addresses Code Reviews on GitHub's PR un
 2.  **Trigger**: Comment `/gemini review` and `@coderabbitai review`.
 3.  **Poll**: Wait for reviews to complete.
 4.  **Analyze**: Read the feedback.
-    *   **If "Ready to Merge" / "No issues found"**: The Cycle Ends.
-    *   **If Issues Found**: Implement fixes and **REPEAT STEP 1**.
+  *   **If "Ready to Merge" / "No issues found"**: The Cycle Ends.
+  *   **If Issues Found**: Implement fixes and **REPEAT STEP 1**.
 
 **Never** stop a cycle just because you did one pass of fixes. Verify the fix by triggering another review.
 

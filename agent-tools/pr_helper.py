@@ -74,7 +74,10 @@ def filter_feedback_since(feedback, since_iso):
         for item in items:
             # GitHub uses multiple keys for timestamps
             ts_str = item.get('submitted_at') or item.get('updated_at') or item.get('created_at')
-            item_dt = parse_ts(ts_str)
+            try:
+                item_dt = parse_ts(ts_str)
+            except (ValueError, TypeError):
+                item_dt = None
             
             if item_dt and item_dt > since_dt:
                 new_items.append({**item, '_type': label})
@@ -202,7 +205,7 @@ def main():
     # Monitor
     p_monitor = subparsers.add_parser('monitor', help='Poll for new feedback until timeout')
     p_monitor.add_argument('pr_number', type=int)
-    p_monitor.add_argument('--since', default="1970-01-01T00:00:00Z")
+    p_monitor.add_argument('--since', default="1970-01-01T00:00:00Z", help='ISO 8601 timestamp to filter new feedback from')
     p_monitor.add_argument('--timeout', type=int, default=1200)
     p_monitor.add_argument('--initial-wait', type=int, default=180)
     p_monitor.add_argument('--interval', type=int, default=120)
@@ -214,10 +217,14 @@ def main():
 
     args = parser.parse_args()
 
-    if args.command == 'trigger': cmd_trigger(args)
-    elif args.command == 'fetch': cmd_fetch(args)
-    elif args.command == 'monitor': cmd_monitor(args)
-    elif args.command == 'verify': cmd_verify(args)
+    if args.command == 'trigger':
+        cmd_trigger(args)
+    elif args.command == 'fetch':
+        cmd_fetch(args)
+    elif args.command == 'monitor':
+        cmd_monitor(args)
+    elif args.command == 'verify':
+        cmd_verify(args)
     else:
         parser.print_help()
 
