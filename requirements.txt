@@ -1,5 +1,5 @@
 pandas
 Flask
 Flask-WTF
-email-validator
+email-validator==2.1.0
 gunicorn

@@ -37,3 +37,8 @@ agent-tools/agent-workspace/
 # Agent Rules & Workflows
 !.agent/
 !.agent/**
+
+# Git and shell artifacts
+git_*.txt
+listing.txt
+*_ts.txt

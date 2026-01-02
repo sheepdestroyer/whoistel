@@ -92,10 +92,14 @@ def filter_feedback_since(feedback, since_iso):
 def cmd_trigger(args):
     """Triggers reviews from Gemini and CodeRabbit."""
     print(f"Triggering reviews for PR #{args.pr_number}...", file=sys.stderr)
-    subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "/gemini review"], check=True)
-    subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "@coderabbitai review"], check=True)
-    subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "@sourcery-ai review"], check=True)
-    print("Reviews triggered successfully.", file=sys.stderr)
+    try:
+        subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "/gemini review"], check=True)
+        subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "@coderabbitai review"], check=True)
+        subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "@sourcery-ai review"], check=True)
+        print("Reviews triggered successfully.", file=sys.stderr)
+    except subprocess.CalledProcessError as e:
+        print(f"Error triggering reviews: {e}", file=sys.stderr)
+        sys.exit(1)
 
 def cmd_fetch(args):
     """One-shot fetch of all new feedback."""
@@ -105,9 +109,13 @@ def cmd_fetch(args):
     if new_items:
         print(f"Found new feedback: {counts}", file=sys.stderr)
         if args.output:
-            with open(args.output, 'w') as f:
-                json.dump(new_items, f, indent=2)
-            print(f"Written to {args.output}", file=sys.stderr)
+            try:
+                with open(args.output, 'w') as f:
+                    json.dump(new_items, f, indent=2)
+                print(f"Written to {args.output}", file=sys.stderr)
+            except IOError as e:
+                print(f"Error writing to {args.output}: {e}", file=sys.stderr)
+                sys.exit(1)
         else:
             print(json.dumps(new_items, indent=2))
     else:
@@ -129,9 +137,13 @@ def cmd_monitor(args):
         if new_items:
             print(f"\nNew Feedback Detected: {counts}", file=sys.stderr)
             if args.output:
-                with open(args.output, 'w') as f:
-                    json.dump(new_items, f, indent=2)
-                print(f"Successfully written to {args.output}", file=sys.stderr)
+                try:
+                    with open(args.output, 'w') as f:
+                        json.dump(new_items, f, indent=2)
+                    print(f"Successfully written to {args.output}", file=sys.stderr)
+                except IOError as e:
+                    print(f"Error writing to {args.output}: {e}", file=sys.stderr)
+                    sys.exit(1)
             else:
                 print(json.dumps(new_items, indent=2))
             sys.exit(0)
@@ -143,16 +155,40 @@ def cmd_monitor(args):
     sys.exit(1)
 
 def cmd_verify(args):
-    """Heuristic verification of local files against recent comments."""
-    # This logic is adapted from the old verify_comments.py
-    if not os.path.exists(args.file):
-        print(f"Error: JSON feedback file '{args.file}' not found. Run 'fetch' first.", file=sys.stderr)
-        sys.exit(1)
+    """Heuristic verification of local files against recent comments and runs pytest."""
+    
+    # 1. Run pytest as the primary verification method
+    print("Running pytest for primary verification...", file=sys.stderr)
+    try:
+        # We assume PYTHONPATH=. is needed as per project standards
+        env = os.environ.copy()
+        if "PYTHONPATH" in env:
+             env["PYTHONPATH"] = f".:{env['PYTHONPATH']}"
+        else:
+             env["PYTHONPATH"] = "."
         
-    with open(args.file) as f:
-        comments = json.load(f)
+        result = subprocess.run([sys.executable, "-m", "pytest"], capture_output=True, text=True, check=False, env=env)
+        if result.returncode == 0:
+            print("  STATUS: PASS - All tests passed successfully", file=sys.stderr)
+        else:
+            print(f"  STATUS: FAIL - Tests failed (exit code {result.returncode})", file=sys.stderr)
+            print(result.stdout, file=sys.stderr)
+    except subprocess.SubprocessError as e:
+        print(f"  STATUS: ERROR - Could not run pytest: {e}", file=sys.stderr)
 
-    print(f"Verifying {len(comments)} feedback items against local files...", file=sys.stderr)
+    # 2. Heuristic check of local files against comments
+    if not os.path.exists(args.file):
+        print(f"\nNote: JSON feedback file '{args.file}' not found. Skipping heuristic checks.", file=sys.stderr)
+        return
+        
+    try:
+        with open(args.file) as f:
+            comments = json.load(f)
+    except (IOError, json.JSONDecodeError) as e:
+        print(f"Error reading or parsing {args.file}: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"\nChecking heuristics for {len(comments)} feedback items...", file=sys.stderr)
     
     for c in comments:
         path = c.get('path')
@@ -169,7 +205,7 @@ def cmd_verify(args):
         if not full_path.startswith(project_root) or not os.path.exists(full_path):
             continue
 
-        print(f"\n[{path}:{line}] {body[:60]}...", file=sys.stderr)
+        print(f"[{path}:{line}] {body[:60]}...", file=sys.stderr)
         with open(full_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
@@ -182,6 +218,8 @@ def cmd_verify(args):
              print("  STATUS: PASS - CLI error message updated", file=sys.stderr)
         elif re.search(r"g\.db_connections\.append\(db\)", content):
              print("  STATUS: PASS - Scalable DB connection registry found", file=sys.stderr)
+        elif re.search(r"email-validator==[0-9.]+", content):
+             print("  STATUS: PASS - Dependency pinning found", file=sys.stderr)
         else:
              print("  STATUS: MANUAL VERIFICATION REQUIRED", file=sys.stderr)
 
