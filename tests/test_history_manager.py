@@ -1,8 +1,7 @@
 import pytest
 import sqlite3
 import history_manager
-import os
-from contextlib import closing
+
 
 # Use a separate test DB file for history manager tests to adhere to isolation
 TEST_HISTORY_DB = 'test_history_manager.sqlite3'
@@ -129,3 +128,31 @@ def test_history_manager_get_recent_reports_with_conn(history_db_connection):
     latest = recent[0]
     assert latest["comment"] == "Spam 2"
     assert latest["phone_number"] == number_1
+
+def test_history_manager_add_report_and_get_spam_count_without_conn(tmp_path, monkeypatch):
+    """Exercise with_db_connection by using add_report/get_spam_count without an explicit conn."""
+    # Point the history manager to a temporary DB file
+    db_path = tmp_path / "history.db"
+    monkeypatch.setattr(history_manager, "DB_FILE", str(db_path), raising=False)
+
+    # Initialize the DB using the implicit connection handling
+    history_manager.init_history_db()
+
+    number = "0123456789"
+    date = "2023-03-01"
+
+    # Initially, spam count should be 0 (no conn passed)
+    initial_count = history_manager.get_spam_count(number)
+    assert initial_count == 0
+
+    # Add a spam report without passing conn
+    history_manager.add_report(
+        phone_number=number,
+        report_date=date,
+        is_spam=True,
+        comment="test",
+    )
+
+    # Spam count should now be 1, using implicit connection again
+    updated_count = history_manager.get_spam_count(number)
+    assert updated_count == 1

@@ -25,7 +25,7 @@ arcep_xls_inspection/
 
 # Logs and Artifacts
 *.log
-pytest_debug.txt
+pytest_*.txt
 *.png
 verification/
 final_test_out.txt

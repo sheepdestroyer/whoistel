@@ -120,9 +120,9 @@ A PR Review Cycle is only complete when:
 ### 5. Analyze & Filter (Agent Responsibility)
 The Agent must parse the JSON to find comments created **after** the last push/fix cycle.
 *   **Semantic Analysis**: Do not rely on scripts to tell you if it's "Ready". Read the comment body.
-    *   Does it say "LGTM" but list 3 "Nitpicks"? -> **Fixes Needed**.
-    *   Does it say "Changes Requested"? -> **Fixes Needed**.
-    *   Does it say "No actionable comments"? -> **Ready**.
+  *   Does it say "LGTM" but list 3 "Nitpicks"? -> **Fixes Needed**.
+  *   Does it say "Changes Requested"? -> **Fixes Needed**.
+  *   Does it say "No actionable comments"? -> **Ready**.
 *   **Filter**: Ignore "outdated" or resolved comments if your logic handles them.
 
 ### 6. Implement & Verify
@@ -140,6 +140,12 @@ Return to Step 1.
 
 > [!NOTE]
 > **Pagination**: When debugging with the `gh` CLI manually (e.g., `gh api`), always use the `--paginate` flag to ensure you see all comments. Default limits may hide feedback in long discussions.
+
+3.  **Timestamp Precision & Timezones**:
+    *   **UTC Everywhere**: GitHub API returns timestamps in UTC (e.g., `2023-10-27T10:00:00Z`).
+    *   **Common Trap**: Comparing a naive datetime (e.g., `datetime.now()` which might be local) with an aware UTC datetime raises `TypeError`. 
+    *   **Rule**: Always ensure your local reference timestamps are **aware UTC** objects (`datetime.now(timezone.utc)`).
+    *   **Filtering**: When filtering "since" a certain time, naive matching effectively ignores the timezone offset, often leading to missed events if your local time is ahead of UTC (e.g., CET is UTC+1). explicit conversion is mandatory.
 
 ## Post-Mortem: Repeated Review Request Failure (Cycle 26)
 

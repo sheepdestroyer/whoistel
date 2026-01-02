@@ -45,3 +45,6 @@ description: Official workflow for managing PR Review Cycles with AI bots (Gemin
 
 > [!NOTE]
 > **Pagination**: When using the `gh` CLI manually (e.g., `gh api`), ensure you use the `--paginate` flag to retrieve all comments. Default limits may hide critical feedback in long PRs.
+
+> [!WARNING]
+> **Timezones**: Always use **UTC** (Coordinated Universal Time) for all timestamps interaction with GitHub API. Ensure your datetime objects are checking timezone-aware (e.g., `tzinfo=timezone.utc`). Comparing naive (local) vs aware (API) datetimes causes crashes.

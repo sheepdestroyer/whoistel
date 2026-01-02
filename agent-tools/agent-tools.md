@@ -28,6 +28,9 @@ python3 agent-tools/pr_helper.py monitor {PR_NUMBER} --since {ISO_TIMESTAMP} --o
 - `--interval`: Delay between subsequent checks (default: 120).
 - `--output`: File path to save the JSON feedback.
 
+> [!WARNING]
+> **Timestamp Precision**: Always use **UTC** timestamps (ending in `Z`) for the `--since` argument. GitHub API timestamps are UTC-aware. Providing a local time without conversion will result in missing feedback (e.g., if you are UTC+1, 21:00 local is 20:00 UTC). Use `datetime.now(timezone.utc).isoformat()`.
+
 #### 3. `fetch`
 Performs a one-shot retrieval of all new feedback since a timestamp.
 ```bash

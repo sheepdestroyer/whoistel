@@ -225,3 +225,29 @@ def test_format_datetime_filter(app_instance):
     
     # Test with invalid string
     assert f("invalid-date") == ""
+
+def test_report_html_comment_escaped_in_history(client):
+    """Ensure submitted HTML comments are escaped in the history view."""
+    # 1. Report a number with an HTML comment
+    html_comment = '<script>alert(1)</script>'
+    rv = client.post(
+        '/report',
+        data={
+            'number': '0678901234',
+            'date': '2023-03-01',
+            'is_spam': 'on',
+            'comment': html_comment,
+        },
+        follow_redirects=True,
+    )
+
+    assert rv.status_code == 200
+
+    # 2. Check History: raw HTML must not appear, escaped HTML must appear
+    rv = client.get('/history')
+    assert b'0678901234' in rv.data
+    # Ensure raw HTML is not rendered
+    assert b'<script>alert(1)</script>' not in rv.data
+    # Ensure the comment is HTML-escaped in the rendered page
+    # Jinja2 auto-escaping converts < to &lt;, > to &gt;
+    assert b'&lt;script&gt;alert(1)&lt;/script&gt;' in rv.data

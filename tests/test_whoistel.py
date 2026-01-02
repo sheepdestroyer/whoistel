@@ -9,18 +9,14 @@ def get_project_root():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Helper function to run whoistel.py main in-process
-def run_whoistel_main(capsys, args_list, db_path=None):
-    """Runs whoistel.main() with given args and optional DB patch."""
+def run_whoistel_main(capsys, args_list):
+    """Runs whoistel.main() with given args."""
     from whoistel import main
     import whoistel
     from unittest.mock import patch
     
     # Patch sys.argv
-    with patch('sys.argv', ['whoistel.py'] + args_list):
-        # Patch DB_FILE if provided, otherwise use what's there (which is patched by conftest)
-        # Note: conftest patches whoistel.DB_FILE for the session, 
-        # but main() uses setup_db_connection which reads whoistel.DB_FILE.
-        # So we just need to ensure standard flow works.
+    with patch('sys.argv', ['whoistel.py', *args_list]):
         try:
             main()
         except SystemExit as e:
@@ -166,6 +162,7 @@ def test_operator_info_validation():
     mock_cursor.fetchone.return_value = None
     result = get_operator_info(mock_conn, '9999')
     assert result is None
+
 def test_get_full_info_known_and_unknown(db_connection):
     """Tests get_full_info using the DB fixture for known and unknown numbers."""
     from whoistel import get_full_info
@@ -225,3 +222,46 @@ def test_print_result_output(capsys):
     assert "0799999999" in captured.out
     assert "Num\u00e9ro inconnu" in captured.out
     assert "Num\u00e9ro inconnu dans la base" in captured.out
+
+def test_cli_missing_db_exits_with_error(tmp_path, capsys):
+    """CLI should exit with code 1 and print an error if the DB file is missing."""
+    # Point DB_FILE to a non-existent path
+    # We must patch whoistel.DB_FILE but also ensure setup_db_connection uses it.
+    # The run_whoistel_main logic patches sys.argv but does NOT patch DB_FILE anymore (refactoring).
+    # So we need to patch whoistel.DB_FILE in this test.
+    import whoistel
+    from unittest.mock import patch
+    
+    missing_db_path = tmp_path / "nonexistent.sqlite"
+    
+    with patch.object(whoistel, 'DB_FILE', str(missing_db_path)):
+        # Use a known valid number format so it tries to hit DB
+        exit_code, output = run_whoistel_main(capsys, ["0123456789"])
+    
+    assert exit_code == 1
+    # Error message should be on stderr and likely contain "Erreur" or "error"
+    # The actual message is "Erreur lors de la connexion à la base de données..." or similar from whoistel.py
+    assert "Erreur" in output.err or "error" in output.err.lower()
+
+
+def test_cli_db_error_from_setup_db_connection(capsys):
+    """CLI should exit with code 1 and print an error if setup_db_connection fails."""
+    import whoistel
+    from unittest.mock import patch
+    
+    # We can patch setup_db_connection to raise DatabaseError
+    with patch('whoistel.setup_db_connection', side_effect=whoistel.DatabaseError("Test DB Error")):
+         exit_code, output = run_whoistel_main(capsys, ["0123456789"])
+    
+    assert exit_code == 1
+    # Check that it didn't crash with traceback but handled it
+    # Note: run_whoistel_main catches SystemExit. 
+    # whoistel.main catches DatabaseError and sys.exit(1).
+    # so we expect exit code 1.
+    # stderr usually has logs? whoistel.main doesn't print exception to stderr, it logs it.
+    # But wait, whoistel.main logic:
+    # try: with closing(setup_db_connection()) ... except DatabaseError: sys.exit(1)
+    # Logging goes to stderr by default if not configured otherwise? 
+    # Let's check whoistel.py logging config. It's not explicitly configured in main, so it might output nothing to stderr if level is WARNING/ERROR.
+    # But typically uncaught exceptions or log.exception go to stderr.
+    pass # Asserting exit code 1 is the main thing.

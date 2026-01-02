@@ -132,6 +132,11 @@ def create_app(test_config=None):
             date = None
 
         if number:
+            # Validate number format before storing
+            if not whoistel.is_valid_phone_format(number):
+                flash("Erreur interne : Numéro de téléphone invalide lors du signalement.", "error")
+                return redirect(url_for('view_number', number=number))
+
             if not is_spam and not comment and not date:
                 flash("Veuillez cocher la case spam, ajouter un commentaire ou une date.", "error")
                 return redirect(url_for('view_number', number=number))
@@ -152,13 +157,6 @@ def create_app(test_config=None):
         history_manager.init_history_db()
 
     return app
-
-# Legacy global app object for backward compatibility with tools and tests
-# This now triggers create_app() which is safe if called through a runner.
-# However, to avoid the side-effect on import entirely, tests should use create_app().
-# We'll keep 'app' here but wrap it so it's not accidental?
-# Actually, if we want NO side effects, we should remove it.
-# But Gunicorn might need it.
 
 if __name__ == '__main__':
     app = create_app()

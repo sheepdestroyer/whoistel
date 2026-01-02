@@ -35,3 +35,8 @@ A Review Cycle is a **LOOP**, not a check.
 ## 7. CLI Pagination
 *   **Mandatory Flag**: When using `gh api` to fetch comments or reviews, YOU MUST ALWAYS use `--paginate`.
     *   *Reason*: Large PRs often exceed the default page size (30 items). Without `--paginate`, validation cycles may miss critical feedback or approval states.
+
+## 8. Timestamp Precision
+*   **Timezones**: Always use **UTC** (Coordinated Universal Time) for all timestamps interaction with GitHub API.
+*   **Awareness**: Ensure your datetime objects are checking timezone-aware (e.g., `tzinfo=timezone.utc`). Comparing naive (local) vs aware (API) datetimes causes crashes.
+*   **Filtering**: When filtering comments by time (e.g., `--since`), provide the timestamp in ISO 8601 UTC format (`YYYY-MM-DDTHH:MM:SSZ`) to ensure accurate retrieval.

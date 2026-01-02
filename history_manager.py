@@ -60,6 +60,9 @@ def init_history_db():
         c.execute('''
             CREATE INDEX IF NOT EXISTS idx_reports_phone_number_spam ON reports (phone_number, is_spam);
         ''')
+        c.execute('''
+            CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports (created_at DESC);
+        ''')
         conn.commit()
 
 @with_db_connection

@@ -304,7 +304,10 @@ def main():
     cleaned_number = clean_phone_number(raw_tel)
     
     if not is_valid_phone_format(cleaned_number):
-        print(f"Erreur: Le numéro {cleaned_number} est invalide. Il doit contenir exactement 10 chiffres.", file=sys.stderr)
+        if cleaned_number and cleaned_number != raw_tel:
+            print(f"Erreur: Le numéro «{raw_tel}» est invalide après normalisation («{cleaned_number}»). Il doit contenir exactement 10 chiffres.", file=sys.stderr)
+        else:
+             print(f"Erreur: Le numéro «{raw_tel}» est invalide. Il doit contenir exactement 10 chiffres.", file=sys.stderr)
         sys.exit(1)
 
     # Use valid database connection
@@ -313,8 +316,9 @@ def main():
              result = get_full_info(conn, cleaned_number)
              if not print_result(result):
                  sys.exit(1)
-    except DatabaseError:
-        # Error already logged when exception was raised
+    except DatabaseError as e:
+        # Error already logged, but print to stderr to ensure visibility in all contexts
+        print(f"{e}", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":
