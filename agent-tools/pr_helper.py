@@ -68,6 +68,7 @@ def cmd_trigger(args):
     print(f"Triggering reviews for PR #{args.pr_number}...", file=sys.stderr)
     subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "/gemini review"], check=True)
     subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "@coderabbitai review"], check=True)
+    subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "@sourcery-ai review"], check=True)
     print("Reviews triggered successfully.", file=sys.stderr)
 
 def cmd_fetch(args):
