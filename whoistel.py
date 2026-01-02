@@ -262,15 +262,15 @@ def print_result(result):
         print(f"\nOpérateur : Code {result.get('code_operateur')} (Détails non trouvés)")
 
     if loc := result.get('location'):
+        print("\n--- Localisation (Estimation) ---")
         if 'commune' in loc:
-            print("\n--- Localisation (Estimation) ---")
             print(f"Commune : {loc.get('commune')}")
             print(f"Département : {loc.get('departement')}")
             print(f"Code Postal : {loc.get('code_postal')}")
             if loc.get('latitude') and loc.get('longitude'):
                 print(f"GPS : {loc.get('latitude')}, {loc.get('longitude')}")
         elif 'region' in loc:
-            print(f"\nLocalisation : Région {loc['region']} (Détail commune non disponible)")
+            print(f"Région : {loc['region']} (Détail commune non disponible)")
     
     return True
 

@@ -29,8 +29,8 @@ pytest_debug.txt
 *.png
 verification/
 final_test_out.txt
-pytest_output.txt
-pytest_out*.txt
+pytest_*.txt
+*test_out*.txt
 
 # Agent Workspace for clean repro
 agent-tools/agent-workspace/

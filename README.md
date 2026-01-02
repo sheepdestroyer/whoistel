@@ -107,7 +107,7 @@ For production, use a WSGI server like Gunicorn, and ensure `SECRET_KEY` is set:
 ```bash
 pip install gunicorn
 export SECRET_KEY='your-production-secret-key'
-gunicorn -w 1 --bind 0.0.0.0:5000 webapp:app
+gunicorn -w 1 --bind 0.0.0.0:5000 'webapp:create_app()'
 
 > **Note:** We use `-w 1` (single worker) because the application currently uses SQLite for the history database. Multi-process write access to SQLite can result in `database is locked` errors. For high-concurrency production usage, consider switching to a client-server database like PostgreSQL.
 ```

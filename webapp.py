@@ -124,8 +124,8 @@ def create_app(test_config=None):
             try:
                 datetime.strptime(date, '%Y-%m-%d')
             except ValueError:
-                flash(f"Le format de la date '{date}' est invalide (attendu: AAAA-MM-JJ) et a été ignoré.", "warning")
-                date = None
+                flash(f"Le format de la date '{date}' est invalide (attendu: AAAA-MM-JJ).", "error")
+                return redirect(url_for('view_number', number=number))
         else:
             date = None
 
