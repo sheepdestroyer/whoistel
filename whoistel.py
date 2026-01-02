@@ -15,6 +15,7 @@ from email_validator import validate_email, EmailNotValidError
 from contextlib import closing
 
 class DatabaseError(Exception):
+    """Custom exception raised for database-related errors."""
     pass
 
 # Configure logging

@@ -179,4 +179,12 @@ When running a review cycle:
 2.  **Use Raw Tools**: Do not rely solely on custom monitoring scripts which can mask errors. Use extensive `gh` CLI commands directly to verify state.
 3.  **Respect Quotas**: Be mindful of the cost of each interaction and avoid tight loops of API calls.
 
-**Resolution**: The agent manually fetched all comments, identified the missing feedback, and proceeded to address it without further superfluous review requests.
+
+## 11. Agent Autonomy & Tool Usage
+*   **Active Monitoring**: When running long-running processes (like `monitor`), the Agent must NOT yield control to the user (via `notify_user`) simply to wait.
+*   **Process Management**: Use `command_status`, `read_terminal`, or loops to actively check the process.
+*   **Intervention**: Only notify the user if:
+    1.  The process fails/crashes.
+    2.  The process succeeds and requires user confirmation for the *next* step.
+    3.  A timeout is reached that requires a decision.
+*   **Idling**: "Idling" by telling the user to "wait for the logs" is prohibited. You are the operator.

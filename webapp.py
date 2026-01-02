@@ -54,6 +54,10 @@ def create_app(test_config=None):
         return dt_obj.strftime(format) if dt_obj else ""
 
     def _get_db(name, connect_func):
+        """
+        Retrieves or creates a database connection for the current request context.
+        Uses Flask's g object to cache connections.
+        """
         db = getattr(g, name, None)
         if db is None:
             db = connect_func()

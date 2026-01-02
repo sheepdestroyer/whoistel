@@ -40,3 +40,7 @@ A Review Cycle is a **LOOP**, not a check.
 *   **Timezones**: Always use **UTC** (Coordinated Universal Time) for all timestamps interaction with GitHub API.
 *   **Awareness**: Ensure your datetime objects are checking timezone-aware (e.g., `tzinfo=timezone.utc`). Comparing naive (local) vs aware (API) datetimes causes crashes.
 *   **Filtering**: When filtering comments by time (e.g., `--since`), provide the timestamp in ISO 8601 UTC format (`YYYY-MM-DDTHH:MM:SSZ`) to ensure accurate retrieval.
+
+## 9. Agent Autonomy
+*   **No Idling**: Agents must actively monitor polling scripts. Do NOT exit/notify the user just to wait.
+*   **Self-Correction**: If a tool fails (e.g., specific monitoring script), fallback to raw `gh` commands immediately.
