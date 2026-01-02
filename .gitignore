@@ -33,3 +33,6 @@ tests/artifacts/
 
 # Agent Workspace for clean repro
 agent-tools/agent-workspace/
+
+# Agent Rules & Workflows
+!.agent/
