@@ -113,8 +113,9 @@ To ensure reproducible and clean builds during agent-driven development:
 
 When an Agent performs CI tasks (verification, review analysis):
 1.  **Work in Isolation**: Use the **`agent-workspace/`** directory for all intermediate artifacts (JSON status files, logs).
-2.  **No Pollution**: Do **not** write temporary status files (`pr_status_*.json`, `poll.log`) to the repository root. All tool outputs must be directed to `agent-workspace/`.
-3.  **Clean Up**: The directory is ignored by git, so files can persist for debugging or be cleaned up.
+2.  **Persistent Tools**: Use **`agent-tools/`** for scripts that are part of the repository (e.g., polling logic). Do not clutter this directory with temp files.
+3.  **No Pollution**: Do **not** write temporary status files (`pr_status_*.json`, `poll.log`) to the repository root. All tool outputs must be directed to `agent-workspace/`.
+4.  **Clean Up**: The workspace directory is ignored by git, so files can persist for debugging or be cleaned up.
 
 ### Review Cycle responsibility
 

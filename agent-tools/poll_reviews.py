@@ -9,8 +9,10 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser(description='Poll PR for reviews')
     parser.add_argument('pr_number', type=int, help='PR number to monitor')
-    parser.add_argument('since', help='Filter reviews after this date (ISO 8601 format)', nargs='?', default="2026-01-02T00:17:24Z")
+    parser.add_argument('--since', help='Filter reviews after this date (ISO 8601 format)', default="2026-01-02T00:17:24Z")
     parser.add_argument('--timeout', type=int, default=1200, help='Timeout in seconds')
+    parser.add_argument('--initial-wait', type=int, default=180, help='Initial wait in seconds')
+    parser.add_argument('--interval', type=int, default=120, help='Polling interval in seconds')
     return parser.parse_args()
 
 def fetch_reviews(pr_number, temp_dir):
@@ -39,9 +41,12 @@ def fetch_reviews(pr_number, temp_dir):
 def main():
     args = parse_args()
     print(f"Polling for reviews newer than {args.since} for {args.timeout}s...")
+    print(f"Initial wait of {args.initial_wait}s...")
+    time.sleep(args.initial_wait)
 
     with tempfile.TemporaryDirectory() as temp_dir:
         start = time.time()
+
         
         while time.time() - start < args.timeout:
             reviews = fetch_reviews(args.pr_number, temp_dir)
@@ -59,7 +64,7 @@ def main():
                 sys.exit(0)
             
             print(".", end="", flush=True)
-            time.sleep(30)
+            time.sleep(args.interval)
 
     print("\nTimeout: No new reviews detected.")
     sys.exit(1)

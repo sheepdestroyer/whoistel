@@ -31,7 +31,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # so it needs to be in /app as well if updatearcep.sh's CWD is /app.
 # The initial `COPY requirements.txt .` (where . is /app) handled this.
 # Copy application files
-COPY whoistel.py generatedb.py updatearcep.sh webapp.py history_manager.py query_op.py /app/
+COPY whoistel.py generatedb.py updatearcep.sh webapp.py history_manager.py /app/
 COPY static /app/static
 COPY templates /app/templates
 

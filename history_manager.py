@@ -16,7 +16,6 @@ def with_db_connection(func):
             # Modify kwargs in-place and restore to avoid copying
             kwargs['conn'] = new_conn
             result = func(*args, **kwargs)
-            del kwargs['conn']
             return result
     return wrapper
 
