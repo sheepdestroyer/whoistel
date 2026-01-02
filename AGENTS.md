@@ -52,6 +52,9 @@ A PR Review Cycle triggers, fetches and addresses Code Reviews on GitHub's PR un
 
 **Never** stop a cycle just because you did one pass of fixes. Verify the fix by triggering another review.
 
+> [!IMPORTANT]
+> **STRICT ORDER**: You MUST `git push` your changes BEFORE triggering a review (`/gemini review` or `@coderabbitai review`). Triggering reviews on unpushed code leads to "Outdated" reviews and wastes Gemini's rate-limited slots. If you forget to push, you are effectively asking for a review on the *previous* state.
+
 ## Learned Lessons: Fetching Comments
 To initiate or restart a successful Code Review Cycle, here is what we learned:
 
@@ -68,7 +71,7 @@ To initiate or restart a successful Code Review Cycle, here is what we learned:
 To successfully iterate with AI reviewers (Gemini, CodeRabbit, Sourcery) using the CLI:
 
 ### 1. Request Review
-Trigger the bot to review your latest changes.
+**CRITICAL**: Verify your local changes are pushed to `origin` before running these commands.
 ```bash
 gh pr comment {PR_NUMBER} --body "/gemini review"
 # Optional: Trigger CodeRabbit if needed
@@ -86,12 +89,20 @@ The Review Loop must **NOT** be interrupted unless:
 -   **Do not stop** doing nothing. If you are not fixing, you are waiting. If you are not waiting, you are pushing.
 
 ### 3. Fetch Comments (Cleanly)
-Use the **`agent-tools/agent-workspace/`** directory for all intermediate files to avoid polluting the root. **`agent-tools/`** is reserved for persistent scripts committed to the repo.
+**STRICT RULE**: You must **NEVER** write status files, logs, or debug dumps to the repository root.
+*   **Allowed Location**: `agent-tools/agent-workspace/`
+*   **Forbidden**: `.` (root), `agent-tools/` (root of tools)
+
+Use the **`agent-tools/agent-workspace/`** directory for all intermediate files. **`agent-tools/`** is reserved for persistent scripts committed to the repo.
 
 **Polling Rules**:
-1.  **Initial Wait**: Wait **at least 3 minutes** after requesting a review before the first check.
-2.  **Interval**: Poll every **2 minutes**.
-3.  **Tool**: Use `agent-tools/poll_reviews.py` which implements these defaults.
+1.  **Check ALL Channels**: You must check:
+    *   Top-level Reviews (`repos/{owner}/{repo}/pulls/{number}/reviews`)
+    *   Inline Comments (`repos/{owner}/{repo}/pulls/{number}/comments`)
+    *   Issue Comments (`repos/{owner}/{repo}/issues/{number}/comments`)
+2.  **Initial Wait**: Wait **at least 3 minutes** after requesting a review.
+3.  **Interval**: Poll every **2 minutes**.
+4.  **Tool**: Use `agent-tools/poll_reviews.py` which aggregates these channels.
 
 ```bash
 mkdir -p agent-tools/agent-workspace
