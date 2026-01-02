@@ -86,10 +86,10 @@ The Review Loop must **NOT** be interrupted unless:
 -   **Do not stop** doing nothing. If you are not fixing, you are waiting. If you are not waiting, you are pushing.
 
 ### 3. Fetch Comments (Cleanly)
-Use a **temporary directory** to avoid polluting the workspace.
+Use the **`agent-workspace/` directory** for all intermediate files to avoid polluting the root.
 ```bash
-WORK_DIR=$(mktemp -d)
-gh pr view {PR_NUMBER} --json reviews --json comments > "$WORK_DIR/status.json"
+mkdir -p agent-workspace
+gh pr view {PR_NUMBER} --json reviews --json comments > "agent-workspace/status.json"
 ```
 
 ### 4. Analyze & Filter (Agent Responsibility)
