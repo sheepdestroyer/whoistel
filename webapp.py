@@ -130,8 +130,8 @@ def create_app(test_config=None):
 
         # Validate number format early to fail fast
         if not whoistel.is_valid_phone_format(number):
-            flash("Erreur interne : Numéro de téléphone invalide lors du signalement.", "error")
-            return redirect(url_for('view_number', number=number))
+            flash("Le format du numéro de téléphone est invalide pour un signalement.", "error")
+            return redirect(url_for('index'))
 
         date = request.form.get('date')
         is_spam = request.form.get('is_spam') == 'on'

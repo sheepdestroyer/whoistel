@@ -188,7 +188,7 @@ def cmd_verify(args):
         print(f"Error reading or parsing {args.file}: {e}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"\nChecking heuristics for {len(comments)} feedback items...", file=sys.stderr)
+    print(f"\nVerifying feedback items from {args.file}...", file=sys.stderr)
     
     for c in comments:
         path = c.get('path')
@@ -198,30 +198,10 @@ def cmd_verify(args):
         if not path:
             continue
 
-        # Prevent path traversal attacks by ensuring the path is within the project
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        full_path = os.path.abspath(os.path.join(project_root, path))
-
-        if not full_path.startswith(project_root) or not os.path.exists(full_path):
-            continue
-
         print(f"[{path}:{line}] {body[:60]}...", file=sys.stderr)
-        with open(full_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        # Heuristics (Regex-based for robustness)
-        if re.search(r"new_kwargs\s*=\s*kwargs\.copy\(\)", content):
-            print("  STATUS: PASS - Safe decorator kwargs handling found", file=sys.stderr)
-        elif re.search(r"with\s+closing\(setup_db_connection\(\)\)", content):
-             print("  STATUS: PASS - setup_db_connection wrapped in closing", file=sys.stderr)
-        elif re.search(r"uniquement\s+des\s+chiffres\s+après\s+nettoyage", content):
-             print("  STATUS: PASS - CLI error message updated", file=sys.stderr)
-        elif re.search(r"g\.db_connections\.append\(db\)", content):
-             print("  STATUS: PASS - Scalable DB connection registry found", file=sys.stderr)
-        elif re.search(r"email-validator==[0-9.]+", content):
-             print("  STATUS: PASS - Dependency pinning found", file=sys.stderr)
-        else:
-             print("  STATUS: MANUAL VERIFICATION REQUIRED", file=sys.stderr)
+        # Rely on pytest for functional verification. 
+        # Manual verification is still listed for transparency.
+        print("  STATUS: PLEASE VERIFY WITH CORRESPONDING TEST CASE", file=sys.stderr)
 
 def main():
     """Main entry point for pr_helper.py CLI."""

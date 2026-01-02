@@ -287,13 +287,13 @@ def test_report_invalid_number_format(client):
         'is_spam': 'on',
     }, follow_redirects=True)
 
-    # The request should end up back on the view page for that number, which returns 400 for invalid format
-    assert rv.status_code == 400
-    assert rv.request.path == f'/view/{invalid_number}'
+    # The request should end up back on the index page, which returns 200
+    assert rv.status_code == 200
+    assert rv.request.path == '/'
 
     # The specific flash message about invalid phone number format should be present
     response_text = rv.get_data(as_text=True)
-    assert "Erreur interne : Numéro de téléphone invalide lors du signalement." in response_text
+    assert "Le format du numéro de téléphone est invalide pour un signalement." in response_text
 
 def test_report_comment_truncation_flash_message(client):
     """Tests that a flash message is shown to the user when the comment is truncated."""
