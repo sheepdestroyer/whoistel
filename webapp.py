@@ -39,17 +39,19 @@ def format_datetime(value, format='%d/%m/%Y %H:%M'):
 
     return dt_obj.strftime(format) if dt_obj else ""
 
+def _get_db(name, connect_func):
+    """Generic helper to manage request-scoped database connections."""
+    if name not in g:
+        setattr(g, name, connect_func())
+    return getattr(g, name)
+
 def get_history_db():
     """Returns a request-scoped database connection for the history database."""
-    if 'history_db' not in g:
-        g.history_db = history_manager.get_db_connection()
-    return g.history_db
+    return _get_db('history_db', history_manager.get_db_connection)
 
 def get_main_db():
     """Returns a request-scoped database connection for the main ARCEP database."""
-    if 'main_db' not in g:
-        g.main_db = whoistel.setup_db_connection()
-    return g.main_db
+    return _get_db('main_db', whoistel.setup_db_connection)
 
 @app.teardown_appcontext
 def close_dbs(_error):

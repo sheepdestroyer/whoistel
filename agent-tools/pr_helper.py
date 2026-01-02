@@ -61,10 +61,10 @@ def filter_feedback_since(feedback, since_iso):
 
 def cmd_trigger(args):
     """Triggers reviews from Gemini and CodeRabbit."""
-    print(f"Triggering reviews for PR #{args.pr_number}...")
+    print(f"Triggering reviews for PR #{args.pr_number}...", file=sys.stderr)
     subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "/gemini review"], check=True)
     subprocess.run(["gh", "pr", "comment", str(args.pr_number), "--body", "@coderabbitai review"], check=True)
-    print("Reviews triggered successfully.")
+    print("Reviews triggered successfully.", file=sys.stderr)
 
 def cmd_fetch(args):
     """One-shot fetch of all new feedback."""
@@ -115,13 +115,13 @@ def cmd_verify(args):
     """Heuristic verification of local files against recent comments."""
     # This logic is adapted from the old verify_comments.py
     if not os.path.exists(args.file):
-        print(f"Error: JSON feedback file '{args.file}' not found. Run 'fetch' first.")
+        print(f"Error: JSON feedback file '{args.file}' not found. Run 'fetch' first.", file=sys.stderr)
         sys.exit(1)
         
     with open(args.file) as f:
         comments = json.load(f)
 
-    print(f"Verifying {len(comments)} feedback items against local files...")
+    print(f"Verifying {len(comments)} feedback items against local files...", file=sys.stderr)
     
     for c in comments:
         path = c.get('path')
@@ -131,19 +131,19 @@ def cmd_verify(args):
         if not path or not os.path.exists(path):
             continue
 
-        print(f"\n[{path}:{line}] {body[:60]}...")
+        print(f"\n[{path}:{line}] {body[:60]}...", file=sys.stderr)
         with open(path) as f:
             content = f.read()
 
         # Heuristics
-        if "kwargs['conn'] = new_conn" in content and "del kwargs['conn']" in content:
-            print("  STATUS: PASS - Decorator cleanup found")
+        if "new_kwargs = kwargs.copy()" in content:
+            print("  STATUS: PASS - Safe decorator kwargs handling found", file=sys.stderr)
         elif "with closing(setup_db_connection())" in content:
-             print("  STATUS: PASS - setup_db_connection wrapped in closing")
+             print("  STATUS: PASS - setup_db_connection wrapped in closing", file=sys.stderr)
         elif "uniquement des chiffres après nettoyage" in content:
-             print("  STATUS: PASS - CLI error message updated")
+             print("  STATUS: PASS - CLI error message updated", file=sys.stderr)
         else:
-             print("  STATUS: MANUAL VERIFICATION REQUIRED")
+             print("  STATUS: MANUAL VERIFICATION REQUIRED", file=sys.stderr)
 
 def main():
     parser = argparse.ArgumentParser(description='Unified PR Review Cycle Helper')

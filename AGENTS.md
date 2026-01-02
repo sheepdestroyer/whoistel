@@ -93,7 +93,7 @@ The Review Loop must **NOT** be interrupted unless:
 *   **Allowed Location**: `agent-tools/agent-workspace/`
 *   **Persistent Scripts**: `agent-tools/`
 
-The **`agent-tools/pr_helper.py`** provides a single interface for the entire cycle. Documentation is available in [agent-tools.md](file:///home/sheepdestroyer/LAB/whoistel/agent-tools/agent-tools.md).
+The **`agent-tools/pr_helper.py`** provides a single interface for the entire cycle. Documentation is available in [agent-tools.md](agent-tools/agent-tools.md).
 
 **Polling Rules**:
 1.  **Check ALL Channels**: The tool automatically checks Reviews, Inline Comments, and Issue Comments.
@@ -120,9 +120,9 @@ A PR Review Cycle is only complete when:
 ### 4. Analyze & Filter (Agent Responsibility)
 The Agent must parse the JSON to find comments created **after** the last push/fix cycle.
 *   **Semantic Analysis**: Do not rely on scripts to tell you if it's "Ready". Read the comment body.
-    *   Does it say "LGTM" but list 3 "Nitpicks"? -> **Fixes Needed**.
-    *   Does it say "Changes Requested"? -> **Fixes Needed**.
-    *   Does it say "No actionable comments"? -> **Ready**.
+  *   Does it say "LGTM" but list 3 "Nitpicks"? -> **Fixes Needed**.
+  *   Does it say "Changes Requested"? -> **Fixes Needed**.
+  *   Does it say "No actionable comments"? -> **Ready**.
 *   **Filter**: Ignore "outdated" or resolved comments if your logic handles them.
 
 ### 5. Implement & Verify
