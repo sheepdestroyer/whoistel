@@ -86,7 +86,7 @@ The Review Loop must **NOT** be interrupted unless:
 **Action**:
 -   **Poll**: Run the polling script immediately after requesting a review.
 -   **Increments**: Wait in at least 2-minute increments.
--   **Do not stop** doing nothing. If you are not fixing, you are waiting. If you are not waiting, you are pushing.
+-   **Always be active in the loop**: at any moment, you must be either fixing, waiting, or pushing.
 
 ### 3. Fetch & Monitor (Unified)
 **STRICT RULE**: You must **NEVER** write status files, logs, or debug dumps to the repository root.

@@ -36,7 +36,7 @@ def test_geographic_number_lookup():
     assert "Type détecté : Geographique" in result.stdout
     assert "Opérateur" in result.stdout
     assert "Orange" in result.stdout
-    assert "Région Île-de-France" in result.stdout
+    assert "Région : Île-de-France" in result.stdout
 
 def test_non_geographic_test_number_lookup():
     """
@@ -59,7 +59,7 @@ def test_valid_geo_number_lookup():
     assert "Numéro : 0424288224" in result.stdout
     assert "Type détecté : Geographique" in result.stdout
     assert "Kav El International" in result.stdout
-    assert "Région Sud-Est" in result.stdout
+    assert "Région : Sud-Est" in result.stdout
 
 def test_invalid_number_format_non_digit():
     """Tests handling of an invalidly formatted number."""
@@ -138,3 +138,62 @@ def test_operator_info_validation():
     result = get_operator_info(mock_conn, '1234')
     assert result['mail'] == 'contact@example.com'
     assert result['site'] is None
+def test_get_full_info_known_and_unknown(db_connection):
+    """Tests get_full_info using the DB fixture for known and unknown numbers."""
+    from whoistel import get_full_info
+
+    # Known geographic number (from conftest sample data: 01234...)
+    known_number = "0123456789"
+    known_result = get_full_info(db_connection, known_number)
+
+    assert known_result["found"] is True
+    assert known_result["type"] == "Geographique"
+    assert known_result["operator"]["nom"] == "Operator One"
+    assert known_result["location"]["commune"] == "Paris"
+
+    # Unknown number
+    unknown_number = "0799999999"
+    unknown_result = get_full_info(db_connection, unknown_number)
+
+    assert unknown_result["found"] is False
+    assert "error" in unknown_result
+    assert "inconnu" in unknown_result["error"]
+
+def test_print_result_output(capsys):
+    """Tests print_result presentation, including the 'Num\u00e9ro inconnu' branch."""
+    from whoistel import print_result
+
+    # Known number result dict
+    known_result = {
+        "found": True,
+        "type": "Geographique",
+        "operator": {"nom": "Operator One", "code": "OP1"},
+        "location": {
+            "region": "\u00cele-de-France",
+            "commune": "Paris",
+        },
+        "number": "0123456789",
+    }
+
+    print_result(known_result)
+    captured = capsys.readouterr()
+
+    assert "0123456789" in captured.out
+    assert "Geographique" in captured.out
+    assert "Operator One" in captured.out
+    assert "Paris" in captured.out
+    assert "Num\u00e9ro inconnu" not in captured.out
+
+    # Unknown number result dict
+    unknown_result = {
+        "found": False,
+        "error": "Num\u00e9ro inconnu dans la base",
+        "number": "0799999999",
+    }
+
+    print_result(unknown_result)
+    captured = capsys.readouterr()
+
+    assert "0799999999" in captured.out
+    assert "Num\u00e9ro inconnu" in captured.out
+    assert "Num\u00e9ro inconnu dans la base" in captured.out

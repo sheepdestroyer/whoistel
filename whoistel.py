@@ -141,7 +141,7 @@ def search_number(conn, tel):
         tel (str): Cleaned 10-digit phone number.
         
     Returns:
-        sqlite3.Row: Matching record or None.
+        dict | None: A dictionary containing 'prefix', 'code_operateur', 'code_insee', and 'type', or None if no match.
     """
     cursor = conn.cursor()
 
@@ -217,14 +217,15 @@ def get_full_info(conn, tel):
 
     # Location Info
     if info['code_insee'] and info['code_insee'] != '0':
-        commune_info = get_commune_info(conn, info['code_insee'])
-        result['location'] = commune_info
-
-    # If Geo and no CodeInsee, give Region hint
-    if info['type'] == 'Geographique' and (not result.get('location')):
+        result['location'] = get_commune_info(conn, info['code_insee'])
+    
+    # Always try to add region for Geographique numbers
+    if info['type'] == 'Geographique':
         region_code = tel[:2]
         if region_code in REGION_MAP:
-            result['location'] = {'region': REGION_MAP[region_code]}
+            if not result['location']:
+                result['location'] = {}
+            result['location']['region'] = REGION_MAP[region_code]
 
     return result
 
@@ -250,7 +251,7 @@ def print_result(result):
 
     # Operator Info
     op_info = result.get('operator')
-    if op_info and op_info.get('nom') != 'Inconnu':
+    if isinstance(op_info, dict) and op_info.get('nom') != 'Inconnu':
         print("\n--- Opérateur ---")
         print(f"Nom : {op_info.get('nom')}")
         print(f"Code ARCEP : {op_info.get('code')}")
@@ -263,14 +264,18 @@ def print_result(result):
 
     if loc := result.get('location'):
         print("\n--- Localisation (Estimation) ---")
+        if region := loc.get('region'):
+            if 'commune' in loc:
+                print(f"Région : {region}")
+            else:
+                print(f"Région : {region} (Détail commune non disponible)")
+        
         if 'commune' in loc:
             print(f"Commune : {loc.get('commune')}")
             print(f"Département : {loc.get('departement')}")
             print(f"Code Postal : {loc.get('code_postal')}")
             if loc.get('latitude') and loc.get('longitude'):
                 print(f"GPS : {loc.get('latitude')}, {loc.get('longitude')}")
-        elif 'region' in loc:
-            print(f"Région : {loc['region']} (Détail commune non disponible)")
     
     return True
 

@@ -87,6 +87,38 @@ def test_report_flow(client):
     assert b'Test Spam' in rv.data
     assert b'OUI' in rv.data
 
+def test_report_non_spam_flow(client):
+    # 1. Report a number as non-spam (is_spam unchecked)
+    rv = client.post('/report', data={
+        'number': '0123987654',
+        'date': '2023-02-01',
+        'comment': 'Test Non-Spam'
+    }, follow_redirects=True)
+
+    assert rv.status_code == 200
+    # Since it's a non-spam report, the spam count for this number should remain 0
+    assert b'signal\xc3\xa9 comme spam <strong>0</strong> fois' in rv.data
+
+    # 2. Check History: the report should appear as NON (not spam)
+    rv = client.get('/history')
+    assert b'0123987654' in rv.data
+    assert b'Test Non-Spam' in rv.data
+    assert b'NON' in rv.data
+
+def test_report_invalid_date_format_shows_error_and_redirects_to_view(client):
+    rv = client.post('/report', data={
+        'number': '0987654321',
+        'date': '2023-13-40',
+        'is_spam': 'on',
+        'comment': 'Test Invalid Date'
+    }, follow_redirects=False)
+    assert rv.status_code == 302
+    assert '/view/0987654321' in rv.location
+
+    # Follow the redirect to ensure the flashed error message is rendered
+    rv = client.get(rv.location)
+    assert b'est invalide' in rv.data
+
 def test_check_known_missing_number(client):
     # The number mentioned in AGENTS.md that is missing from ARCEP data
     # +33740756315 -> 0740756315

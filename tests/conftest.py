@@ -92,3 +92,9 @@ def setup_database():
     # Teardown
     whoistel.DB_FILE = original_db_file
     os.unlink(db_path)
+@pytest.fixture
+def db_connection():
+    """Provides a connection to the temporary test database."""
+    conn = sqlite3.connect(whoistel.DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn

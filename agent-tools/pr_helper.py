@@ -12,8 +12,8 @@ import argparse
 from datetime import datetime
 
 # Centralized constants
-DEFAULT_OWNER = "sheepdestroyer"
-DEFAULT_REPO = "whoistel"
+DEFAULT_OWNER = os.environ.get("GH_OWNER", "sheepdestroyer")
+DEFAULT_REPO = os.environ.get("GH_REPO", "whoistel")
 
 def run_gh_api(path, paginate=True):
     """Executes a GitHub API call using the gh CLI and returns the JSON response."""
@@ -132,7 +132,7 @@ def cmd_verify(args):
         body = c.get('body', '')
         line = c.get('line')
         
-        if not path or not os.path.exists(path):
+        if not path:
             continue
 
         # Prevent path traversal attacks by ensuring the path is within the project
@@ -159,6 +159,8 @@ def cmd_verify(args):
 def main():
     """Main entry point for pr_helper.py CLI."""
     parser = argparse.ArgumentParser(description='Unified PR Review Cycle Helper')
+    parser.add_argument('--owner', default=DEFAULT_OWNER, help='GitHub repository owner')
+    parser.add_argument('--repo', default=DEFAULT_REPO, help='GitHub repository name')
     subparsers = parser.add_subparsers(dest='command', help='Sub-commands')
 
     # Trigger
