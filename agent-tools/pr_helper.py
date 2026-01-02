@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+Unified helper script for managing the GitHub PR review cycle, 
+including triggering reviews, monitoring feedback, and verifying fixes.
+"""
 import json
 import time
 import subprocess
@@ -12,6 +16,7 @@ DEFAULT_OWNER = "sheepdestroyer"
 DEFAULT_REPO = "whoistel"
 
 def run_gh_api(path, paginate=True):
+    """Executes a GitHub API call using the gh CLI and returns the JSON response."""
     cmd = ["gh", "api", path]
     if paginate:
         cmd.append("--paginate")
@@ -47,8 +52,7 @@ def filter_feedback_since(feedback, since_iso):
             # GitHub uses multiple keys for timestamps; we take the most relevant one
             ts = item.get('submitted_at') or item.get('updated_at') or item.get('created_at')
             if ts and ts > since_iso:
-                item['_type'] = label
-                new_items.append(item)
+                new_items.append({**item, '_type': label})
                 count += 1
         return count
 
@@ -131,8 +135,15 @@ def cmd_verify(args):
         if not path or not os.path.exists(path):
             continue
 
+        # Prevent path traversal attacks by ensuring the path is within the project
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        full_path = os.path.abspath(os.path.join(project_root, path))
+
+        if not full_path.startswith(project_root) or not os.path.exists(full_path):
+            continue
+
         print(f"\n[{path}:{line}] {body[:60]}...", file=sys.stderr)
-        with open(path) as f:
+        with open(full_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
         # Heuristics
@@ -146,6 +157,7 @@ def cmd_verify(args):
              print("  STATUS: MANUAL VERIFICATION REQUIRED", file=sys.stderr)
 
 def main():
+    """Main entry point for pr_helper.py CLI."""
     parser = argparse.ArgumentParser(description='Unified PR Review Cycle Helper')
     subparsers = parser.add_subparsers(dest='command', help='Sub-commands')
 

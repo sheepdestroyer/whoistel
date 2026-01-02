@@ -1,3 +1,7 @@
+"""
+Management of the SQLite-based history database for storing and 
+retrieving community spam reports.
+"""
 import sqlite3
 import logging
 import os
@@ -18,19 +22,23 @@ def with_db_connection(func):
             return func(*args, **new_kwargs)
     return wrapper
 
-DB_FILE = os.environ.get('HISTORY_DB_FILE', 'history.sqlite3')
+DB_FILE = os.environ.get('HISTORY_DB_FILE', 'data/history.sqlite3')
 logger = logging.getLogger(__name__)
 
 def get_db_connection():
     """Establishes and returns a connection to the SQLite history database."""
     try:
+        db_dir = os.path.dirname(DB_FILE)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
-        return conn
     except sqlite3.Error as e:
         msg = f"Erreur lors de la connexion à la base de données d'historique: {e}"
         logger.exception(msg)
         raise whoistel.DatabaseError(msg) from e
+    else:
+        return conn
 
 def init_history_db():
     """Initializes the history database schema and indexes."""

@@ -1,0 +1,36 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.2, pytest-9.0.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/sheepdestroyer/LAB/whoistel
+plugins: cov-7.0.0, anyio-4.11.0
+collecting ... collected 6 items / 1 error
+
+==================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_webapp.py _____________________
+history_manager.py:31: in get_db_connection
+    conn = sqlite3.connect(DB_FILE)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+E   sqlite3.OperationalError: unable to open database file
+
+The above exception was the direct cause of the following exception:
+tests/test_webapp.py:5: in <module>
+    from webapp import app, MAX_COMMENT_LENGTH
+webapp.py:20: in <module>
+    history_manager.init_history_db()
+history_manager.py:44: in init_history_db
+    with closing(get_db_connection()) as conn:
+                 ^^^^^^^^^^^^^^^^^^^
+history_manager.py:36: in get_db_connection
+    raise whoistel.DatabaseError(msg) from e
+E   whoistel.DatabaseError: Erreur lors de la connexion à la base de données d'historique: unable to open database file
+------------------------------- Captured stderr --------------------------------
+Initializing history database schema in data/history.sqlite3...
+Erreur lors de la connexion à la base de données d'historique: unable to open database file
+Traceback (most recent call last):
+  File "/home/sheepdestroyer/LAB/whoistel/history_manager.py", line 31, in get_db_connection
+    conn = sqlite3.connect(DB_FILE)
+sqlite3.OperationalError: unable to open database file
+=========================== short test summary info ============================
+ERROR tests/test_webapp.py - whoistel.DatabaseError: Erreur lors de la connex...
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.18s ===============================

@@ -1,3 +1,7 @@
+"""
+Flask web application serving the whoistel user interface, 
+handling number lookups and community spam reporting.
+"""
 from flask import Flask, render_template, request, redirect, url_for, flash, g
 from flask_wtf import CSRFProtect
 from contextlib import closing
@@ -9,7 +13,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 if not app.config['SECRET_KEY']:
-    raise ValueError("A SECRET_KEY environment variable must be set for security reasons.")
+    raise ValueError("Environment variable SECRET_KEY must be set.")
 csrf = CSRFProtect(app)
 
 # Ensure history DB is initialized

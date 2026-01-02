@@ -120,17 +120,17 @@ A PR Review Cycle is only complete when:
 ### 5. Analyze & Filter (Agent Responsibility)
 The Agent must parse the JSON to find comments created **after** the last push/fix cycle.
 *   **Semantic Analysis**: Do not rely on scripts to tell you if it's "Ready". Read the comment body.
-  *   Does it say "LGTM" but list 3 "Nitpicks"? -> **Fixes Needed**.
-  *   Does it say "Changes Requested"? -> **Fixes Needed**.
-  *   Does it say "No actionable comments"? -> **Ready**.
+    *   Does it say "LGTM" but list 3 "Nitpicks"? -> **Fixes Needed**.
+    *   Does it say "Changes Requested"? -> **Fixes Needed**.
+    *   Does it say "No actionable comments"? -> **Ready**.
 *   **Filter**: Ignore "outdated" or resolved comments if your logic handles them.
 
-### 5. Implement & Verify
+### 6. Implement & Verify
 *   Address the specific feedback.
 *   Run tests (`pytest`) to verify fixes.
 *   **Cleanup**: Remove the temporary directory.
 
-### 6. Push & Repeat
+### 7. Push & Repeat
 ```bash
 git add .
 git commit -m "Address Cycle X comments"

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 #-*- encoding: Utf-8 -*-
+"""
+Core logic for cleaning phone numbers and looking up operator/location info
+from the ARCEP database.
+"""
 import sqlite3
 import argparse
 import sys
@@ -64,11 +68,12 @@ def setup_db_connection():
     try:
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
-        return conn
     except sqlite3.Error as e:
         msg = f"Erreur lors de la connexion à la base de données: {e}"
         logger.exception(msg)
         raise DatabaseError(msg) from e
+    else:
+        return conn
 
 def get_operator_info(conn, code_operateur):
     """
