@@ -56,24 +56,26 @@ def create_app(test_config=None):
     def _get_db(name, connect_func):
         """
         Retrieves or creates a database connection for the current request context.
-        Uses Flask's g object to cache connections.
+        Uses Flask's g object to cache connections and registers them for teardown.
         """
         db = getattr(g, name, None)
         if db is None:
             db = connect_func()
             setattr(g, name, db)
+            # Scalable registry for teardown
+            if not hasattr(g, 'db_connections'):
+                g.db_connections = []
+            g.db_connections.append(db)
         return db
 
     @app.teardown_appcontext
     def close_dbs(_error):
         """Closes all database connections at the end of the request."""
-        history_db = g.pop('history_db', None)
-        if history_db is not None:
-            history_db.close()
-        
-        main_db = g.pop('main_db', None)
-        if main_db is not None:
-            main_db.close()
+        for conn in getattr(g, 'db_connections', []):
+            try:
+                conn.close()
+            except Exception:
+                app.logger.error("Error closing database connection during teardown.")
 
     @app.errorhandler(whoistel.DatabaseError)
     def handle_db_error(e):

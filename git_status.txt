@@ -1,0 +1,10 @@
+On branch feature/web-ui-history
+Your branch is up to date with 'origin/feature/web-ui-history'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	git_log.txt
+	git_status.txt
+	listing.txt
+
+nothing added to commit but untracked files present (use "git add" to track)

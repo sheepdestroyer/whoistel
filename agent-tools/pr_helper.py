@@ -172,13 +172,16 @@ def cmd_verify(args):
         with open(full_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Heuristics
-        if "new_kwargs = kwargs.copy()" in content:
+        # Heuristics (Regex-based for robustness)
+        import re
+        if re.search(r"new_kwargs\s*=\s*kwargs\.copy\(\)", content):
             print("  STATUS: PASS - Safe decorator kwargs handling found", file=sys.stderr)
-        elif "with closing(setup_db_connection())" in content:
+        elif re.search(r"with\s+closing\(setup_db_connection\(\)\)", content):
              print("  STATUS: PASS - setup_db_connection wrapped in closing", file=sys.stderr)
-        elif "uniquement des chiffres après nettoyage" in content:
+        elif re.search(r"uniquement\s+des\s+chiffres\s+après\s+nettoyage", content):
              print("  STATUS: PASS - CLI error message updated", file=sys.stderr)
+        elif re.search(r"g\.db_connections\.append\(db\)", content):
+             print("  STATUS: PASS - Scalable DB connection registry found", file=sys.stderr)
         else:
              print("  STATUS: MANUAL VERIFICATION REQUIRED", file=sys.stderr)
 
