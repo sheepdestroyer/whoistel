@@ -40,18 +40,7 @@ def main():
     
     while time.time() - start_time < timeout:
         if review := check_for_reviews(args.pr_number, commit):
-            print("\nREVIEW DETECTED!")
-            print(f"State: {review.get('state')}")
-            print(f"Body: {review.get('body')}")
-            
-            body_lower = review.get('body', '').lower()
-            state = review.get('state', '')
-            
-            if state == 'APPROVED' or "looks good" in body_lower or "lgtm" in body_lower or "ready to merge" in body_lower:
-                print("\nVERDICT: READY TO MERGE")
-            else:
-                print("\nVERDICT: CHANGES REQUESTED (Likely)")
-            
+            print(json.dumps(review, indent=2))
             sys.exit(0)
         
         time.sleep(30)

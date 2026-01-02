@@ -55,31 +55,45 @@ In order to initiate or restart a successful Code Review Cycle, here is what we 
     *   **Solution**: Always use the `--paginate` flag with `gh api` to retrieve all comments.
 
 ## The Correct Review Cycle Workflow
-To successfully iterate with Gemini Code Assist (or any reviewer) using the CLI:
+To successfully iterate with AI reviewers (Gemini, CodeRabbit, Sourcery) using the CLI:
 
 ### 1. Request Review
 Trigger the bot to review your latest changes.
 ```bash
 gh pr comment {PR_NUMBER} --body "/gemini review"
+# Optional: Trigger CodeRabbit if needed
+gh pr comment {PR_NUMBER} --body "@coderabbitai review"
 ```
 
-### 2. Wait
-Allow time for the review to process (typically 3-5 minutes). An initial `sleep 180` will do, no less.
+### 2. Wait & Monitor (Non-Stop)
+The Review Loop must **NOT** be interrupted unless:
+1.  **Rate Limit**: We are explicitly in a rate-limited state (e.g., 429 error) and the recovery window has not expired.
+2.  **Success**: The reviewer explicitly states "Ready to Merge" or "LGTM" with *no* actionable feedback.
 
-### 3. Fetch Comments (Correctly)
-Use the API endpoint with pagination to ensure you get *everything*.
+**Action**:
+-   **Poll**: Run the polling script immediately after requesting a review.
+-   **Increments**: Wait in at least 2-minute increments.
+-   **Do not stop** doing nothing. If you are not fixing, you are waiting. If you are not waiting, you are pushing.
+
+### 3. Fetch Comments (Cleanly)
+Use a **temporary directory** to avoid polluting the workspace.
 ```bash
-gh api repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments --paginate > comments.json
+WORK_DIR=$(mktemp -d)
+gh pr view {PR_NUMBER} --json reviews --json comments > "$WORK_DIR/status.json"
 ```
 
-### 4. Analyze & Filter
-Parse the JSON to find comments created **after** your last push/fix cycle.
-*   Filter by `created_at` timestamp.
-*   Ignore "outdated" or resolved comments if your logic handles them.
+### 4. Analyze & Filter (Agent Responsibility)
+The Agent must parse the JSON to find comments created **after** the last push/fix cycle.
+*   **Semantic Analysis**: Do not rely on scripts to tell you if it's "Ready". Read the comment body.
+    *   Does it say "LGTM" but list 3 "Nitpicks"? -> **Fixes Needed**.
+    *   Does it say "Changes Requested"? -> **Fixes Needed**.
+    *   Does it say "No actionable comments"? -> **Ready**.
+*   **Filter**: Ignore "outdated" or resolved comments if your logic handles them.
 
 ### 5. Implement & Verify
-*   Address the specific feedback (unless the review says that there is nothing left to fix and that the PR is ready to merge)
+*   Address the specific feedback.
 *   Run tests (`pytest`) to verify fixes.
+*   **Cleanup**: Remove the temporary directory.
 
 ### 6. Push & Repeat
 ```bash
