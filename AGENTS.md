@@ -86,7 +86,7 @@ The Review Loop must **NOT** be interrupted unless:
 -   **Do not stop** doing nothing. If you are not fixing, you are waiting. If you are not waiting, you are pushing.
 
 ### 3. Fetch Comments (Cleanly)
-Use the **`agent-workspace/`** directory for all intermediate files to avoid polluting the root. **`agent-tools/`** is reserved for persistent scripts committed to the repo.
+Use the **`agent-tools/agent-workspace/`** directory for all intermediate files to avoid polluting the root. **`agent-tools/`** is reserved for persistent scripts committed to the repo.
 
 **Polling Rules**:
 1.  **Initial Wait**: Wait **at least 3 minutes** after requesting a review before the first check.
@@ -94,9 +94,9 @@ Use the **`agent-workspace/`** directory for all intermediate files to avoid pol
 3.  **Tool**: Use `agent-tools/poll_reviews.py` which implements these defaults.
 
 ```bash
-mkdir -p agent-workspace
+mkdir -p agent-tools/agent-workspace
 # Default waits: 180s initial, 120s interval
-python3 agent-tools/poll_reviews.py {PR_NUMBER} --since {TIMESTAMP} > "agent-workspace/status.json"
+python3 agent-tools/poll_reviews.py {PR_NUMBER} --since {TIMESTAMP} > "agent-tools/agent-workspace/status.json"
 ```
 
 ### 4. Analyze & Filter (Agent Responsibility)
