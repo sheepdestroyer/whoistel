@@ -8,11 +8,10 @@ import whoistel
 from unittest.mock import patch
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
     # Create a temporary database for history
     db_fd, db_path = tempfile.mkstemp()
-    original_db_file = history_manager.DB_FILE
-    history_manager.DB_FILE = db_path
+    monkeypatch.setattr(history_manager, 'DB_FILE', db_path)
     history_manager.init_history_db()
 
     app.config['TESTING'] = True
@@ -25,8 +24,6 @@ def client():
 
     os.close(db_fd)
     os.unlink(db_path)
-    # Restore original DB_FILE
-    history_manager.DB_FILE = original_db_file
 
 @pytest.fixture
 def client_with_csrf(client):
