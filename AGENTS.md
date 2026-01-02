@@ -107,6 +107,22 @@ Return to Step 1.
 
 **Issue**: The agent failed to fetch new Code Review comments and instead repeatedly posted review requests ("gemini review"), triggering the daily quota limit.
 
+### Cycle 7: Robustness & Cleanup
+**Improvements:**
+- **Container Persistence**: `history.sqlite3` is now correctly persisted in the `/app/data` volume using `HISTORY_DB_FILE`.
+- **Review Cycle Robustness**: The review loop now handles timeouts and API rate limits gracefully, with scripts designed to be non-destructive.
+- **Cleanliness**: Temporary files (`*_dump.json`, `*status*.json`) are explicitly ignored or cleaned up.
+- **Testing**: Added CSRF protection tests for `/check` and refactored `history_manager` for clarity.
+
+**Workflow Update:**
+When running a review cycle:
+1.  **Request**: Trigger reviews (`/gemini review`, `@coderabbitai review`).
+2.  **Poll**: Use `agent-tools/poll_reviews.py` with a reasonable timeout.
+3.  **Analyze**: Use `analyze_reviews.py` (or Agent's internal logic) to parse feedback.
+4.  **Fix**: Implement changes.
+5.  **Verify**: Run tests and check clean repo state.
+6.  **Repeat**: Until "Ready to Merge".
+
 **Root Cause**:
 1.  **Improper Monitoring**: The agent relied on a polling script (`monitor_c26.py`) that likely wasn't capturing or outputting the review state correctly, or the agent failed to interpret the specific output conditions (e.g., distinguishing between a pending review and a lack of new reviews).
 2.  **Blind Retries**: Instead of verifying the *absence* of a review definitively (by checking the raw comments list manually via `gh pr view --json comments`), the agent assumed the request hadn't triggered and re-sent the command `/gemini review`.

@@ -142,16 +142,23 @@ def test_report_comment_truncation(client):
         assert len(args[3]) == MAX_COMMENT_LENGTH
         assert args[3] == "a" * MAX_COMMENT_LENGTH
 
+
 def test_csrf_protection(client_with_csrf):
     """Tests that CSRF protection is active."""
     # The fixture client_with_csrf enables CSRF.
     
-    # Try to post without a CSRF token
+    # Try to post without a CSRF token to /report
     rv = client_with_csrf.post('/report', data={
         'number': '0123456789',
         'is_spam': 'on'
     })
-    
+    # Should return 400 Bad Request (CSRF token missing)
+    assert rv.status_code == 400
+
+    # Try to post without a CSRF token to /check
+    rv = client_with_csrf.post('/check', data={
+        'number': '0123456789'
+    })
     # Should return 400 Bad Request (CSRF token missing)
     assert rv.status_code == 400
 

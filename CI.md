@@ -112,9 +112,9 @@ To ensure reproducible and clean builds during agent-driven development:
 ### Temporary Directory Strategy
 
 When an Agent performs CI tasks (verification, review analysis):
-1.  **Work in Isolation**: Use a temporary directory (e.g., via `mktemp -d`) for all intermediate artifacts (JSON status files, logs).
+1.  **Work in Isolation**: Use a temporary directory (e.g., via `mktemp -d` or Python's `tempfile`) for all intermediate artifacts (JSON status files, logs).
 2.  **Clean Up**: Ensure the directory is removed after the operation.
-3.  **No Pollution**: Do **not** write temporary status files (`pr_status_*.json`, `poll.log`) to the repository root to avoid cluttering `.gitignore`.
+3.  **No Pollution**: Do **not** write temporary status files (`pr_status_*.json`, `poll.log`) to the repository root to avoid cluttering `.gitignore`. If debugging artifacts are necessary, use the `*_dump.json` suffix which is ignored.
 
 ### Review Cycle responsibility
 
