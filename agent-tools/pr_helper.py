@@ -30,9 +30,9 @@ def run_gh_api(path, paginate=True):
         print(f"Error decoding JSON from GitHub API at {path}", file=sys.stderr)
         return []
 
-def get_all_feedback(pr_number):
+def get_all_feedback(pr_number, owner=DEFAULT_OWNER, repo=DEFAULT_REPO):
     """Fetches Reviews, Inline Comments, and Issue Comments from GitHub."""
-    base_path = f"repos/{DEFAULT_OWNER}/{DEFAULT_REPO}"
+    base_path = f"repos/{owner}/{repo}"
     reviews = run_gh_api(f"{base_path}/pulls/{pr_number}/reviews")
     inline_comments = run_gh_api(f"{base_path}/pulls/{pr_number}/comments")
     issue_comments = run_gh_api(f"{base_path}/issues/{pr_number}/comments")
@@ -73,7 +73,7 @@ def cmd_trigger(args):
 
 def cmd_fetch(args):
     """One-shot fetch of all new feedback."""
-    feedback = get_all_feedback(args.pr_number)
+    feedback = get_all_feedback(args.pr_number, args.owner, args.repo)
     new_items, counts = filter_feedback_since(feedback, args.since)
     
     if new_items:
@@ -97,7 +97,7 @@ def cmd_monitor(args):
 
     start_time = time.time()
     while time.time() - start_time < args.timeout:
-        feedback = get_all_feedback(args.pr_number)
+        feedback = get_all_feedback(args.pr_number, args.owner, args.repo)
         new_items, counts = filter_feedback_since(feedback, args.since)
         
         if new_items:

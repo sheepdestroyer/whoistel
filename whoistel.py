@@ -56,6 +56,20 @@ def clean_phone_number(raw_tel):
 
     return tel
 
+def is_valid_phone_format(tel):
+    """
+    Checks if a cleaned phone number is valid (digits only and exactly 10 digits).
+    
+    Args:
+        tel (str): Cleaned phone number.
+        
+    Returns:
+        bool: True if valid, False otherwise.
+    """
+    if not tel:
+        return False
+    return tel.isdigit() and len(tel) == 10
+
 def setup_db_connection():
     """
     Establishes a connection to the SQLite database.

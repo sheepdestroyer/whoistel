@@ -89,7 +89,7 @@ def create_app(test_config=None):
             return redirect(url_for('index'))
 
         tel = whoistel.clean_phone_number(raw_tel)
-        if not tel.isdigit() or len(tel) != 10:
+        if not whoistel.is_valid_phone_format(tel):
             flash("Le numéro de téléphone est invalide. Il doit contenir exactement 10 chiffres (ex: 0123456789).", "error")
             return redirect(url_for('index'))
 

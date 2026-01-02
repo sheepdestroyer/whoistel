@@ -1,0 +1,5 @@
+commit ce3777fc7d180f34c71b9c8f6555ef3a54b47fe9
+Author: sheepdestroyer <sheepdestroyer@gmail.com>
+Date:   Fri Jan 2 20:00:19 2026 +0100
+
+    Final PR polish: fix helper path bug, parameterize repo args, add requested tests and standardize docstrings
