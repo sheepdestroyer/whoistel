@@ -63,4 +63,4 @@ ENV PYTHONPATH=/app
 # ENTRYPOINT makes the container behave like an executable.
 # CMD provides default arguments.
 ENTRYPOINT ["gunicorn"]
-CMD ["-w", "1", "-b", "0.0.0.0:5000", "webapp:app"] # -w 1 is used due to SQLite's write concurrency limitations.
+CMD ["-w", "1", "-b", "0.0.0.0:5000", "webapp:create_app()"] # -w 1 is used due to SQLite's write concurrency limitations.

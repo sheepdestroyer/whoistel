@@ -98,13 +98,8 @@ def get_operator_info(conn, code_operateur):
                 mail = None
 
         if site:
-            try:
-                parsed = urlparse(site)
-                if not all([parsed.scheme, parsed.netloc]):
-                    site = None
-                elif parsed.scheme not in ['http', 'https']:
-                    site = None
-            except ValueError:
+            parsed = urlparse(site)
+            if not parsed.scheme or not parsed.netloc or parsed.scheme not in ['http', 'https']:
                 site = None
 
         return {

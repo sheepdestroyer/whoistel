@@ -1,0 +1,4 @@
+ImportError while loading conftest '/home/sheepdestroyer/LAB/whoistel/tests/conftest.py'.
+tests/conftest.py:5: in <module>
+    import whoistel
+E   ModuleNotFoundError: No module named 'whoistel'

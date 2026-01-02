@@ -1,36 +1,44 @@
 import pytest
 import os
 import tempfile
-import sqlite3
-from webapp import app, MAX_COMMENT_LENGTH
+from webapp import create_app, MAX_COMMENT_LENGTH
 import history_manager
 import whoistel
 from unittest.mock import patch
+from datetime import datetime
 
 @pytest.fixture
-def client(monkeypatch):
+def app_instance(monkeypatch):
+    """Fixture that creates a Flask app instance with a temporary history database."""
     # Create a temporary database for history
     db_fd, db_path = tempfile.mkstemp()
     monkeypatch.setattr(history_manager, 'DB_FILE', db_path)
-    history_manager.init_history_db()
+    # No need to call init_history_db here, create_app does it within app_context
 
-    app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False
+    app = create_app({
+        'TESTING': True,
+        'WTF_CSRF_ENABLED': False,
+        'SECRET_KEY': 'test-key'
+    })
 
-    app.config['SECRET_KEY'] = 'test-key'
-
-    with app.test_client() as client:
-        yield client
+    yield app
 
     os.close(db_fd)
     os.unlink(db_path)
 
 @pytest.fixture
-def client_with_csrf(client):
+def client(app_instance):
+    """Fixture that provides a test client for the app."""
+    with app_instance.test_client() as client:
+        yield client
+
+@pytest.fixture
+def client_with_csrf(app_instance):
     """Fixture that enables CSRF protection for specific tests."""
-    app.config['WTF_CSRF_ENABLED'] = True
-    yield client
-    app.config['WTF_CSRF_ENABLED'] = False
+    app_instance.config['WTF_CSRF_ENABLED'] = True
+    with app_instance.test_client() as client:
+        yield client
+    app_instance.config['WTF_CSRF_ENABLED'] = False
 
 def test_index(client):
     rv = client.get('/')
@@ -57,7 +65,7 @@ def test_view_number_unknown(client):
     # Tests checking a number that likely doesn't exist or is generic
     rv = client.get('/view/0123456789')
     assert b'0123456789' in rv.data
-    # Check if spam count is 0
+    # Check if spam count is 0 - using the literal bytes from the template
     assert b'signal\xc3\xa9 comme spam <strong>0</strong> fois' in rv.data
 
 def test_report_flow(client):
@@ -163,24 +171,25 @@ def test_csrf_protection(client_with_csrf):
     assert rv.status_code == 400
 
 
-def test_format_datetime_filter():
+def test_format_datetime_filter(app_instance):
     """Test the format_datetime utility function directly."""
-    from webapp import format_datetime
-    from datetime import datetime
+    # Filters are registered on the app, but we can't easily call them outside context
+    # unless we use the function directly. In our case, it's defined inside create_app.
+    # To test it, we can use app.jinja_env.filters['format_datetime']
+    
+    f = app_instance.jinja_env.filters['format_datetime']
     
     # Test with datetime object
     dt = datetime(2023, 1, 1, 12, 34, 56)
-    assert format_datetime(dt) == "01/01/2023 12:34"
+    assert f(dt) == "01/01/2023 12:34"
     
     # Test with valid strings
-    assert format_datetime("2023-01-01 12:34:56") == "01/01/2023 12:34"
-    assert format_datetime("2023-01-01") == "01/01/2023 00:00"
+    assert f("2023-01-01 12:34:56") == "01/01/2023 12:34"
+    assert f("2023-01-01") == "01/01/2023 00:00"
     
     # Test with None or empty
-    assert format_datetime(None) == ""
-    assert format_datetime("") == ""
+    assert f(None) == ""
+    assert f("") == ""
     
-    # Test with invalid string (should warn and return empty)
-    # Note: We are not capturing logs here but ensuring it doesn't raise
-    assert format_datetime("invalid-date") == ""
-
+    # Test with invalid string
+    assert f("invalid-date") == ""
