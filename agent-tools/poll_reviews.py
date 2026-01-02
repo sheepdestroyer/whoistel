@@ -14,14 +14,24 @@ TIMEOUT = 1200  # 20 minutes
 def fetch_reviews(temp_dir):
     output_path = os.path.join(temp_dir, "reviews_temp.json")
     try:
-        # Fetch reviews
+        # Fetch reviews using list args instead of shell=True for security
         subprocess.run(
-            f"gh api repos/sheepdestroyer/whoistel/pulls/{PR_NUMBER}/reviews > {output_path}",
-            shell=True, check=True, stderr=subprocess.DEVNULL
+            ["gh", "api", f"repos/sheepdestroyer/whoistel/pulls/{PR_NUMBER}/reviews"],
+            check=True,
+            stdout=open(output_path, 'w'),
+            stderr=subprocess.PIPE,
+            text=True
         )
         with open(output_path) as f:
             return json.load(f)
-    except Exception:
+    except subprocess.CalledProcessError as e:
+        print(f"Error fetching reviews: {e.stderr}", file=sys.stderr)
+        return []
+    except json.JSONDecodeError:
+        print("Error decoding JSON response", file=sys.stderr)
+        return []
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
         return []
 
 def main():

@@ -42,6 +42,16 @@ By following these guidelines, we aim to create a robust and reliable version of
 # GitHub PR Review Cycle
 A PR Review Cycle triggers, fetches and addresses Code Reviews on GitHub's PR until there is nothing left to fix and the PR is Ready to Merge.
 
+**The Loop Rule**: A Review Cycle is NOT complete after one iteration. It is a loop:
+1.  **Push**: Push changes to the PR branch.
+2.  **Trigger**: Comment `/gemini review` and `@coderabbitai review`.
+3.  **Poll**: Wait for reviews to complete.
+4.  **Analyze**: Read the feedback.
+    *   **If "Ready to Merge" / "No issues found"**: The Cycle Ends.
+    *   **If Issues Found**: Implement fixes and **REPEAT STEP 1**.
+
+**Never** stop a cycle just because you did one pass of fixes. Verify the fix by triggering another review.
+
 ## Learned Lessons: Fetching Comments
 In order to initiate or restart a successful Code Review Cycle, here is what we learned:
 

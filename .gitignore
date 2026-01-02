@@ -56,3 +56,9 @@ manual_*.txt
 *_reviews.json
 git_log.txt
 feedback_summary.txt
+
+# Agent Workspace for clean repro
+agent-workspace/
+reviews_cycle*.json
+comments_c*.json
+*_debug.txt

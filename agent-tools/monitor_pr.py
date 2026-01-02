@@ -24,7 +24,14 @@ def check_for_reviews(pr_number, commit_sha):
         if matching_reviews:
             return matching_reviews[-1]
         return None
-    except Exception:
+    except subprocess.CalledProcessError as e:
+        print(f"Error fetching PR reviews: {e.stderr}", file=sys.stderr)
+        return None
+    except json.JSONDecodeError:
+        print("Error decoding GitHub response", file=sys.stderr)
+        return None
+    except Exception as e:
+        print(f"Unexpected error in monitor: {e}", file=sys.stderr)
         return None
 
 def main():

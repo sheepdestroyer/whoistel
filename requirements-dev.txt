@@ -1,2 +1,0 @@
-# For running tests
-pytest
