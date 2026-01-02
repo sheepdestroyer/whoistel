@@ -117,7 +117,7 @@ A PR Review Cycle is only complete when:
 
 **DO NOT** conclude a task based on local verification alone. The bot's validation is the required gateway.
 
-### 4. Analyze & Filter (Agent Responsibility)
+### 5. Analyze & Filter (Agent Responsibility)
 The Agent must parse the JSON to find comments created **after** the last push/fix cycle.
 *   **Semantic Analysis**: Do not rely on scripts to tell you if it's "Ready". Read the comment body.
   *   Does it say "LGTM" but list 3 "Nitpicks"? -> **Fixes Needed**.
