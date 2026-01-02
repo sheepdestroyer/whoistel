@@ -251,17 +251,13 @@ def test_cli_db_error_from_setup_db_connection(capsys):
     
     # We can patch setup_db_connection to raise DatabaseError
     with patch('whoistel.setup_db_connection', side_effect=whoistel.DatabaseError("Test DB Error")):
-         exit_code, output = run_whoistel_main(capsys, ["0123456789"])
+        exit_code, _ = run_whoistel_main(capsys, ["0123456789"])
     
     assert exit_code == 1
     # Check that it didn't crash with traceback but handled it
     # Note: run_whoistel_main catches SystemExit. 
     # whoistel.main catches DatabaseError and sys.exit(1).
     # so we expect exit code 1.
-    # stderr usually has logs? whoistel.main doesn't print exception to stderr, it logs it.
-    # But wait, whoistel.main logic:
-    # try: with closing(setup_db_connection()) ... except DatabaseError: sys.exit(1)
     # Logging goes to stderr by default if not configured otherwise? 
-    # Let's check whoistel.py logging config. It's not explicitly configured in main, so it might output nothing to stderr if level is WARNING/ERROR.
     # But typically uncaught exceptions or log.exception go to stderr.
     pass # Asserting exit code 1 is the main thing.

@@ -60,10 +60,12 @@ def filter_feedback_since(feedback, since_iso):
     """Filters results to items newer than since_iso."""
     since_dt = parse_ts(since_iso)
     if not since_dt:
-         # Fallback or error? For now, if since is invalid, we return all or nothing?
-         # If default is 1970, it should parse.
-         # Let's assume early epoch if fail.
-         since_dt = datetime(1970, 1, 1).astimezone()
+            print(
+                f"Warning: invalid --since timestamp {since_iso!r}; "
+                "falling back to 1970-01-01T00:00:00Z",
+                file=sys.stderr,
+            )
+            since_dt = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
     new_items = []
     

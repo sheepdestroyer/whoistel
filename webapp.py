@@ -122,9 +122,17 @@ def create_app(test_config=None):
     def report():
         """Handles submission of spam reports and comments."""
         number = whoistel.clean_phone_number(request.form.get('number'))
+        if not number:
+             flash("Veuillez saisir un numéro.", "error")
+             return redirect(url_for('index'))
+
         date = request.form.get('date')
         is_spam = request.form.get('is_spam') == 'on'
-        comment = (request.form.get('comment') or '').strip()[:MAX_COMMENT_LENGTH]
+        
+        raw_comment = (request.form.get('comment') or '').strip()
+        if len(raw_comment) > MAX_COMMENT_LENGTH:
+            flash(f"Votre commentaire a été tronqué à {MAX_COMMENT_LENGTH} caractères.", "info")
+        comment = raw_comment[:MAX_COMMENT_LENGTH]
 
         if date:
             try:

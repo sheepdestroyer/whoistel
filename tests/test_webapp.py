@@ -46,8 +46,8 @@ def test_index(client):
     assert response.status_code == 200
     assert b"Rechercher un num" in response.data
 
-def test_view_number_unknown(client):
-    """Test viewing a number that is not in the database."""
+def test_view_number_unknown_mocked(client):
+    """Test viewing a number that is not in the database (mocked)."""
     with patch('whoistel.search_number', return_value=None):
         response = client.get('/view/0999999999')
         assert response.status_code == 200
