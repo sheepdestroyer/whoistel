@@ -53,7 +53,7 @@ A PR Review Cycle triggers, fetches and addresses Code Reviews on GitHub's PR un
 **Never** stop a cycle just because you did one pass of fixes. Verify the fix by triggering another review.
 
 ## Learned Lessons: Fetching Comments
-In order to initiate or restart a successful Code Review Cycle, here is what we learned:
+To initiate or restart a successful Code Review Cycle, here is what we learned:
 
 1.  **Endpoint Distinction**:
     *   `gh pr view {N} --json comments`: Fetches **Issue Comments** (top-level discussion). It does **NOT** fetch inline code review comments (specific to lines of code).

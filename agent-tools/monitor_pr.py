@@ -7,7 +7,7 @@ import argparse
 def get_current_commit():
     return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
 
-def check_for_reviews(pr_number, commit_sha):
+def check_for_reviews(pr_number):
     try:
         result = subprocess.run(
             ["gh", "pr", "view", str(pr_number), "--json", "reviews"],
@@ -46,7 +46,7 @@ def main():
     timeout = 10 * 60  # 10 minutes
     
     while time.time() - start_time < timeout:
-        if review := check_for_reviews(args.pr_number, commit):
+        if review := check_for_reviews(args.pr_number):
             print(json.dumps(review, indent=2))
             sys.exit(0)
         

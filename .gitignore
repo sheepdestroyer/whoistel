@@ -31,31 +31,8 @@ arcep_xls_inspection/
 verification/
 
 # Development artifacts
-agent-tools/*.json
-agent-tools/*.txt
-analysis_*.txt
-gitbranch.txt
-gitlog.txt
-gitstatus.txt
-latest_comments_*.json
-listing.txt
-manual_report.txt
-manual_reviews_check.json
-pr_status_*.json
-pytest_*.txt
-review_outcome.txt
-test_result.txt
-test_whoistel_out.txt
+# NOTE: All temporary agent artifacts should be written to agent-workspace/
 wait_for_review.py
-manual_*.json
-auth_status.txt
-gh_help.txt
-manual_*.py
-manual_*.txt
-*_comments.json
-*_reviews.json
-git_log.txt
-feedback_summary.txt
 
 # Agent Workspace for clean repro
 agent-workspace/

@@ -1,0 +1,27 @@
+On branch feature/web-ui-history
+Your branch is up to date with 'origin/feature/web-ui-history'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .gitignore
+	modified:   AGENTS.md
+	modified:   agent-tools/monitor_pr.py
+	modified:   agent-tools/poll_reviews.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	agent-tools/all_comments.json
+	agent-tools/all_reviews.json
+	agent-tools/check_comments.json
+	agent-tools/gitbranch.txt
+	agent-tools/gitstatus.txt
+	agent-tools/manual_c25_chk.json
+	agent-tools/manual_report.txt
+	agent-tools/missed_reviews_analysis.txt
+	agent-tools/pytest_c13_fail.txt
+	agent-tools/verification_output.txt
+	agent-tools/verification_output_final.txt
+	gitstatus.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")

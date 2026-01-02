@@ -4,19 +4,21 @@ import subprocess
 import sys
 import tempfile
 import os
-from datetime import datetime
+import argparse
 
-# Can be overridden by CLI args
-LAST_REVIEW_DATE = sys.argv[1] if len(sys.argv) > 1 else "2026-01-02T00:17:24Z"
-PR_NUMBER = 29
-TIMEOUT = 1200  # 20 minutes
+def parse_args():
+    parser = argparse.ArgumentParser(description='Poll PR for reviews')
+    parser.add_argument('pr_number', type=int, help='PR number to monitor')
+    parser.add_argument('since', help='Filter reviews after this date (ISO 8601 format)', nargs='?', default="2026-01-02T00:17:24Z")
+    parser.add_argument('--timeout', type=int, default=1200, help='Timeout in seconds')
+    return parser.parse_args()
 
-def fetch_reviews(temp_dir):
+def fetch_reviews(pr_number, temp_dir):
     output_path = os.path.join(temp_dir, "reviews_temp.json")
     try:
         # Fetch reviews using list args instead of shell=True for security
         subprocess.run(
-            ["gh", "api", f"repos/sheepdestroyer/whoistel/pulls/{PR_NUMBER}/reviews"],
+            ["gh", "api", f"repos/sheepdestroyer/whoistel/pulls/{pr_number}/reviews"],
             check=True,
             stdout=open(output_path, 'w'),
             stderr=subprocess.PIPE,
@@ -35,18 +37,19 @@ def fetch_reviews(temp_dir):
         return []
 
 def main():
-    print(f"Polling for reviews newer than {LAST_REVIEW_DATE} for {TIMEOUT}s...")
+    args = parse_args()
+    print(f"Polling for reviews newer than {args.since} for {args.timeout}s...")
 
     with tempfile.TemporaryDirectory() as temp_dir:
         start = time.time()
         
-        while time.time() - start < TIMEOUT:
-            reviews = fetch_reviews(temp_dir)
+        while time.time() - start < args.timeout:
+            reviews = fetch_reviews(args.pr_number, temp_dir)
             new_reviews = []
             
             for r in reviews:
                 # Basic ISO comparison (strings work if format is consistent Z)
-                if r.get('submitted_at') and r['submitted_at'] > LAST_REVIEW_DATE:
+                if r.get('submitted_at') and r['submitted_at'] > args.since:
                     new_reviews.append(r)
             
             if new_reviews:
