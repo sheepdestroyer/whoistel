@@ -84,6 +84,26 @@ def test_clean_phone_number():
     assert clean_phone_number("") == ""
     assert clean_phone_number(None) == ""
 
+def test_is_valid_phone_format():
+    """Tests the phone number validation helper."""
+    from whoistel import is_valid_phone_format
+
+    # Valid 10-digit strings
+    assert is_valid_phone_format("0102030405") is True
+    assert is_valid_phone_format("0612345678") is True
+
+    # 9- and 11-digit strings should be rejected
+    assert is_valid_phone_format("123456789") is False
+    assert is_valid_phone_format("12345678901") is False
+
+    # Empty / None inputs
+    assert is_valid_phone_format("") is False
+    assert is_valid_phone_format(None) is False
+
+    # Non-digit characters should be rejected, even if upstream cleaning usually occurs
+    assert is_valid_phone_format("0102AB0405") is False
+    assert is_valid_phone_format("01 02 03 04 05") is False
+
 def test_operator_info_validation():
     """Tests the email and URL validation logic in get_operator_info."""
     from whoistel import get_operator_info

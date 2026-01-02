@@ -97,4 +97,7 @@ def db_connection():
     """Provides a connection to the temporary test database."""
     conn = sqlite3.connect(whoistel.DB_FILE)
     conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        yield conn
+    finally:
+        conn.close()

@@ -100,7 +100,7 @@ def create_app(test_config=None):
         """Displays information and history for a specific phone number."""
         cleaned_number = whoistel.clean_phone_number(number)
         
-        if not cleaned_number.isdigit():
+        if not whoistel.is_valid_phone_format(cleaned_number):
             return render_template('error.html', message="Le format du numéro est invalide."), 400
 
         if cleaned_number != number:

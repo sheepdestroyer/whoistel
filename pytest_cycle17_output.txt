@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.2, pytest-9.0.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/sheepdestroyer/LAB/whoistel
+plugins: cov-7.0.0, anyio-4.11.0
+collecting ... collected 26 items
+
+tests/test_webapp.py::test_index PASSED                                  [  3%]
+tests/test_webapp.py::test_check_number_redirect PASSED                  [  7%]
+tests/test_webapp.py::test_check_number_missing_number_validation_error PASSED [ 11%]
+tests/test_webapp.py::test_check_number_invalid_number_validation_error PASSED [ 15%]
+tests/test_webapp.py::test_view_number_unknown PASSED                    [ 19%]
+tests/test_webapp.py::test_report_flow PASSED                            [ 23%]
+tests/test_webapp.py::test_report_non_spam_flow PASSED                   [ 26%]
+tests/test_webapp.py::test_report_invalid_date_format_shows_error_and_redirects_to_view PASSED [ 30%]
+tests/test_webapp.py::test_check_known_missing_number PASSED             [ 34%]
+tests/test_webapp.py::test_view_number_redirect_dirty PASSED             [ 38%]
+tests/test_webapp.py::test_report_empty_date PASSED                      [ 42%]
+tests/test_webapp.py::test_view_invalid_number_format_returns_400 PASSED [ 46%]
+tests/test_webapp.py::test_report_validation_error_requires_at_least_one_field PASSED [ 50%]
+tests/test_webapp.py::test_database_connection_error PASSED              [ 53%]
+tests/test_webapp.py::test_report_comment_truncation PASSED              [ 57%]
+tests/test_webapp.py::test_csrf_protection PASSED                        [ 61%]
+tests/test_webapp.py::test_format_datetime_filter PASSED                 [ 65%]
+tests/test_whoistel.py::test_geographic_number_lookup PASSED             [ 69%]
+tests/test_whoistel.py::test_non_geographic_test_number_lookup PASSED    [ 73%]
+tests/test_whoistel.py::test_valid_geo_number_lookup PASSED              [ 76%]
+tests/test_whoistel.py::test_invalid_number_format_non_digit PASSED      [ 80%]
+tests/test_whoistel.py::test_clean_phone_number PASSED                   [ 84%]
+tests/test_whoistel.py::test_is_valid_phone_format PASSED                [ 88%]
+tests/test_whoistel.py::test_operator_info_validation PASSED             [ 92%]
+tests/test_whoistel.py::test_get_full_info_known_and_unknown PASSED      [ 96%]
+tests/test_whoistel.py::test_print_result_output PASSED                  [100%]
+
+============================== 26 passed in 0.41s ==============================

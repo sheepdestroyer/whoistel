@@ -13,7 +13,7 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install system dependencies required for data processing
-RUN apt-get update && apt-get install -y --no-install-recommends wget=1.21.* && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
 
 
 # Set the working directory in the container

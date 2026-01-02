@@ -42,16 +42,36 @@ def get_all_feedback(pr_number, owner=DEFAULT_OWNER, repo=DEFAULT_REPO):
         "issue_comments": issue_comments
     }
 
+def parse_ts(ts_str):
+    """Parses ISO 8601 timestamp to datetime object."""
+    if not ts_str:
+        return None
+    try:
+        if ts_str.endswith('Z'):
+            ts_str = ts_str[:-1] + '+00:00'
+        return datetime.fromisoformat(ts_str)
+    except ValueError:
+        return None
+
 def filter_feedback_since(feedback, since_iso):
     """Filters results to items newer than since_iso."""
+    since_dt = parse_ts(since_iso)
+    if not since_dt:
+         # Fallback or error? For now, if since is invalid, we return all or nothing?
+         # If default is 1970, it should parse.
+         # Let's assume early epoch if fail.
+         since_dt = datetime(1970, 1, 1).astimezone()
+
     new_items = []
     
     def process_items(items, label):
         count = 0
         for item in items:
-            # GitHub uses multiple keys for timestamps; we take the most relevant one
-            ts = item.get('submitted_at') or item.get('updated_at') or item.get('created_at')
-            if ts and ts > since_iso:
+            # GitHub uses multiple keys for timestamps
+            ts_str = item.get('submitted_at') or item.get('updated_at') or item.get('created_at')
+            item_dt = parse_ts(ts_str)
+            
+            if item_dt and item_dt > since_dt:
                 new_items.append({**item, '_type': label})
                 count += 1
         return count
