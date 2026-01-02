@@ -128,6 +128,11 @@ def create_app(test_config=None):
              flash("Veuillez saisir un numéro.", "error")
              return redirect(url_for('index'))
 
+        # Validate number format early to fail fast
+        if not whoistel.is_valid_phone_format(number):
+            flash("Erreur interne : Numéro de téléphone invalide lors du signalement.", "error")
+            return redirect(url_for('view_number', number=number))
+
         date = request.form.get('date')
         is_spam = request.form.get('is_spam') == 'on'
         
@@ -145,20 +150,13 @@ def create_app(test_config=None):
         else:
             date = None
 
-        if number:
-            # Validate number format before storing
-            if not whoistel.is_valid_phone_format(number):
-                flash("Erreur interne : Numéro de téléphone invalide lors du signalement.", "error")
-                return redirect(url_for('view_number', number=number))
-
-            if not is_spam and not comment and not date:
-                flash("Veuillez cocher la case spam, ajouter un commentaire ou une date.", "error")
-                return redirect(url_for('view_number', number=number))
-
-            history_manager.add_report(number, date, is_spam, comment, conn=_get_db('history_db', history_manager.get_db_connection))
-            flash("Signalement enregistré.", "success")
+        if not is_spam and not comment and not date:
+            flash("Veuillez cocher la case spam, ajouter un commentaire ou une date.", "error")
             return redirect(url_for('view_number', number=number))
-        return redirect(url_for('index'))
+
+        history_manager.add_report(number, date, is_spam, comment, conn=_get_db('history_db', history_manager.get_db_connection))
+        flash("Signalement enregistré.", "success")
+        return redirect(url_for('view_number', number=number))
 
     @app.route('/history', methods=['GET'])
     def history():

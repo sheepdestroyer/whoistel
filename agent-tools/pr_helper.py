@@ -10,6 +10,7 @@ import sys
 import os
 import argparse
 from datetime import datetime, timezone
+import re
 
 # Centralized constants
 DEFAULT_OWNER = os.environ.get("GH_OWNER", "sheepdestroyer")
@@ -173,7 +174,6 @@ def cmd_verify(args):
             content = f.read()
 
         # Heuristics (Regex-based for robustness)
-        import re
         if re.search(r"new_kwargs\s*=\s*kwargs\.copy\(\)", content):
             print("  STATUS: PASS - Safe decorator kwargs handling found", file=sys.stderr)
         elif re.search(r"with\s+closing\(setup_db_connection\(\)\)", content):

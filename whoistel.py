@@ -22,7 +22,7 @@ class DatabaseError(Exception):
 logging.basicConfig(level=logging.INFO, format='%(message)s') # Simplified format for CLI
 logger = logging.getLogger(__name__)
 
-DB_FILE = 'whoistel.sqlite3'
+DB_FILE = os.environ.get('WHOISTEL_DB_FILE', 'whoistel.sqlite3')
 
 REGION_MAP = {
     '01': 'Île-de-France',
@@ -308,7 +308,7 @@ def main():
         if cleaned_number and cleaned_number != raw_tel:
             print(f"Erreur: Le numéro «{raw_tel}» est invalide après normalisation («{cleaned_number}»). Il doit contenir exactement 10 chiffres.", file=sys.stderr)
         else:
-             print(f"Erreur: Le numéro «{raw_tel}» est invalide. Il doit contenir exactement 10 chiffres.", file=sys.stderr)
+            print(f"Erreur: Le numéro «{raw_tel}» est invalide. Il doit contenir exactement 10 chiffres.", file=sys.stderr)
         sys.exit(1)
 
     # Use valid database connection
