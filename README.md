@@ -82,6 +82,36 @@ For the specific test number `+33740756315`, the script currently reports it as 
 *   `--no-annu`: (Obsolete and ignored)
 *   `--no-ovh`: (Obsolete and ignored)
 
+## Web Application
+
+The project includes a simple Web UI using Flask.
+
+### Running Locally
+
+To start the web application in development mode, you must set the `SECRET_KEY` environment variable:
+
+```bash
+export SECRET_KEY='your-secret-key-for-dev'
+export FLASK_DEBUG=1
+python3 webapp.py
+```
+
+The application will be available at `http://127.0.0.1:5000`.
+
+### Production Deployment
+
+**Warning:** Do not use `python3 webapp.py` (which uses `app.run()`) in a production environment. It is not designed for security or performance under load.
+
+For production, use a WSGI server like Gunicorn, and ensure `SECRET_KEY` is set:
+
+```bash
+pip install gunicorn
+export SECRET_KEY='your-production-secret-key'
+gunicorn -w 1 --bind 0.0.0.0:5000 'webapp:create_app()'
+
+> **Note:** We use `-w 1` (single worker) because the application currently uses SQLite for the history database. Multi-process write access to SQLite can result in `database is locked` errors. For high-concurrency production usage, consider switching to a client-server database like PostgreSQL.
+```
+
 ## Development & Testing
 
 To run the tests, ensure `pytest` is installed. If you ran `./updatearcep.sh`, `pytest` (listed in `requirements.txt`) should already be installed. Otherwise, you can install it as part of all dependencies:

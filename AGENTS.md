@@ -10,14 +10,14 @@ The primary goal is to have a working command-line tool (`whoistel.py`) that can
 2.  **Code Review & Updates:**
     *   Perform a full code review if requested or if starting a significant new piece of work.
     *   Ensure APIs and data sources are current. If an API is defunct, find an alternative or remove the functionality if an alternative isn't readily available.
-    *   The primary data sources are CSV files from `data.gouv.fr` for ARCEP data.
+    *   The primary data sources are from `data.gouv.fr` for ARCEP data.
 3.  **Testing:**
     *   The phone number `+33740756315` must be used as a test case.
     *   The script must be runnable with this number by explicitly passing it as the main phone number argument (e.g., `python3 whoistel.py +33740756315`).
     *   Use `pytest -v` for validation. Write tests to cover core functionality, especially number lookups.
     *   Run the script with the test number before submitting changes.
 4.  **Data Handling:**
-    *   **Never attempt to read `.csv` or `.xls` files directly within the main application logic and your tests** These data files are large, converted if nececessary and used during the database generation phase (`generatedb.py`), but not directly by `whoistel.py`. Only inspect them using `head` or `tail`.
+    *   **Never attempt to read data files directly (like `.csv` or `.xls`) within the main application logic and your tests.** These data files are large, converted if necessary and used during the database generation phase (`generatedb.py`), but not directly by `whoistel.py`. Only inspect them using `head` or `tail`.
 5.  **Python Version:** The project targets Python 3. Ensure all code is Python 3 compatible.
 6.  **Dependency Management:** If new dependencies are added, ensure they are documented (e.g., in a `requirements.txt` if appropriate).
 7.  **Committing Code:**
@@ -27,13 +27,165 @@ The primary goal is to have a working command-line tool (`whoistel.py`) that can
 8.  **Error Handling:** Implement robust error handling, especially for API calls and data parsing.
 9.  **User Interaction:** The primary interface is command-line. Ensure output is clear and informative. Successful results should go to `stdout`, while logs, errors, and diagnostic information should go to `stderr`.
 10. **Containerization**:
-    *   Assist with the creation and debugging of the `Containerfile`.
+    *   Assist with the creation and debugging of the production-ready `Containerfile`.
     *   Provide instructions for building and running the container locally if requested.
     *   Note: Direct execution of `docker` or `podman` commands by the agent may be subject to environment limitations.
 
 ### Specific Known Issues (and areas to focus on if not yet resolved)
 *   Operator lookup for non-geographic mobile numbers (e.g., 07xxxx) needs to be reliable. This may involve adjustments in `generatedb.py` regarding how `PlagesNumeros` is populated from `majournums.csv` (particularly the `EZABPQM` field) or how `whoistel.py` performs its search.
 *   Ensure 10-digit number validation is correctly implemented in `whoistel.py` before attempting ARCEP lookups.
-*   Address any encoding issues when reading CSV files (e.g., the 'Mnémo' vs 'Mn\\xe9mo' issue in `generatedb.py`).
+*   Address any encoding issues when reading data files (e.g., the 'Mnémo' vs 'Mn\\xe9mo' issue in `generatedb.py`).
 
 By following these guidelines, we aim to create a robust and reliable version of the `whoistel` tool.
+
+
+# GitHub PR Review Cycle
+A PR Review Cycle triggers, fetches and addresses Code Reviews on GitHub's PR until there is nothing left to fix and the PR is validated by the AI Reviewers.
+
+**The Loop Rule**: A Review Cycle is NOT complete after one iteration. It is a loop:
+1.  **Push**: Push changes to the PR branch.
+2.  **Trigger**: Comment `/gemini review` and `@coderabbitai review`.
+3.  **Poll**: Wait for reviews to complete.
+4.  **Analyze**: Read the feedback.
+  *   **If "Ready to Merge" / "No issues found"**: The Cycle Ends.
+  *   **If Issues Found**: Implement fixes and **REPEAT STEP 1**.
+
+**Never** stop a cycle just because you did one pass of fixes. Verify the fix by triggering another review.
+
+> [!IMPORTANT]
+> **STRICT ORDER**: You MUST `git push` your changes BEFORE triggering a review (`/gemini review` or `@coderabbitai review`). Triggering reviews on unpushed code leads to "Outdated" reviews and wastes Gemini's rate-limited slots. If you forget to push, you are effectively asking for a review on the *previous* state.
+
+## Learned Lessons: Fetching Comments
+To initiate or restart a successful Code Review Cycle, here is what we learned:
+
+1.  **Endpoint Distinction**:
+    *   `gh pr view {N} --json comments`: Fetches **Issue Comments** (top-level discussion). It does **NOT** fetch inline code review comments (specific to lines of code).
+    *   `gh api repos/{owner}/{repo}/pulls/{N}/comments`: Fetches **Review Comments** (inline feedback). This is the correct endpoint for code review feedback.
+
+2.  **Pagination is Critical**:
+    *   The GitHub API paginates results (default ~30 items).
+    *   **Failure Mode**: Without pagination, we only retrieved the first page of comments (often the oldest ones). New feedback was missed because it fell on subsequent pages.
+    *   **Solution**: Always use the `--paginate` flag with `gh api` to retrieve all comments.
+
+## The Correct Review Cycle Workflow
+To successfully iterate with AI reviewers (Gemini, CodeRabbit, Sourcery) using the CLI:
+
+### 1. Request Review
+**CRITICAL**: Verify your local changes are pushed to `origin` before running these commands.
+```bash
+gh pr comment {PR_NUMBER} --body "/gemini review"
+# Optional: Trigger CodeRabbit if needed
+gh pr comment {PR_NUMBER} --body "@coderabbitai review"
+```
+
+### 2. Wait & Monitor (Non-Stop)
+The Review Loop must **NOT** be interrupted unless:
+1.  **Rate Limit**: We are explicitly in a rate-limited state (e.g., 429 error) and the recovery window has not expired.
+2.  **Success**: The reviewer explicitly states "Ready to Merge" or "LGTM" with *no* actionable feedback.
+
+**Action**:
+-   **Poll**: Run the polling script immediately after requesting a review.
+-   **Increments**: Wait in at least 2-minute increments.
+-   **Always be active in the loop**: at any moment, you must be either fixing, waiting, or pushing.
+
+### 3. Fetch & Monitor (Unified)
+**STRICT RULE**: You must **NEVER** write status files, logs, or debug dumps to the repository root.
+*   **Allowed Location**: `agent-tools/agent-workspace/`
+*   **Persistent Scripts**: `agent-tools/`
+
+The **`agent-tools/pr_helper.py`** provides a single interface for the entire cycle. Documentation is available in [agent-tools.md](agent-tools/agent-tools.md).
+
+**Polling Rules**:
+1.  **Check ALL Channels**: The tool automatically checks Reviews, Inline Comments, and Issue Comments.
+2.  **Initial Wait**: Wait **at least 3 minutes** after requesting a review.
+3.  **Interval**: Poll every **2 minutes**.
+
+```bash
+mkdir -p agent-tools/agent-workspace
+# Request
+python3 agent-tools/pr_helper.py trigger {PR_NUMBER}
+
+# Monitor (includes 3m initial wait and 2m polling)
+python3 agent-tools/pr_helper.py monitor {PR_NUMBER} --since {TIMESTAMP} --output "agent-tools/agent-workspace/feedback.json"
+```
+
+### 4. Final Validation (The Exit Rule)
+A PR Review Cycle is only complete when:
+1.  **All** fixes are pushed.
+2.  A **Final Review** has been triggered (`/gemini review`).
+3.  Gemini Code Assist (and/or CodeRabbit) identifies **Zero** new issues and explicitly states "Ready to Merge" or similar.
+
+**DO NOT** conclude a task based on local verification alone. The bot's validation is the required gateway.
+
+### 5. Analyze & Filter (Agent Responsibility)
+The Agent must parse the JSON to find comments created **after** the last push/fix cycle.
+*   **Semantic Analysis**: Do not rely on scripts to tell you if it's "Ready". Read the comment body.
+  *   Does it say "LGTM" but list 3 "Nitpicks"? -> **Fixes Needed**.
+  *   Does it say "Changes Requested"? -> **Fixes Needed**.
+  *   Does it say "No actionable comments"? -> **Ready**.
+*   **Filter**: Ignore "outdated" or resolved comments if your logic handles them.
+
+### 6. Implement & Verify
+*   Address the specific feedback.
+*   Run tests (`pytest`) to verify fixes.
+*   **Cleanup**: Remove the temporary directory.
+
+### 7. Push & Repeat
+```bash
+git add .
+git commit -m "Address Cycle X comments"
+git push
+```
+Return to Step 1.
+
+> [!NOTE]
+> **Pagination**: When debugging with the `gh` CLI manually (e.g., `gh api`), always use the `--paginate` flag to ensure you see all comments. Default limits may hide feedback in long discussions.
+
+3.  **Timestamp Precision & Timezones**:
+    *   **UTC Everywhere**: GitHub API returns timestamps in UTC (e.g., `2023-10-27T10:00:00Z`).
+    *   **Common Trap**: Comparing a naive datetime (e.g., `datetime.now()` which might be local) with an aware UTC datetime raises `TypeError`. 
+    *   **Rule**: Always ensure your local reference timestamps are **aware UTC** objects (`datetime.now(timezone.utc)`).
+    *   **Filtering**: When filtering "since" a certain time, naive matching effectively ignores the timezone offset, often leading to missed events if your local time is ahead of UTC (e.g., CET is UTC+1). explicit conversion is mandatory.
+
+## Post-Mortem: Repeated Review Request Failure (Cycle 26)
+
+**Issue**: The agent failed to fetch new Code Review comments and instead repeatedly posted review requests ("gemini review"), triggering the daily quota limit.
+
+### Cycle 7: Robustness & Cleanup
+**Improvements:**
+- **Container Persistence**: `history.sqlite3` is now correctly persisted in the `/app/data` volume using `HISTORY_DB_FILE`.
+- **Review Cycle Robustness**: The review loop now handles timeouts and API rate limits gracefully, with scripts designed to be non-destructive.
+- **Cleanliness**: Temporary files (`*_dump.json`, `*status*.json`) are explicitly ignored or cleaned up.
+- **Testing**: Added CSRF protection tests for `/check` and refactored `history_manager` for clarity.
+
+**Workflow Update:**
+When running a review cycle:
+1.  **Request**: Trigger reviews (`/gemini review`, `@coderabbitai review`).
+2.  **Poll**: Use `agent-tools/poll_reviews.py` with a reasonable timeout.
+3.  **Analyze**: Use `analyze_reviews.py` (or Agent's internal logic) to parse feedback.
+4.  **Fix**: Implement changes.
+5.  **Verify**: Run tests and check clean repo state.
+6.  **Repeat**: Until "Ready to Merge".
+
+**Root Cause**:
+1.  **Improper Monitoring**: The agent relied on a polling script (`monitor_c26.py`) that likely wasn't capturing or outputting the review state correctly, or the agent failed to interpret the specific output conditions (e.g., distinguishing between a pending review and a lack of new reviews).
+2.  **Blind Retries**: Instead of verifying the *absence* of a review definitively (by checking the raw comments list manually via `gh pr view --json comments`), the agent assumed the request hadn't triggered and re-sent the command `/gemini review`.
+3.  **Lack of Backoff**: There was no exponential backoff or sufficient wait time between retry attempts.
+
+**Corrective Actions**:
+1.  **Exhaustive State Check**: Before requesting a new review, explicitly fetch and count existing comments and reviews. Only request a new review if:
+    *   One hasn't been requested in the last X minutes.
+    *   No new comments have appeared since the last request.
+2.  **Use Raw Tools**: Do not rely solely on custom monitoring scripts which can mask errors. Use extensive `gh` CLI commands directly to verify state.
+3.  **Respect Quotas**: Be mindful of the cost of each interaction and avoid tight loops of API calls.
+
+
+## 11. Agent Autonomy & Tool Usage
+*   **Active Monitoring**: When running long-running processes (like `monitor`), the Agent must NOT yield control to the user (via `notify_user`) simply to wait.
+*   **Process Management**: Use `command_status`, `read_terminal`, or loops to actively check the process.
+*   **No Browser for GitHub**: You must **NEVER** use browser tools (e.g., `browser_subagent`, `read_browser_page`) to interact with or monitor GitHub Pull Requests, Issues, or repository state. You have efficient, dedicated tools (`gh` CLI via `run_command` and MCP GitHub server tools) for these tasks. Using browser tools for GitHub is considered unprofessional and inefficient.
+*   **Intervention**: Only notify the user if:
+    1.  The process fails/crashes.
+    2.  The process succeeds and requires user confirmation for the *next* step.
+    3.  A timeout is reached that requires a decision.
+*   **Idling**: "Idling" by telling the user to "wait for the logs" is prohibited. You are the operator.
