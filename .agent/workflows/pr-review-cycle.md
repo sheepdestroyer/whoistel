@@ -23,7 +23,7 @@ description: Official workflow for managing PR Review Cycles with AI bots (Gemin
     ```bash
     python3 agent-tools/pr_helper.py monitor {PR_NUMBER} --since {TIMESTAMP} --output "agent-tools/agent-workspace/feedback.json"
     ```
-    *   Alternatively, use `gh` CLI to check status manually if the script fails.
+    *   Alternatively, use Github MCP tool or `gh` CLI to check status manually if the script fails.
 
 4.  **Analyze & Implement**
     *   Read `feedback.json`.
