@@ -164,7 +164,7 @@ def test_operator_info_validation():
     assert result is None
 
 def test_get_full_info_known_and_unknown(db_connection):
-    """Tests get_full_info using the DB fixture for known and unknown numbers."""
+    """Tests get_full_info end-to-end for known and unknown numbers."""
     from whoistel import get_full_info
 
     # Known geographic number (from conftest sample data: 01234...)
@@ -242,9 +242,6 @@ def test_print_result_output(capsys):
 def test_cli_missing_db_exits_with_error(tmp_path, capsys):
     """CLI should exit with code 1 and print an error if the DB file is missing."""
     # Point DB_FILE to a non-existent path
-    # We must patch whoistel.DB_FILE but also ensure setup_db_connection uses it.
-    # The run_whoistel_main logic patches sys.argv but does NOT patch DB_FILE anymore (refactoring).
-    # So we need to patch whoistel.DB_FILE in this test.
     import whoistel
     from unittest.mock import patch
     
@@ -256,7 +253,6 @@ def test_cli_missing_db_exits_with_error(tmp_path, capsys):
     
     assert exit_code == 1
     # Error message should be on stderr and likely contain "Erreur" or "error"
-    # The actual message is "Erreur lors de la connexion à la base de données..." or similar from whoistel.py
     assert "Erreur" in output.err or "error" in output.err.lower()
 
 
