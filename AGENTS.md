@@ -183,6 +183,7 @@ When running a review cycle:
 ## 11. Agent Autonomy & Tool Usage
 *   **Active Monitoring**: When running long-running processes (like `monitor`), the Agent must NOT yield control to the user (via `notify_user`) simply to wait.
 *   **Process Management**: Use `command_status`, `read_terminal`, or loops to actively check the process.
+*   **No Browser for GitHub**: You must **NEVER** use browser tools (e.g., `browser_subagent`, `read_browser_page`) to interact with or monitor GitHub Pull Requests, Issues, or repository state. You have efficient, dedicated tools (`gh` CLI via `run_command` and MCP GitHub server tools) for these tasks. Using browser tools for GitHub is considered unprofessional and inefficient.
 *   **Intervention**: Only notify the user if:
     1.  The process fails/crashes.
     2.  The process succeeds and requires user confirmation for the *next* step.

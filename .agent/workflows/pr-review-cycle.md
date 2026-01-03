@@ -35,3 +35,6 @@ description: Official workflow for managing PR Review Cycles with AI bots (Gemin
 
 > [!WARNING]
 > **Timezones**: Always use **UTC** (Coordinated Universal Time) for all timestamps when interacting with the GitHub API. Ensure your datetime objects are timezone-aware (e.g., `tzinfo=timezone.utc`). Comparing naive (local) vs aware (API) datetimes causes crashes.
+
+> [!CAUTION]
+> **No Browser Usage**: Do **NOT** use browser tools (subagents, page reading) to interact with GitHub or monitor the PR. Use the `gh` CLI or MCP GitHub tools exclusively. Using the browser for GitHub is prohibited as it is inefficient and prone to error.

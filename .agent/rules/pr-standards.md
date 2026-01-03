@@ -18,7 +18,7 @@ A Review Cycle is a **LOOP**, not a check.
 
 ## 4. Polling & Wait Times
 *   **Initial Wait**: Wait **at least 3 minutes** after requesting a review to allow bots to process.
-*   **Poll Interval**: Check for feedback every **2 minutes**.
+*   **Poll Interval**: Check for feedback every **2 minutes`.
 *   **Timeout**: Set a reasonable timeout (e.g., 15-25 minutes) to avoid infinite loops, but do not give up early.
 
 ## 5. Tool Usage
@@ -45,3 +45,8 @@ A Review Cycle is a **LOOP**, not a check.
 *   **No Idling**: Agents must actively monitor polling scripts. Do NOT exit/notify the user just to wait for a bot or a long process.
 *   **Autonomous Action**: Agents are AUTHORIZED and REQUIRED to `git commit` and `git push` fixes autonomously if tests pass. Do not ask the user to push for you.
 *   **Self-Correction**: If a tool fails (e.g., specific monitoring script), fallback to raw `gh` commands immediately.
+
+## 10. Direct Tool Usage Only
+**PROHIBITION**: You must **NEVER** use browser tools (including `browser_subagent`) to check Pull Request status, review comments, or checks on GitHub. 
+*   **Reason**: Browser tools are inefficient and inconsistent for structured data extraction compared to the `gh` CLI and the GitHub MCP server.
+*   **Mandate**: Use `gh` CLI or MCP `pull_request_read` tools for all GitHub interactions.
