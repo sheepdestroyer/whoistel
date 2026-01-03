@@ -23,7 +23,7 @@ A Review Cycle is a **LOOP**, not a check.
 
 ## 5. Tool Usage
 *   **Primary Tool**: Use `agent-tools/pr_helper.py` for triggering and monitoring.
-*   **Fallback**: Use `gh` CLI directly if the helper encounters issues.
+*   **Fallback**: Use Github MCP or `gh` CLI directly if the helper encounters issues.
 *   **Path Safety**: Ensure all file paths passed to tools are validated to be within the project root.
 
 ## 6. Bot Etiquette
