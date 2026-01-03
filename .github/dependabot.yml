@@ -4,7 +4,7 @@ updates:
   - package-ecosystem: "pip"
     directory: "/" # Location of package manifests
     schedule:
-      interval: "hourly"
+      interval: "daily"
     target-branch: "main"
     # Include a list of allowed updates
     # to avoid breaking changes from major version updates
