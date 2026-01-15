@@ -3,6 +3,8 @@
 This file tracks tasks for the `whoistel` project.
 
 ## Planned Work (Current Sprint)
+*   [x] **Security**:
+  *   [x] Add security headers to web application (CSP, HSTS, X-Frame-Options, etc.).
 *   [ ] **Containerization**:
   *   [ ] Add Dockerfile/Containerfile for the web app.
   *   [ ] Verify the container builds and runs locally.
