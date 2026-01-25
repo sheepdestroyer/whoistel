@@ -1,27 +1,32 @@
-import pytest
-import subprocess
 import os
+import subprocess
 import sys
+
+import pytest
+
 
 # Helper function to get the root directory of the project
 def get_project_root():
     """Returns the root directory of the project."""
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
 
 # Helper function to run whoistel.py main in-process
 def run_whoistel_main(capsys, args_list):
     """Runs whoistel.main() with given args."""
-    from whoistel import main
-    import whoistel
     from unittest.mock import patch
-    
+
+    import whoistel
+    from whoistel import main
+
     # Patch sys.argv
-    with patch('sys.argv', ['whoistel.py', *args_list]):
+    with patch("sys.argv", ["whoistel.py", *args_list]):
         try:
             main()
         except SystemExit as e:
             return e.code, capsys.readouterr()
         return 0, capsys.readouterr()
+
 
 def test_geographic_number_lookup(capsys):
     """Tests lookup for a known geographic number."""
@@ -37,6 +42,7 @@ def test_geographic_number_lookup(capsys):
     # conftest Region/City is 'Paris'
     assert "Paris" in captured.out
 
+
 def test_non_geographic_test_number_lookup(capsys):
     """
     Tests lookup for a non-existent number.
@@ -49,6 +55,7 @@ def test_non_geographic_test_number_lookup(capsys):
     assert "Numéro inconnu dans la base ARCEP" in captured.out
     assert ret == 1
 
+
 def test_valid_geo_number_lookup(capsys):
     """Tests lookup for another known valid number (same range)."""
     # Check another number in the '01234' range
@@ -60,6 +67,7 @@ def test_valid_geo_number_lookup(capsys):
     assert "Type détecté : Geographique" in captured.out
     assert "Operator One" in captured.out
 
+
 def test_invalid_number_format_non_digit(capsys):
     """Tests handling of an invalidly formatted number."""
     number = "012345678A"
@@ -68,9 +76,11 @@ def test_invalid_number_format_non_digit(capsys):
     assert ret == 1
     assert "invalide" in captured.err
 
+
 def test_clean_phone_number():
     """Tests the phone number cleaning logic."""
     from whoistel import clean_phone_number
+
     # Formatted valid numbers
     assert clean_phone_number("01.02.03.04.05") == "0102030405"
     assert clean_phone_number("+33 1 02 03 04 05") == "0102030405"
@@ -78,10 +88,11 @@ def test_clean_phone_number():
     assert clean_phone_number("06-12-34-56-78") == "0612345678"
     assert clean_phone_number("06\t12 34\n56 78") == "0612345678"
     assert clean_phone_number("0033612345678") == "0612345678"
-    
+
     # Falsy / missing inputs
     assert clean_phone_number("") == ""
     assert clean_phone_number(None) == ""
+
 
 def test_is_valid_phone_format():
     """Tests the phone number validation helper."""
@@ -103,10 +114,12 @@ def test_is_valid_phone_format():
     assert is_valid_phone_format("0102AB0405") is False
     assert is_valid_phone_format("01 02 03 04 05") is False
 
+
 def test_operator_info_validation():
     """Tests the email and URL validation logic in get_operator_info."""
-    from whoistel import get_operator_info
     from unittest.mock import MagicMock
+
+    from whoistel import get_operator_info
 
     # Mock connection and cursor
     mock_conn = MagicMock()
@@ -116,52 +129,53 @@ def test_operator_info_validation():
     # Case 1: Valid email and URL
     # Return dict to simulate sqlite3.Row access by name
     mock_cursor.fetchone.return_value = {
-        'NomOperateur': 'OpName', 
-        'TypeOperateur': 'OpType', 
-        'MailOperateur': 'contact@example.com', 
-        'SiteOperateur': 'https://example.com'
+        "NomOperateur": "OpName",
+        "TypeOperateur": "OpType",
+        "MailOperateur": "contact@example.com",
+        "SiteOperateur": "https://example.com",
     }
-    result = get_operator_info(mock_conn, '1234')
-    assert result['mail'] == 'contact@example.com'
-    assert result['site'] == 'https://example.com'
+    result = get_operator_info(mock_conn, "1234")
+    assert result["mail"] == "contact@example.com"
+    assert result["site"] == "https://example.com"
 
     # Case 2: Invalid email
     mock_cursor.fetchone.return_value = {
-        'NomOperateur': 'OpName', 
-        'TypeOperateur': 'OpType', 
-        'MailOperateur': 'invalid-email', 
-        'SiteOperateur': 'https://example.com'
+        "NomOperateur": "OpName",
+        "TypeOperateur": "OpType",
+        "MailOperateur": "invalid-email",
+        "SiteOperateur": "https://example.com",
     }
-    result = get_operator_info(mock_conn, '1234')
-    assert result['mail'] is None
-    assert result['site'] == 'https://example.com'
+    result = get_operator_info(mock_conn, "1234")
+    assert result["mail"] is None
+    assert result["site"] == "https://example.com"
 
     # Case 3: Invalid URL (bad scheme)
     mock_cursor.fetchone.return_value = {
-        'NomOperateur': 'OpName', 
-        'TypeOperateur': 'OpType', 
-        'MailOperateur': 'contact@example.com', 
-        'SiteOperateur': 'ftp://example.com'
+        "NomOperateur": "OpName",
+        "TypeOperateur": "OpType",
+        "MailOperateur": "contact@example.com",
+        "SiteOperateur": "ftp://example.com",
     }
-    result = get_operator_info(mock_conn, '1234')
-    assert result['mail'] == 'contact@example.com'
-    assert result['site'] is None
+    result = get_operator_info(mock_conn, "1234")
+    assert result["mail"] == "contact@example.com"
+    assert result["site"] is None
 
     # Case 4: Invalid URL (no netloc)
     mock_cursor.fetchone.return_value = {
-        'NomOperateur': 'OpName', 
-        'TypeOperateur': 'OpType', 
-        'MailOperateur': 'contact@example.com', 
-        'SiteOperateur': 'http://'
+        "NomOperateur": "OpName",
+        "TypeOperateur": "OpType",
+        "MailOperateur": "contact@example.com",
+        "SiteOperateur": "http://",
     }
-    result = get_operator_info(mock_conn, '1234')
-    assert result['mail'] == 'contact@example.com'
-    assert result['site'] is None
+    result = get_operator_info(mock_conn, "1234")
+    assert result["mail"] == "contact@example.com"
+    assert result["site"] is None
 
     # Case 5: No operator row found
     mock_cursor.fetchone.return_value = None
-    result = get_operator_info(mock_conn, '9999')
+    result = get_operator_info(mock_conn, "9999")
     assert result is None
+
 
 def test_get_full_info_known_and_unknown(db_connection):
     """Tests get_full_info end-to-end for known and unknown numbers."""
@@ -184,6 +198,7 @@ def test_get_full_info_known_and_unknown(db_connection):
     assert "error" in unknown_result
     assert "inconnu" in unknown_result["error"]
 
+
 def test_get_full_info_non_geographic(db_connection):
     """Tests get_full_info end-to-end for a non-geographic number."""
     from whoistel import get_full_info
@@ -199,6 +214,7 @@ def test_get_full_info_non_geographic(db_connection):
     # For non-geographic numbers, there may be no location or only a region
     location = non_geo_result.get("location")
     assert (location is None) or (set(location.keys()) == {"region"})
+
 
 def test_print_result_output(capsys):
     """Tests print_result presentation, including the 'Num\u00e9ro inconnu' branch."""
@@ -239,18 +255,20 @@ def test_print_result_output(capsys):
     assert "Num\u00e9ro inconnu" in captured.out
     assert "Num\u00e9ro inconnu dans la base" in captured.out
 
+
 def test_cli_missing_db_exits_with_error(tmp_path, capsys):
     """CLI should exit with code 1 and print an error if the DB file is missing."""
     # Point DB_FILE to a non-existent path
-    import whoistel
     from unittest.mock import patch
-    
+
+    import whoistel
+
     missing_db_path = tmp_path / "nonexistent.sqlite"
-    
-    with patch.object(whoistel, 'DB_FILE', str(missing_db_path)):
+
+    with patch.object(whoistel, "DB_FILE", str(missing_db_path)):
         # Use a known valid number format so it tries to hit DB
         exit_code, output = run_whoistel_main(capsys, ["0123456789"])
-    
+
     assert exit_code == 1
     # Error message should be on stderr and likely contain "Erreur" or "error"
     assert "Erreur" in output.err or "error" in output.err.lower()
@@ -258,13 +276,17 @@ def test_cli_missing_db_exits_with_error(tmp_path, capsys):
 
 def test_cli_db_error_from_setup_db_connection(capsys):
     """CLI should exit with code 1 and print an error if setup_db_connection fails."""
-    import whoistel
     from unittest.mock import patch
-    
+
+    import whoistel
+
     # We can patch setup_db_connection to raise DatabaseError
-    with patch('whoistel.setup_db_connection', side_effect=whoistel.DatabaseError("Test DB Error")):
+    with patch(
+        "whoistel.setup_db_connection",
+        side_effect=whoistel.DatabaseError("Test DB Error"),
+    ):
         exit_code, output = run_whoistel_main(capsys, ["0123456789"])
-    
+
     assert exit_code == 1
     # Check that it didn't crash with traceback but handled it with a user-facing error
     assert "Test DB Error" in output.err
