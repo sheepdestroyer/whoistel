@@ -168,6 +168,16 @@ def create_app(test_config=None):
     with app.app_context():
         history_manager.init_history_db()
 
+    @app.after_request
+    def set_security_headers(response):
+        """Adds security headers to every response."""
+        # CSP: Default to self, allow inline styles (legacy), disallow objects/iframes
+        response.headers['Content-Security-Policy'] = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none';"
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
+
     return app
 
 if __name__ == '__main__':
