@@ -1,28 +1,30 @@
-import pytest
 import sqlite3
+
+import pytest
+
 import history_manager
 
-
 # Use a separate test DB file for history manager tests to adhere to isolation
-TEST_HISTORY_DB = 'test_history_manager.sqlite3'
+TEST_HISTORY_DB = "test_history_manager.sqlite3"
+
 
 @pytest.fixture
 def history_db_connection(tmp_path):
     """Provides a connection to a temporary history database."""
     db_path = tmp_path / TEST_HISTORY_DB
-    
+
     # Initialize schema
     conn = sqlite3.connect(db_path)
     if hasattr(history_manager, "init_history_db"):
         # We need to monkeypatch DB_FILE or pass conn if possible.
         # history_manager.init_history_db uses get_db_connection() which uses DB_FILE.
         # But our history_manager functions accept a 'conn' argument.
-        # Let's create the schema manually or assume init_history_db can be bypassed 
+        # Let's create the schema manually or assume init_history_db can be bypassed
         # if we provide the connection with schema.
-        
+
         # Actually simplest is to run the init logic on this conn directly.
         c = conn.cursor()
-        c.execute('''
+        c.execute("""
             CREATE TABLE IF NOT EXISTS reports (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 phone_number TEXT NOT NULL,
@@ -31,15 +33,16 @@ def history_db_connection(tmp_path):
                 comment TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
-        c.execute('''
+        """)
+        c.execute("""
             CREATE INDEX IF NOT EXISTS idx_reports_phone_number_spam ON reports (phone_number, is_spam);
-        ''')
+        """)
         conn.commit()
 
     conn.row_factory = sqlite3.Row
     yield conn
     conn.close()
+
 
 def test_history_manager_add_report_and_get_spam_count_with_conn(history_db_connection):
     """Directly test add_report + get_spam_count using an explicit SQLite connection."""
@@ -53,8 +56,8 @@ def test_history_manager_add_report_and_get_spam_count_with_conn(history_db_conn
 
     # Add a spam report
     history_manager.add_report(
-        phone_number=number, # Changed from number to phone_number to match func sig
-        report_date=date, # Changed from date to report_date
+        phone_number=number,  # Changed from number to phone_number to match func sig
+        report_date=date,  # Changed from date to report_date
         is_spam=True,
         comment="First spam",
         conn=conn,
@@ -72,6 +75,7 @@ def test_history_manager_add_report_and_get_spam_count_with_conn(history_db_conn
     # Spam count should now be 1
     spam_count = history_manager.get_spam_count(number, conn=conn)
     assert spam_count == 1
+
 
 def test_history_manager_get_recent_reports_with_conn(history_db_connection):
     """Directly test get_recent_reports using an explicit SQLite connection."""
@@ -129,6 +133,7 @@ def test_history_manager_get_recent_reports_with_conn(history_db_connection):
     assert latest["comment"] == "Spam 2"
     assert latest["phone_number"] == number_1
 
+
 def test_history_manager_get_recent_reports_limit(history_db_connection):
     """Test that the limit parameter actually constrains the number of returned reports."""
     conn = history_db_connection
@@ -167,11 +172,15 @@ def test_history_manager_get_recent_reports_limit(history_db_connection):
     assert recent_reports[0]["comment"] == "Most recent report"
     assert recent_reports[1]["comment"] == "Middle report"
 
-def test_history_manager_add_report_and_get_spam_count_without_conn(tmp_path, monkeypatch):
+
+def test_history_manager_add_report_and_get_spam_count_without_conn(
+    tmp_path, monkeypatch
+):
     """Exercise with_db_connection by using add_report/get_spam_count without an explicit conn."""
     # Point the history manager to a temporary DB file
     db_path = tmp_path / "history.db"
-    monkeypatch.setattr(history_manager, "DB_FILE", str(db_path), raising=False)
+    monkeypatch.setattr(history_manager, "DB_FILE",
+                        str(db_path), raising=False)
 
     # Initialize the DB using the implicit connection handling
     history_manager.init_history_db()
