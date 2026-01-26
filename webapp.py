@@ -27,7 +27,29 @@ def create_app(test_config=None):
             # In production, this is mandatory.
             raise ValueError("Environment variable SECRET_KEY must be set.")
 
+    # Harden cookie security
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax',
+    )
+
     csrf.init_app(app)
+
+    @app.after_request
+    def add_security_headers(response):
+        """Add security headers to the response."""
+        # CSP: Default to self. Allow inline styles/scripts as a fallback for potential
+        # template inlines (though mostly clean) and CDNs if added later.
+        # This is safer than strict 'self' which might break error pages or debug toolbars.
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'"
+        )
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
 
     # Note: Template filters, error handlers, and routes are registered here
     # to avoid import-time side effects (like DB initialization).
