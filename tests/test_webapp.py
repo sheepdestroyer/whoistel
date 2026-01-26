@@ -313,3 +313,18 @@ def test_report_comment_truncation_flash_message(client):
     assert rv.status_code == 200
     expected_message = f"Votre commentaire a été tronqué à {MAX_COMMENT_LENGTH} caractères."
     assert expected_message.encode("utf-8") in rv.data
+
+def test_security_headers(client):
+    """Test that security headers are present in responses."""
+    response = client.get('/')
+    assert response.status_code == 200
+
+    headers = response.headers
+    assert 'Content-Security-Policy' in headers
+    assert "default-src 'self'" in headers['Content-Security-Policy']
+    assert 'X-Content-Type-Options' in headers
+    assert headers['X-Content-Type-Options'] == 'nosniff'
+    assert 'X-Frame-Options' in headers
+    assert headers['X-Frame-Options'] == 'SAMEORIGIN'
+    assert 'Referrer-Policy' in headers
+    assert headers['Referrer-Policy'] == 'strict-origin-when-cross-origin'
