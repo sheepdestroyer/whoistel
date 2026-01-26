@@ -32,6 +32,25 @@ def create_app(test_config=None):
     # Note: Template filters, error handlers, and routes are registered here
     # to avoid import-time side effects (like DB initialization).
 
+    @app.after_request
+    def add_security_headers(response):
+        """Adds security headers to every response."""
+        # CSP: Allow self, unsafe-inline for scripts/styles (required for some simple setups),
+        # and data: for images.
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:;"
+        )
+        # Prevent MIME sniffing
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        # Prevent clickjacking
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        # Controls referrer information
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
+
     @app.template_filter('format_datetime')
     def format_datetime(value, format='%d/%m/%Y %H:%M'):
         """Jinja2 filter to format datetime objects or ISO strings."""
