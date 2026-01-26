@@ -77,6 +77,25 @@ def create_app(test_config=None):
             except Exception:
                 app.logger.error("Error closing database connection during teardown.")
 
+    @app.after_request
+    def add_security_headers(response):
+        """
+        Add security headers to every response to protect against common vulnerabilities.
+        """
+        # CSP: Restrict sources to self (no inline scripts/styles allowed by default)
+        response.headers['Content-Security-Policy'] = "default-src 'self'"
+
+        # X-Content-Type-Options: Prevent MIME sniffing
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+
+        # X-Frame-Options: Prevent clickjacking
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+
+        # Referrer-Policy: Control referrer information
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+
+        return response
+
     @app.errorhandler(whoistel.DatabaseError)
     def handle_db_error(e):
         """Global handler for DatabaseError exceptions."""
