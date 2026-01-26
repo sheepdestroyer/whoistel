@@ -83,6 +83,16 @@ def create_app(test_config=None):
         app.logger.error(f"Database error: {e}")
         return render_template('error.html', message="Database error occurred"), 500
 
+    @app.after_request
+    def add_security_headers(response):
+        """Adds security headers to every response."""
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        # CSP: 'unsafe-inline' is allowed to avoid breaking existing templates that may use inline styles/scripts.
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
+
     @app.route('/', methods=['GET'])
     def index():
         """Renders the landing page with the search form."""
