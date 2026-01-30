@@ -1,9 +1,11 @@
+import os
+import tempfile
 
 import pytest
-import tempfile
-import os
-from webapp import create_app
+
 import history_manager
+from webapp import create_app
+
 
 @pytest.fixture
 def client():
@@ -13,7 +15,8 @@ def client():
     original_db = history_manager.DB_FILE
     history_manager.DB_FILE = path
 
-    app = create_app({'TESTING': True, 'SECRET_KEY': 'dev', 'WTF_CSRF_ENABLED': False})
+    app = create_app({"TESTING": True, "SECRET_KEY": "dev",
+                     "WTF_CSRF_ENABLED": False})
 
     with app.test_client() as client:
         yield client
@@ -23,22 +26,23 @@ def client():
     if os.path.exists(path):
         os.unlink(path)
 
+
 def test_security_headers_present(client):
-    response = client.get('/')
+    response = client.get("/")
     headers = response.headers
 
     # Check Content-Security-Policy
-    csp = headers.get('Content-Security-Policy')
+    csp = headers.get("Content-Security-Policy")
     assert csp is not None
     assert "default-src 'self'" in csp
     assert "script-src 'self' 'unsafe-inline'" in csp
     assert "style-src 'self' 'unsafe-inline'" in csp
 
     # Check X-Content-Type-Options
-    assert headers.get('X-Content-Type-Options') == 'nosniff'
+    assert headers.get("X-Content-Type-Options") == "nosniff"
 
     # Check X-Frame-Options
-    assert headers.get('X-Frame-Options') == 'SAMEORIGIN'
+    assert headers.get("X-Frame-Options") == "SAMEORIGIN"
 
     # Check Referrer-Policy
-    assert headers.get('Referrer-Policy') == 'strict-origin-when-cross-origin'
+    assert headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
