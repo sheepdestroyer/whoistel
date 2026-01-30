@@ -29,6 +29,19 @@ def create_app(test_config=None):
 
     csrf.init_app(app)
 
+    @app.after_request
+    def set_security_headers(response):
+        """Sets security headers for every response."""
+        # Content-Security-Policy: Allow self and inline scripts/styles (for simple templates)
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+        # X-Content-Type-Options: Prevent MIME sniffing
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        # X-Frame-Options: Prevent clickjacking
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        # Referrer-Policy: Protect user privacy
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
+
     # Note: Template filters, error handlers, and routes are registered here
     # to avoid import-time side effects (like DB initialization).
 
