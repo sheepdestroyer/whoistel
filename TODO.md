@@ -28,6 +28,9 @@ This file tracks tasks for the `whoistel` project.
     *   [x] Implemented "Longest Prefix Match" logic for accurate lookups.
     *   [x] Improved output format and error handling.
     *   [x] Added support for `+33` format.
+*   [x] **Security Enhancements**:
+    *   [x] Implemented security headers (CSP, HSTS, X-Frame-Options, etc.) in `webapp.py`.
+    *   [x] Added tests for security headers.
 *   [x] **Testing & Validation**:
     *   [x] Verified with `+33424288224` (Success: Found Operator and Region).
     *   [x] Verified with `+33740756315` (Handled: Correctly reports unknown due to missing data).
