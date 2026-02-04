@@ -12,6 +12,9 @@ This file tracks tasks for the `whoistel` project.
   *   [ ] Document API usage (if any) or form parameters. (Search, Result, History).
 
 ## Completed
+*   [x] **Security Hardening**:
+  *   [x] Added security headers (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) to `webapp.py`.
+  *   [x] Added tests for security headers.
 *   [x] **Create Web UI (Flask)**:
   *   [x] Implement Flask application (`webapp.py`).
   *   [x] Refactor `whoistel.py` logic for reuse in the web app.

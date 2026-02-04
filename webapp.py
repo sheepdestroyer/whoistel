@@ -168,6 +168,15 @@ def create_app(test_config=None):
     with app.app_context():
         history_manager.init_history_db()
 
+    @app.after_request
+    def add_security_headers(response):
+        """Add security headers to every response."""
+        response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' data:;"
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
+
     return app
 
 if __name__ == '__main__':
