@@ -39,6 +39,8 @@ This file tracks tasks for the `whoistel` project.
     *   [x] Replaced `galichon.com` with official "Communes de France - Base des codes postaux" (Enriched La Poste data) from `data.gouv.fr`.
     *   [x] Enriched `Communes` table with Latitude, Longitude, and Department Name.
     *   [x] Updated `whoistel.py` to display GPS coordinates if available.
+*   [x] **Security**:
+    *   [x] Add standard security headers (CSP, X-Frame-Options, etc.) to web app responses.
 
 ## Known Issues / Future Work
 *   **Missing Data:** The range `0740` (and potentially others) is missing from the ARCEP `MAJNUM.csv` file. This causes lookups for numbers like `+33740756315` to return "Unknown".
