@@ -12,6 +12,8 @@ This file tracks tasks for the `whoistel` project.
   *   [ ] Document API usage (if any) or form parameters. (Search, Result, History).
 
 ## Completed
+*   [x] **Testing**:
+  *   [x] Added unit tests for `generatedb.py` covering setup and schema creation.
 *   [x] **Create Web UI (Flask)**:
   *   [x] Implement Flask application (`webapp.py`).
   *   [x] Refactor `whoistel.py` logic for reuse in the web app.
